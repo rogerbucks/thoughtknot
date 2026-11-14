@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render-marks.test.js",
+  "test": "roads join only neighbours in the same room, while no room fills the screen",
+  "seen_failing_first": false,
+  "evidence": "the old test, narrowed to far out: close in, roads now cross rooms on purpose"
+}

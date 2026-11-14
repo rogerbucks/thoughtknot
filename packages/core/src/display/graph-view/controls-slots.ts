@@ -40,6 +40,7 @@ export const ON_DEMAND: Readonly<Record<string, string>> = {
   'thoughtknot-bar-more-list': 'the bar’s More list, under its button',
   'thoughtknot-thing-menu': 'a thing’s menu, at the pointer',
   'thoughtknot-quick-info': 'a thing’s quick look, at the pointer',
+  'thoughtknot-stage-card': 'a thing’s card in the card view, on the drawing at the thing’s place',
   'thoughtknot-suggestions': 'suggestions under the words being typed',
   'thoughtknot-massive-list': 'search results under the search box',
   'thoughtknot-edit-card': 'the editor of one thing, at that thing',

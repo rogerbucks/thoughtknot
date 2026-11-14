@@ -1,0 +1,6 @@
+{
+  "file": "test/graph-spec-display-rules.test.js",
+  "test": "spec_display_rules_here: a correcting judgement replaces the old one, which stays folded away > the old judgement is kept in the graph, folded away, never deleted",
+  "seen_failing_first": false,
+  "evidence": "The engine already kept a superseded Decision; this change moves the rule to say that data, so the test pins it."
+}

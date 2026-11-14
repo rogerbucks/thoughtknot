@@ -8,5 +8,10 @@
   <true/>
   <key>LSSupportsOpeningDocumentsInPlace</key>
   <true/>
+  <!-- The app has no encryption of its own: the vault key sits in Apple's Keychain, and sync uses the Web Crypto that
+       Apple's WebKit provides. That is Apple's built-in encryption, so the export answer is "exempt" (Roger, 14 Nov
+       2026, for TestFlight builds he alone tests). A lawyer confirms it before any public release (LEGAL-3). -->
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
 </dict>
 </plist>

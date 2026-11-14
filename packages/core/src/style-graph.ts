@@ -7,6 +7,7 @@ import { STYLE } from './layout.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
 import type { SavedExplore } from './explore-saved.ts';
+import type { NamedFilter } from './filter-named.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Render } from './render-choice.ts';
 import { RULE_KEYS } from './rule-words.ts';
@@ -33,10 +34,9 @@ export const OUTSIDE = ['fade', 'hide'] as const;
 export type Outside = (typeof OUTSIDE)[number];
 
 /**
- * The colours styling may use (§7, styling_keeps_locked_rules). These are the locked style's own hues, by name: its
- * kinds' and its readings'. Red and green are there too, which it keeps for meaning (for and against). Never a raw
- * colour value: a hue is drawn through the locked blends (theme.ts, `hueColour`), so it meets the locked contrast in
- * both themes.
+ * The colours styling may use (ES§7, styling_keeps_locked_rules): the locked style's own hues, by name. They are its
+ * kinds' and readings', and red and green, kept for meaning. Never a raw colour: a hue is drawn through the locked
+ * blends (theme.ts, `hueColour`), so it meets the locked contrast in both themes.
  */
 export const STYLE_HUES: readonly string[] = [...new Set([...STYLE.kind_hues, ...STYLE.edge_hues, 'red', 'green'])];
 
@@ -64,9 +64,8 @@ export const FLOW_MOTIONS = ['dashes', 'dot', 'still'] as const;
 export type FlowMotion = (typeof FLOW_MOTIONS)[number];
 
 /**
- * How links are drawn (§25, untangle_routing). Curved, as Graphviz draws them unless told otherwise; straight; or with
- * right angles. So a dense graph can trade curves for fewer crossings. Or direct (untangle_direct): one gentle curve
- * from box to box, the boxes moved aside to make room (direct-links.ts).
+ * How links are drawn (ES§25, untangle_routing): curved, straight, or with right angles. A dense graph can trade curves
+ * for fewer crossings. Or direct (untangle_direct): one gentle curve, the boxes moved aside to make room (direct-links.ts).
  */
 export const ROUTINGS = ['curved', 'straight', 'right-angled', 'direct'] as const;
 /** One of the routings. */
@@ -93,13 +92,14 @@ export const STYLE_KINDS = [
   'Preset',
   'Render',
   'Explore',
+  'NamedFilter',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
 
 /**
- * The keys each kind of style thing may have (§2, style_words_checked): the ones `styleEdit` writes and the checks read.
- * A key of any other name is a problem, reported with the nearest of these as its fix. A thing's `id` is its name, not a key.
+ * The keys each kind of style thing may have (ES§2, style_words_checked), as `styleEdit` writes them and the checks read.
+ * Any other is a problem, its fix the nearest of these. A thing's `id` is its name, not a key.
  */
 export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Nudge: ['word', 'thing', 'other', 'group', 'direction'],
@@ -136,6 +136,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Preset: ['preset'],
   Render: ['space', 'painter', 'lens', 'view'],
   Explore: ['centre', 'shown', 'shape', 'per_branch', 'view'],
+  NamedFilter: ['name', 'kind', 'when'],
 };
 
 /** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */
@@ -169,9 +170,8 @@ export interface Nudge {
 }
 
 /**
- * A property switched on or off for showing inline (§14, properties_switch). It covers every thing of a kind, one
- * thing, or every link of a relationship type. It holds in the whole graph, or in one view (properties_remembered).
- * Drawn below the text of its box or link (inline-properties.ts).
+ * A property switched on or off for showing inline (ES§14, properties_switch). It is for a kind's things, one thing, or
+ * a type's links, in the whole graph or one view (properties_remembered). Drawn below its box (inline-properties.ts).
  */
 export interface Show {
   property: string;
@@ -239,8 +239,8 @@ export interface Flow {
 }
 
 /**
- * A thing's image drawn on its box (§18, animated_image_shown). It names the property that holds it, for every thing
- * of a kind or one thing. It holds in the whole graph, or in one view. The most particular decides (picture.ts).
+ * A thing's image drawn on its box (ES§18, animated_image_shown), from the property that holds it. It is for a kind's
+ * things or one thing, in the whole graph or a view. The most particular decides (picture.ts).
  */
 export interface Picture {
   property: string;
@@ -258,10 +258,7 @@ export interface LinkTarget {
   to: string;
 }
 
-/**
- * A look (§7, styled_paths_and_views): within one view or one path, the colour, line and format of a thing, kind or
- * link. A rule's look (§56, rule-words.ts) has a `when` or a `lens` instead, and finds its own things.
- */
+/** A look (ES§7, styled_paths_and_views): a thing's, kind's or link's colour, line or format; a rule's: `when` (ES§56). */
 export interface Look extends RuleParts {
   view?: string;
   path?: string;
@@ -290,9 +287,8 @@ export interface Frame {
 }
 
 /**
- * How a view was shown, saved when the user asked (§7, view_saved_as_shown). It keeps only what was written and could
- * be read. It keeps the View menu's switches as they stood (§25, view_switch_view_only). It keeps the legend's choices
- * (§25, untangle_legend; untangle-saved.ts).
+ * How a view was shown, saved when the user asked (ES§7, view_saved_as_shown): only what could be read. It keeps the View
+ * menu's switches (ES§25, view_switch_view_only) and the legend's choices (ES§25, untangle_legend; untangle-saved.ts).
  */
 export interface Shown {
   zoom?: number;
@@ -339,6 +335,8 @@ export interface StyleGraph {
   renders: Render[];
   /** The explorations saved (§71, explore_saved), in the order written; the first for a view is used. */
   explores: SavedExplore[];
+  /** The filters saved by name (ES§25, untangle_filter_saved), in the order written; the first of a name is used. */
+  named: NamedFilter[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -380,6 +378,7 @@ export function emptyStyle(): StyleGraph {
     presets: [],
     renders: [],
     explores: [],
+    named: [],
   };
 }
 

@@ -15,11 +15,12 @@ own code — so a break says which feature broke. The expected figures are data 
 """
 import hashlib, base64, re, datetime as dt
 from zoneinfo import ZoneInfo
+from graphspec.engine.queries import plain_row   # rows as Grafeo 0.5.43 gave them: floats, naive UTC
 UTC = dt.timezone.utc
 SIGN = {'Drawdown': 1, 'InterestCharge': 1, 'DefaultInterestCharge': 1, 'Repayment': -1}
 CASH = ('Drawdown', 'Repayment', 'Payment')
 
-def _q(db, g, q): db.set_graph(g); return list(db.execute_cypher(q))
+def _q(db, g, q): db.set_graph(g); return [plain_row(r) for r in db.execute_cypher(q)]
 def _local(t, tz): return t.replace(tzinfo=UTC).astimezone(ZoneInfo(tz))
 def _kind(labels): return next((l for l in labels if l in SIGN or l in CASH), None)
 

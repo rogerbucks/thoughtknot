@@ -182,6 +182,14 @@ export class PaneSession {
     return this.reading(this.lastNote);
   }
 
+  /**
+   * The texts of all the note's gql blocks as last seen, with what is typed in the block's place. A style block after
+   * the block is among them, as a reading holds only the blocks up to it (ES§25, untangle_filter_saved).
+   */
+  noteTexts(): string[] {
+    return this.texts(this.lastNote).texts;
+  }
+
   /** The strictness the note is read by (spec §21): the host's setting, asked each time; Forgiving unless set. */
   strictness: () => StrictnessSettings = () => ({ strictness: 'forgiving', allowed: [] });
 

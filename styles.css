@@ -147,6 +147,10 @@
 /* The drawing's colours are written on each shape, which the browser does not force. So the drawing keeps its own.
    Here each shape, line and word is drawn in the system's colours, the chosen or focused thing in its highlight. */
 @media (forced-colors: active) {
+  /* the chosen card keeps its mark when the shadow is dropped */
+  .thoughtknot-stage-card.is-selected {
+    border: 3px solid Highlight;
+  }
   .thoughtknot-svg {
     forced-color-adjust: none;
   }
@@ -2577,6 +2581,133 @@ pre.thoughtknot-code {
   block-size: 100%;
   touch-action: none;
   cursor: grab;
+}
+/* the card view (render_cards): each item a card with its whole note, over the stage's canvas; the pointer passes through */
+.thoughtknot-stage-cards {
+  position: absolute;
+  inset: 0;
+  isolation: isolate; /* the cards stack among themselves, under the panels and dock */
+  overflow: hidden;
+  pointer-events: none;
+}
+.thoughtknot-stage-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  inline-size: var(--thoughtknot-card-w);
+  block-size: var(--thoughtknot-card-h);
+  transform: translate(var(--thoughtknot-card-x), var(--thoughtknot-card-y)) scale(var(--thoughtknot-card-k));
+  transform-origin: 0 0;
+  z-index: var(--thoughtknot-card-z);
+  opacity: var(--thoughtknot-card-alpha);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  border: 1.5px solid var(--thoughtknot-card-colour);
+  border-radius: 10px;
+  box-shadow: var(--gn-shadow-s);
+  font-family: var(--gn-font-ui);
+  font-size: var(--gn-font-size-xs);
+  line-height: 1.5;
+}
+.thoughtknot-stage-card.is-selected {
+  box-shadow:
+    0 0 0 2px var(--thoughtknot-card-colour),
+    var(--gn-shadow-l);
+}
+.thoughtknot-stage-card-head {
+  display: flex;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  position: relative;
+  isolation: isolate;
+  padding: 0 10px;
+  font-size: var(--gn-font-size-s);
+  font-weight: var(--gn-font-weight-semibold);
+}
+/* the head's tint: the card's colour, faint, under its name */
+.thoughtknot-stage-card-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--thoughtknot-card-colour);
+  opacity: 0.14;
+}
+.thoughtknot-stage-card-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.thoughtknot-stage-card-kind {
+  flex: none;
+  padding: 0 6px;
+  border: 1px solid var(--thoughtknot-card-colour);
+  border-radius: 8px;
+  font-size: 0.9em;
+  font-weight: normal;
+  line-height: 1.45;
+}
+.thoughtknot-stage-card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px 10px 0;
+}
+.thoughtknot-stage-card-body p {
+  margin: 0 0 9px;
+}
+.thoughtknot-stage-card-body.is-cut {
+  mask-image: linear-gradient(var(--gn-text-normal) 75%, transparent);
+}
+.thoughtknot-stage-card-more {
+  padding: 0 10px;
+  color: var(--thoughtknot-card-colour);
+  font-size: 0.9em;
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-stage-card-props {
+  padding: 0 10px 8px;
+  border-top: 1px dashed var(--gn-border);
+  font-size: 0.9em;
+  opacity: 0.75;
+}
+button.thoughtknot-stage-card-more {
+  display: block;
+  margin: 0;
+  padding: 0 10px 4px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: start;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.thoughtknot-stage-card-words > :first-child {
+  margin-block-start: 0;
+}
+.thoughtknot-stage-card-words :is(p, ul, ol) {
+  margin-block: 0 9px;
+}
+/* Show all opens a card in place, above the cards round it; its words scroll once taller than the card may grow */
+.thoughtknot-stage-card.is-open {
+  z-index: calc(var(--thoughtknot-card-z) + 100000);
+  block-size: auto;
+  min-block-size: var(--thoughtknot-card-h);
+  max-block-size: calc(3 * var(--thoughtknot-card-h));
+}
+.thoughtknot-stage-card.is-open > .thoughtknot-stage-card-body {
+  overflow: auto;
+  pointer-events: auto;
+}
+/* far out a card shows only its name */
+.thoughtknot-stage-card.is-far > :not(.thoughtknot-stage-card-head) {
+  visibility: hidden;
 }
 /* names past the drawing's own edge show up to the panel's, which clips them (Roger, 2 Nov 2026) */
 .thoughtknot-viewport svg.thoughtknot-svg {
@@ -5026,6 +5157,54 @@ img.thoughtknot-picture-hidden,
   min-width: 0;
 }
 
+/* The filter by what things hold, first in the Filter panel (ES§25, untangle_ask_filter). Its box, rows, count and
+   buttons sit close together. A rule under them parts them from the legend of kinds and links. */
+.thoughtknot-filter-ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  margin-bottom: var(--gn-space-2);
+  padding-bottom: var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
+}
+.thoughtknot-filter-ask select,
+.thoughtknot-filter-ask input[type='text'] {
+  min-height: 28px;
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-filter-ask-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-filter-ask-hide {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  margin-inline-end: auto;
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-filter-ask-hide input {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  margin: 0;
+}
+/* The filters saved by name, picked from one list, with Delete beside it (untangle_filter_saved). */
+.thoughtknot-filter-saved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-filter-saved:empty {
+  display: none;
+}
+.thoughtknot-filter-saved select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* Compact panels (§25, panels_compact). Roger, 6 Nov 2026: the side panels are "way too big", and hold "a ton of text
    … Not useful for daily use … Use tool tips". Where a mouse or trackpad hovers, the panels are dense, as a modern
    app's are:
@@ -5055,6 +5234,7 @@ img.thoughtknot-picture-hidden,
   }
   .thoughtknot-dock button,
   .thoughtknot-untangle-offers button,
+  .thoughtknot-filter button,
   .thoughtknot-dock-fold,
   .thoughtknot-dock-more > summary,
   .thoughtknot-chip-fold,

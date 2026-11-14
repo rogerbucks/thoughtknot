@@ -47,10 +47,7 @@ export interface SelectionHost {
   /** The drawing's viewport, and its size as the zoom has it. */
   viewport: () => HTMLElement;
   size: () => Size;
-  /**
-   * The View menu. It opens the folds a thing is hidden in (§25), and lays the graph out again with a thing and its
-   * neighbours together (untangle_regroup).
-   */
+  /** The View menu: opens a thing's folds (ES§25), lays a thing and its neighbours out together (untangle_regroup). */
   switching?: () => ViewSwitching | null;
 }
 
@@ -103,8 +100,10 @@ export class Selection {
       go: (key) => this.goTo(key, false),
       legend: o.view?.shown?.legend, // a view saved as shown opens with its legend's choices (§25, untangle_legend)
       ...(o.exploring && { exploring: o.exploring }), // and an exploration saved opens again (§71, explore_saved)
+      ...(o.named && { named: o.named }), // the filters saved by name, to pick again (untangle_filter_saved)
       regroup: (only) => this.regrouping.to(only),
       svg: host.svg,
+      ...(o.ruleAsk?.describe && { describe: (w, fill) => o.ruleAsk?.describe?.(w, fill) }), // untangle_ask_filter
     });
     this.layers = this.untangle.layers(null);
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
@@ -159,8 +158,7 @@ export class Selection {
 
   /** A thing or link chosen from the details: the selection, its details shown, brought into view readable (§25). */
   private bring(step: TrailStep): void {
-    // one hidden by a filter or the legend would be chosen out of sight. So the whole graph is shown first, as finding
-    // does; a link is numbered among the drawing's links as its edge is
+    // one hidden by a filter would be chosen out of sight, so all is shown first; a link is numbered as its edge is
     const { hidden } = this.layers;
     if ('key' in step ? hidden.things.has(step.key) : hidden.edges.has(step.link)) this.untangle.reset();
     this.came('chosen', () => this.host.open(step, true));

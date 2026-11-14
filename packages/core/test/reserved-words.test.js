@@ -1,6 +1,6 @@
 // The words a view may not use as a name, and those it may not ask for as a kind. See editor spec §7 (view_profile,
 // views_agree_with_grafeo; engines_get_standard). For names: GQL's reserved and pre-reserved words, the words it reads
-// as values, and the further words Grafeo 0.5.43 refuses as a name. For kinds: the words Grafeo refuses as a label.
+// as values, and the further words Grafeo 0.6.2 refuses as a name. For kinds: the words Grafeo refuses as a label.
 // Python's tests/test_view_parity.py holds both Grafeo lists to Grafeo itself.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -31,23 +31,20 @@ describe('the reserved words', () => {
   });
 
   // proves: views_agree_with_grafeo
-  test('hold the words Grafeo 0.5.43 refuses as a name that GQL leaves free', () => {
+  test('hold the words Grafeo 0.6.2 refuses as a name that GQL leaves free', () => {
     assert.deepEqual(GRAFEO_REFUSED, [
       'ACYCLIC',
       'CONTAINS',
       'DIFFERENT',
       'ENDS',
-      'GROUPS',
       'INF',
       'MERGE',
       'NAN',
-      'ORDINALITY',
       'REPEATABLE',
       'SHORTEST',
       'SIMPLE',
       'STARTS',
       'TRAIL',
-      'TYPE',
       'UNWIND',
       'WALK',
     ]);
@@ -71,10 +68,12 @@ describe('the reserved words', () => {
 
   // proves: view_profile
   test('a name is reserved whatever its case, as GQL’s keywords are, and only as a whole word', () => {
-    for (const w of ['walk', 'WALK', 'Walk', 'match', 'Return', 'on', 'true', 'unwind', 'Type', 'is'])
+    for (const w of ['walk', 'WALK', 'Walk', 'match', 'Return', 'on', 'true', 'unwind', 'Shortest', 'is'])
       assert.equal(isReservedName(w), true, w);
     for (const w of ['n', 'm', 'p', 'walker', 'walk_1', 'matches', 'node', 'graph', 'step', 'id', 'trip', 'stop'])
       assert.equal(isReservedName(w), false, w);
+    // Grafeo 0.6 takes these as names, where 0.5.43 refused them
+    for (const w of ['type', 'groups', 'ordinality']) assert.equal(isReservedName(w), false, w);
   });
 
   // proves: view_profile
@@ -84,29 +83,22 @@ describe('the reserved words', () => {
   });
 
   // proves: views_agree_with_grafeo
-  test('hold the words Grafeo 0.5.43 refuses as a kind, whatever their case, and no other', () => {
+  test('hold the words Grafeo 0.6.2 refuses as a kind, whatever their case, and no other', () => {
     assert.deepEqual(GRAFEO_REFUSED_KINDS, [
-      'ACYCLIC',
       'CAST',
       'EXCEPT',
       'FOR',
       'GROUP',
-      'GROUPS',
       'INTERSECT',
       'OFFSET',
-      'ORDINALITY',
       'OTHERWISE',
       'REMOVE',
-      'SHORTEST',
-      'SIMPLE',
-      'TRAIL',
       'UNION',
-      'WALK',
       'XOR',
     ]);
-    for (const w of ['Walk', 'walk', 'GROUP', 'Group', 'xor', 'Union']) assert.equal(isRefusedKind(w), true, w);
+    for (const w of ['For', 'for', 'GROUP', 'Group', 'xor', 'Union']) assert.equal(isRefusedKind(w), true, w);
     // GQL keeps these too, but a kind may be them: Grafeo reads each as a label
-    for (const w of ['Path', 'Nothing', 'Match', 'Person', 'Walker', 'Type', 'Nan'])
+    for (const w of ['Path', 'Nothing', 'Match', 'Person', 'Walk', 'Walker', 'Type', 'Nan'])
       assert.equal(isRefusedKind(w), false, w);
   });
 });

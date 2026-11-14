@@ -20,8 +20,8 @@ import type { Refusal } from './layout-limits.ts';
 import type { BetweenRow, GroupRow, MeshIndex } from './mesh-index.ts';
 import { partsStoreOf } from './parts-store.ts';
 import type { PartsStore } from './parts-store.ts';
-import { FacetColumns } from './facet-counts.ts';
-import type { Facet } from './facet-counts.ts';
+import { FacetColumns, codedFacet } from './facet-counts.ts';
+import type { CodedFacet } from './facet-counts.ts';
 import { PartsSource, nearFrom } from './parts-source.ts';
 import { rowsKeptOrRead } from './parts-kept.ts';
 import type { KeptPlace } from './parts-kept.ts';
@@ -54,8 +54,11 @@ export interface StoredParts {
   /** A group's things and the links inside it, to lay out on its own; null once the store holds other text. */
   group: (id: string) => Promise<GraphDrawing | null>;
   near: LinksNear;
-  /** Its filters, each property's value by thing in the drawing's order, read from the store a group at a time. */
-  facets: () => Facet[];
+  /**
+   * Its filters, each property's value by thing in the drawing's order, read from the store a group at a time. Held as
+   * numbers, never as words per thing (scale_parts_overview).
+   */
+  facets: () => CodedFacet[];
 }
 
 /** A graph as the graph library's rules read one, from things (key, kind, properties) and links. */
@@ -187,7 +190,7 @@ async function facetsInParts(
   graph: string,
   ids: readonly string[],
   things: readonly { key: string; kind: string }[],
-): Promise<Facet[]> {
+): Promise<CodedFacet[]> {
   const at = new Map(things.map((t, i) => [t.key, i]));
   const columns = new FacetColumns(things.length);
   for (const id of ids)
@@ -195,7 +198,7 @@ async function facetsInParts(
       const i = t.graph === graph ? at.get(t.key) : undefined;
       if (i !== undefined) columns.add(i, JSON.parse(t.props) as Record<string, unknown>);
     }
-  return columns.facets(things.map((t) => t.kind));
+  return columns.facets(things.map((t) => t.kind)).map(codedFacet);
 }
 
 /** The groups of a graph as the store holds them, each with its things' keys, and the links between them counted. */

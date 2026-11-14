@@ -7,7 +7,7 @@ import { inkOf } from './render-look.ts';
 import type { View } from './render-marks.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene } from './render-scene.ts';
-import { archOf, onScreen } from './render-tilt.ts';
+import { archOf, isTilted, onScreen } from './render-tilt.ts';
 
 /** A road between two rooms: the links between them, counted each way. */
 export interface RoadMark {
@@ -55,6 +55,105 @@ export function insideFade(s: Spot, t: Spot, view: View): number {
   const big = (2 * Math.max(s.r, t.r)) / Math.max(1, Math.min(view.w, view.h));
   const k = Math.min(1, Math.max(0, (big - INSIDE_FROM) / (INSIDE_AT - INSIDE_FROM)));
   return 1 - k * k * (3 - 2 * k);
+}
+
+/**
+ * How much a road shows between rooms that sit in two different rooms. It shows as much as the road between those
+ * two has faded, as the reader zooms inside one of them. So as a highway fades, the links it carried come into sight
+ * one level in. The way out never goes blank (Roger, 13 Nov 2026). A road inside one room has 1: it always shows.
+ */
+export function handedOver(
+  scene: Scene,
+  spots: Map<string, Spot>,
+  view: View,
+  road: { a: string; b: string },
+  depth: number,
+): number {
+  const [pa, pb] = [scene.nodes.get(road.a)?.parent, scene.nodes.get(road.b)?.parent];
+  if (pa === pb) return 1;
+  const [p, q] = [pa === undefined ? undefined : spots.get(pa), pb === undefined ? undefined : spots.get(pb)];
+  if (!p || !q) return 0;
+  const fade = 1 - insideFade(onScreen(p, view, depth - 1), onScreen(q, view, depth - 1), view);
+  return fade < 0.05 ? 0 : fade;
+}
+
+/** A room on the screen a road keeps clear of: its middle, its reach, its depth and the rooms it sits in. */
+interface Room {
+  key: string;
+  x: number;
+  y: number;
+  r: number;
+  depth: number;
+  /** It and every room it sits in, so a road keeps clear only of rooms its own ends are not in. */
+  within: Set<string>;
+}
+
+/** The rooms shown on the screen at a group level: those a road may have to bend round. */
+function roomsOnScreen(scene: Scene, spots: Map<string, Spot>, detail: Detail, view: View): Room[] {
+  const last = scene.depths.length - 1,
+    rooms: Room[] = [];
+  if (isTilted(view)) return rooms;
+  for (const node of scene.nodes.values()) {
+    const spot = spots.get(node.key);
+    if (node.depth >= last || !spot || (detail.shown[node.depth] ?? 0) < 0.05) continue;
+    const s = onScreen(spot, view, node.depth);
+    if (s.x + s.r < 0 || s.y + s.r < 0 || s.x - s.r > view.w || s.y - s.r > view.h) continue;
+    const within = new Set<string>();
+    for (let at: string | undefined = node.key; at !== undefined; at = scene.nodes.get(at)?.parent) within.add(at);
+    rooms.push({ ...s, key: node.key, depth: node.depth, within });
+  }
+  return rooms;
+}
+
+/** The ends of `road` and every room either sits in. */
+function holding(scene: Scene, road: { a: string; b: string }): Set<string> {
+  const out = new Set<string>();
+  for (const end of [road.a, road.b])
+    for (let at: string | undefined = end; at !== undefined; at = scene.nodes.get(at)?.parent) out.add(at);
+  return out;
+}
+
+/** How far a road keeps from the edge of a room it bends round, in pixels. */
+const CLEAR_PX = 8;
+/** The most a road bows out, as a share of its length, so it never loops far off. */
+const MOST_BOW = 0.3;
+
+/**
+ * The control point that bends a road from `from` to `to` round the rooms between its ends, or none if its line is
+ * clear. A road keeps clear of a room at its own depth or above that neither end sits in, nor holds. It bows to the side that
+ * needs least.
+ */
+export function roundRooms(
+  from: [number, number],
+  to: [number, number],
+  rooms: readonly Room[],
+  road: { a: string; b: string },
+  depth: number,
+  ends: ReadonlySet<string>,
+): [number, number] | undefined {
+  const [dx, dy] = [to[0] - from[0], to[1] - from[1]],
+    long = Math.hypot(dx, dy);
+  if (long < 1) return undefined;
+  const [ux, uy, nx, ny] = [dx / long, dy / long, -dy / long, dx / long];
+  // the bow each side needs, at the road's middle: a quadratic bows 4t(1 - t) of that at `t` of the way along
+  let [plus, minus] = [0, 0]; // the bow needed to pass on the side `n` points to, and on the other side
+  for (const room of rooms) {
+    // a room that holds an end, or sits inside one, is the road's own; one wider than the road it cannot go round
+    if (room.depth > depth || ends.has(room.key) || room.within.has(road.a) || room.within.has(road.b)) continue;
+    if (2 * room.r > long) continue;
+    const [ox, oy] = [room.x - from[0], room.y - from[1]];
+    const t = (ox * ux + oy * uy) / long,
+      side = ox * nx + oy * ny,
+      reach = room.r + CLEAR_PX;
+    if (t <= 0.05 || t >= 0.95 || Math.abs(side) >= reach) continue;
+    const share = 4 * t * (1 - t);
+    plus = Math.max(plus, (reach + side) / share);
+    minus = Math.max(minus, (reach - side) / share);
+  }
+  if (!plus && !minus) return undefined;
+  const bow = Math.min(Math.min(plus, minus), MOST_BOW * long) * (plus <= minus ? 1 : -1);
+  // the curve's middle is half way from the line's middle to the control point
+  return [(from[0] + to[0]) / 2 + 2 * bow * nx, (from[1] + to[1]) / 2 + 2 * bow * ny];
 }
 
 /** The most of a road's length each end may give up to reach its room's edge, so a road between close rooms still shows. */
@@ -196,6 +295,7 @@ export function roadsOf(
 ): RoadMark[] {
   const roads: RoadMark[] = [];
   const last = scene.depths.length - 1;
+  const rooms = roomsOnScreen(scene, spots, detail, view);
   scene.roads.forEach((at, depth) => {
     const shown = roadAlpha(detail, depth);
     // with Faint roads on, a level's roads stay faintly in sight while that level shows at all (Roger, 7 Nov 2026)
@@ -204,15 +304,22 @@ export function roadsOf(
     for (const road of at) {
       const p = spots.get(road.a),
         q = spots.get(road.b);
-      // only neighbours in the same room: links that leave it ride on the road of the room itself
-      if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
+      if (!p || !q) continue;
+      // links that leave a room ride on the road of the room itself, till the reader is inside it (handedOver)
+      const over = handedOver(scene, spots, view, road, depth);
+      if (!over) continue;
       const [s, t] = [onScreen(p, view, depth), onScreen(q, view, depth)];
       // the globe's far side has signposts instead. A road with one end round the back still runs to the ball's edge.
-      const alpha = s.behind && t.behind ? 0 : Math.max(least, shown * insideFade(s, t, view));
+      const own = shown * insideFade(s, t, view);
+      const alpha = s.behind && t.behind ? 0 : over < 1 ? over * own : Math.max(least, own);
       if (alpha < 0.05) continue;
       // a road runs from the edge of one room to the edge of the other, never into its middle (Roger)
       const [from, to] = edgesOf(s, t);
-      const [via, width] = [archOf(p, q, view, depth), 2 + Math.log2(road.forward + road.back)];
+      const width = 2 + Math.log2(road.forward + road.back);
+      // in 3D and on the globe a road arches; flat, it bends round any room between its ends (Roger, 13 Nov 2026)
+      const via =
+        archOf(p, q, view, depth) ??
+        (isTilted(view) ? undefined : roundRooms(from, to, rooms, road, depth, holding(scene, road)));
       // between two items, a road says what kind of link it is (Roger, 7 Nov 2026: edges have no labels)
       const count = depth === last ? sayOf(road.types, road.forward, road.back) : countOf(road.forward, road.back);
       const { forward, back } = road;

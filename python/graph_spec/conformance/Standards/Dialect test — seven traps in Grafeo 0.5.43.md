@@ -16,16 +16,16 @@ edges:
 
 # Dialect test — seven traps in Grafeo 0.5.43
 
-**A test document, not a record.** Its controls Q8–Q11 are things the linter must *not* flag — measured on 5 Oct 2026 and kept here so the measurement can be repeated. The dialect linter (§24 H1 of [[Graph spec model]]) checked against every trap listed in E10. A small renovation graph and four queries are written correctly here. Each mutation swaps one of them for its trap. **Four of the traps give a wrong answer with no error**; the suite proves that, with the linter switched off, Grafeo returns a wrong answer and raises nothing. The other three fail loudly in Grafeo, and the linter names the fix. Result: [[Graph spec conformance — report]].
+**Measured again on Grafeo 0.6.2 (13 Nov 2026).** Q1 is now refused, and Q2 and Q4 now answer right, so those three are no longer silent there. The linter still flags all three: the readers and other engines may still fall into them, and a block stays portable. **A test document, not a record.** Its controls Q8–Q11 are things the linter must *not* flag — measured on 5 Oct 2026 and kept here so the measurement can be repeated. The dialect linter (§24 H1 of [[Graph spec model]]) checked against every trap listed in E10. A small renovation graph and four queries are written correctly here. Each mutation swaps one of them for its trap. **Four of the traps give a wrong answer with no error**; the suite proves that, with the linter switched off, Grafeo returns a wrong answer and raises nothing. The other three fail loudly in Grafeo, and the linter names the fix. Result: [[Graph spec conformance — report]].
 
 ## Planted conditions
 
 | Test | Written correctly | The trap | Without the linter |
 |---|---|---|---|
-| Q1 | spend per budget aggregated with `WITH`, then compared | `sum(s.amount_cents) > b.approved_cents` in one expression | every answer null — **silent** |
-| Q2 | a self-containing area matched twice, ids compared | `(a)-[:PART_OF]->(b)-[:PART_OF]->(a)` | the yard reported as containing itself — **silent** |
+| Q1 | spend per budget aggregated with `WITH`, then compared | `sum(s.amount_cents) > b.approved_cents` in one expression | every answer null — **silent** in 0.5.43; Grafeo 0.6 refuses the query |
+| Q2 | a self-containing area matched twice, ids compared | `(a)-[:PART_OF]->(b)-[:PART_OF]->(a)` | the yard reported as containing itself — **silent** in 0.5.43; Grafeo 0.6 answers right |
 | Q3 | each area returned as a map | `[a.id, a.note]` | rows shift where a note is missing — **silent** |
-| Q4 | events after 1 Nov compared as `DATETIME` with an offset | `ZONED DATETIME` | no events found — **silent** |
+| Q4 | events after 1 Nov compared as `DATETIME` with an offset | `ZONED DATETIME` | no events found — **silent** in 0.5.43; Grafeo 0.6 answers right |
 | Q5 | ordinary property names | a property called `for` | Grafeo refuses the block |
 | Q6 | `MATCH … INSERT … SET` | `MATCH … SET … INSERT` | Grafeo refuses the block |
 | Q7 | no bytes in the graph | a byte literal `X'…'` | Grafeo refuses the block |
@@ -159,17 +159,17 @@ rounds:
       queries:
         - {test: Q1, query: "Dialect test — seven traps in Grafeo 0.5.43#Over budget", returns: [{budget: "budget:kitchen", over: true}, {budget: "budget:roof", over: false}]}
         - {test: Q2, query: "Dialect test — seven traps in Grafeo 0.5.43#Areas that contain themselves", returns: []}
-        - {test: Q3, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck"}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard"}}]}
+        - {test: Q3, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck", note: null}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard", note: null}}]}
         - {test: Q4, query: "Dialect test — seven traps in Grafeo 0.5.43#Events after 1 November", returns: [{event: "event:inspection"}]}
-        - {test: Q8, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck"}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard"}}]}
+        - {test: Q8, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck", note: null}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard", note: null}}]}
         - {test: Q9, query: "Dialect test — seven traps in Grafeo 0.5.43#A loop in two patterns", returns: []}
         - {test: Q10, query: "Dialect test — seven traps in Grafeo 0.5.43#How many areas, plus one", returns: [{n: 4}]}
         - {test: Q11, query: "Dialect test — seven traps in Grafeo 0.5.43#Area ids as lists", returns: [{row: ["area:deck", "area"]}, {row: ["area:garden", "area"]}, {row: ["area:yard", "area"]}]}
     mutations:
-      - {test: Q1, name: "an aggregate mixed with a value", silent: true, document: "Dialect test — seven traps in Grafeo 0.5.43#Over budget", replace: "WITH b, sum(s.amount_cents) AS spent\nRETURN b.id AS budget, spent > b.approved_cents AS over", with: "RETURN b.id AS budget, sum(s.amount_cents) > b.approved_cents AS over", expect_check: "dialect linter", expect_message: "aggregate mixed with a value"}
-      - {test: Q2, name: "a pattern that returns to its own variable", silent: true, document: "Dialect test — seven traps in Grafeo 0.5.43#Areas that contain themselves", replace: "MATCH (a:Area)-[:PART_OF]->(b) MATCH (b)-[:PART_OF]->(c) WHERE c.id = a.id", with: "MATCH (a:Area)-[:PART_OF]->(b)-[:PART_OF]->(a)", expect_check: "dialect linter", expect_message: "pattern returns to a bound variable"}
+      - {test: Q1, name: "an aggregate mixed with a value", document: "Dialect test — seven traps in Grafeo 0.5.43#Over budget", replace: "WITH b, sum(s.amount_cents) AS spent\nRETURN b.id AS budget, spent > b.approved_cents AS over", with: "RETURN b.id AS budget, sum(s.amount_cents) > b.approved_cents AS over", expect_check: "dialect linter", expect_message: "aggregate mixed with a value"}
+      - {test: Q2, name: "a pattern that returns to its own variable", document: "Dialect test — seven traps in Grafeo 0.5.43#Areas that contain themselves", replace: "MATCH (a:Area)-[:PART_OF]->(b) MATCH (b)-[:PART_OF]->(c) WHERE c.id = a.id", with: "MATCH (a:Area)-[:PART_OF]->(b)-[:PART_OF]->(a)", expect_check: "dialect linter", expect_message: "pattern returns to a bound variable"}
       - {test: Q3, name: "a list literal with values that may be null", silent: true, document: "Dialect test — seven traps in Grafeo 0.5.43#Each area", replace: "{id: a.id, note: a.note}", with: "[a.id, a.note]", expect_check: "dialect linter", expect_message: "list literal"}
-      - {test: Q4, name: "a zoned datetime comparison", silent: true, document: "Dialect test — seven traps in Grafeo 0.5.43#Events after 1 November", replace: "e.at > DATETIME", with: "e.at > ZONED DATETIME", expect_check: "dialect linter", expect_message: "zoned datetime"}
+      - {test: Q4, name: "a zoned datetime comparison", document: "Dialect test — seven traps in Grafeo 0.5.43#Events after 1 November", replace: "e.at > DATETIME", with: "e.at > ZONED DATETIME", expect_check: "dialect linter", expect_message: "zoned datetime"}
       - {test: Q5, name: "a reserved word as a property name", document: "Dialect test — seven traps in Grafeo 0.5.43", replace: "(roof:Budget {id: 'budget:roof',", with: "(roof:Budget {id: 'budget:roof', for: 'house',", expect_check: "dialect linter", expect_message: "reserved word"}
       - {test: Q6, name: "SET before INSERT", document: "Dialect test — seven traps in Grafeo 0.5.43#Later — the kitchen budget is raised", replace: "INSERT (n:Note {id: 'note:kitchen-raise', text: 'tiles cost more than quoted'}), (n)-[:ABOUT]->(kitchen)\nSET kitchen.approved_cents = 11000", with: "SET kitchen.approved_cents = 11000\nINSERT (n:Note {id: 'note:kitchen-raise', text: 'tiles cost more than quoted'}), (n)-[:ABOUT]->(kitchen)", expect_check: "dialect linter", expect_message: "SET before INSERT"}
       - {test: Q12, name: "a reserved word as a label", document: "Dialect test — seven traps in Grafeo 0.5.43#Names Grafeo accepts", replace: "(n4:Note {id: 'note:d'})", with: "(n4:groups {id: 'note:d'})", expect_check: "dialect linter", expect_message: "reserved word"}

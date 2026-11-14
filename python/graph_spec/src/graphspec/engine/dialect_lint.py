@@ -13,7 +13,8 @@ RESERVED_ANYWHERE = {
     "for",
     "groups",
     "group",
-}  # rejected by Grafeo 0.5.43 as a key, label, type or variable
+}  # rejected by Grafeo as a key, label, type or variable: for and group by 0.6.2, groups
+# by 0.5.43 (kept, so a block stays portable)
 AGGREGATES = r"\b(sum|count|avg|min|max|collect)\s*\("
 
 
@@ -55,14 +56,14 @@ def lint(text: str) -> list[dict[str, Any]]:
                 "reserved word",
                 m.start(1),
                 w,
-                f"rename '{w}' — Grafeo 0.5.43 rejects it as a name (E10)",
+                f"rename '{w}' — Grafeo rejects it as a name (E10)",
             )
     for m in re.finditer(r"\(\s*(on)\s*[:)]", src):
         add(
             "reserved word",
             m.start(1),
             m.group(0),
-            "rename the variable 'on' — Grafeo 0.5.43 rejects it (E10)",
+            "rename the variable 'on' — Grafeo rejects it (E10)",
         )
     for m in re.finditer(r"\bZONED\s+DATETIME\b", src, re.I):
         add(

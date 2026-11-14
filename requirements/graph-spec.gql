@@ -1,4 +1,4 @@
-// graph: requirements · SOURCE · schema spec-requirements@1 · 218 requirements, 10 wordings
+// graph: requirements · SOURCE · schema spec-requirements@1 · 214 requirements, 10 wordings
 // The graph spec, frozen as it stood before the requirements moved to GitHub (Roger's vault, 19 Oct 2026).
 // Each Section is a § the code cites. Each Requirement's quote is the rule's own words. Do not edit by hand.
 // It came by a paste. Its escapes, underscores and the emphasis inside its quotes were put back from the spec's own text.
@@ -727,7 +727,7 @@ INSERT
 (r10_explicit_local)-[:DECIDED_IN]->(dIds),
 (r10_forced:Requirement {id: 'req:10.forced', level: 'must', rests_on: 'A1', statement: 'A graph that insists on explicit ids refuses bare ids and names its things local:', quote: 'In such a graph a bare id must be refused, and a thing written without an id must take `local:<name>`.'}), (r10_forced)-[:PART_OF]->(s10),
 (r10_forced)-[:DECIDED_IN]->(dIds),
-(r10_joins_global:Requirement {id: 'req:10.joins-global', level: 'must', rests_on: 'A1, A5', statement: 'Joined graphs match only global ids, never local ones', quote: 'Graphs read together must match things by global ids, never by local ones, and must show a local id with its graph'}), (r10_joins_global)-[:PART_OF]->(s10),
+(r10_joins_global:Requirement {id: 'req:10.joins-global', level: 'must', rests_on: 'A1, A5', statement: 'Joined graphs match only global ids, never local ones', quote: 'Graphs read together must match things by global ids, never by local ones'}), (r10_joins_global)-[:PART_OF]->(s10),
 (r10_joins_global)-[:DECIDED_IN]->(dIds),
 (r25_deferred_says:Requirement {id: 'req:25.deferred-says', level: 'must', stands_alone: TRUE, statement: 'A Deferred says what is needed and why it waits', quote: 'A `Deferred` must say what is still needed, in `what`, and why it waits, in `why`.'}), (r25_deferred_says)-[:PART_OF]->(s25),
 (r25_deferred_says)-[:DECIDED_IN]->(dDeferred),
@@ -805,12 +805,8 @@ INSERT
 (r27_tool_hints)-[:PROVED_BY {test: 'Y18', partial: TRUE}]->(creader),
 (r27_tool_hints)-[:PROVED_BY {test: 'Y19', partial: TRUE}]->(creader),
 (r27_tool_hints)-[:DECIDED_IN]->(dExtensions),
-(r27_local_id_shown:Requirement {id: 'req:27.local-id-shown', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A local id is shown with its graph', quote: 'must show a local id with its graph'}), (r27_local_id_shown)-[:PART_OF]->(s27),
-(r27_corrected_shown:Requirement {id: 'req:27.corrected-shown', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A judgement replaced by a newer one shows as corrected by the judgement that replaces it', quote: 'corrected by a new judgement that replaces it'}), (r27_corrected_shown)-[:PART_OF]->(s27),
+(r27_corrected_replaced:Requirement {id: 'req:27.corrected-replaced', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A judgement is corrected by a new one that supersedes it, and the old one is kept, folded away', quote: 'corrected by a new judgement that replaces it'}), (r27_corrected_replaced)-[:PART_OF]->(s27),
 (r27_ai_challenges_asked:Requirement {id: 'req:27.ai-challenges-asked', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'The AI challenges a judgement only when asked', quote: 'AI challenges only when asked'}), (r27_ai_challenges_asked)-[:PART_OF]->(s27),
-(r27_gentle_words:Requirement {id: 'req:27.gentle-words', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'Shown names are gentle: a paradox shows as clash, an excuse as exception, overdue as past its revisit date; stored names do not change', quote: 'clash, exception, past its revisit date'}), (r27_gentle_words)-[:PART_OF]->(s27),
-(r27_likelihood_range:Requirement {id: 'req:27.likelihood-range', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A likelihood word is always shown with its range', quote: 'a likelihood word always shows its range'}), (r27_likelihood_range)-[:PART_OF]->(s27),
-(r27_altitude_defined:Requirement {id: 'req:27.altitude-defined', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'Altitude is how far a view stands back: high shows the whole, low shows the detail', quote: 'altitude is how far a view stands back'}), (r27_altitude_defined)-[:PART_OF]->(s27),
 (r27_appearance:Requirement {id: 'req:27.appearance', level: 'must', stands_alone: TRUE, statement: 'Appearance goes in the style graph in the same note', quote: 'Colour, layout and default view must be written in the style graph in the same note, never in the data graph or a sidecar file.'}), (r27_appearance)-[:PART_OF]->(s27),
 (r27_appearance)-[:PROVED_BY {test: 'Z11', partial: TRUE}]->(cplain),
 (r27_appearance)-[:DECIDED_IN]->(dExtensions),

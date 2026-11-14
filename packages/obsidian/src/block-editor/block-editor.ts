@@ -12,6 +12,7 @@ import type { Chosen, DeclaredDeferred } from '@thoughtknot/core/display/graph-v
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import type ThoughtKnotPlugin from '../main';
 import { BlockNote } from './block-note';
+import { namedFor } from '../filter-saving';
 import { writeStyle } from '../style-write';
 import { word } from '@thoughtknot/core';
 
@@ -39,6 +40,8 @@ export class BlockEditor extends Component {
         again: () => plugin.resumeLayouts(),
         // an exploration saved in the note's style block, as a card saves it (§71, explore_saved)
         saveExplore: (graph, explore) => void writeStyle(plugin, note.path, graph, { explore }, word('explore.saved')),
+        // and filters saved by name, picked, saved and deleted as in a card (untangle_filter_saved)
+        named: (graph, style) => namedFor(plugin, note.path, graph, style, () => false),
       },
       layout,
       note,

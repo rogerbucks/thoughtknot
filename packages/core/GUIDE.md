@@ -1242,7 +1242,7 @@ reads `· QUERY` as a query, and the core draws no query as data. So a view is n
     it keeps from kinds. `viewQuery` refuses such a kind with a RangeError that says why.
 - `reserved-words.ts` — the words a view may not use, in any case.
   - As a name: GQL's reserved and pre-reserved words (ISO/IEC 39075:2024 §21.3) and its truth values (§21.2), as the
-    openGQL grammar lists them. Also the words GQL leaves free that Grafeo 0.5.43 refuses as a name, NaN and Inf among
+    openGQL grammar lists them. Also the words GQL leaves free that Grafeo 0.6.2 refuses as a name, NaN and Inf among
     them (`GRAFEO_REFUSED`).
   - As a kind, which is a label: only the fewer words Grafeo refuses as a label (`GRAFEO_REFUSED_KINDS`). So Path, Match
     and Nothing may still be kinds.

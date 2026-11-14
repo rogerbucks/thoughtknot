@@ -1,51 +1,36 @@
 // The stage of the new rendering (editor spec §73, render_switch; wiki/Rendering-spec.md). With its setting on, a graph
 // is drawn here, on one canvas over the card, by the layers one way down. Today's SVG stays underneath, hidden.
-// Ctrl or Cmd with the wheel, or a pinch on a trackpad or touch screen, zooms smoothly at the pointer (Roger, 6 Nov).
-// Dragging pans. Plain scrolling is left to the page. A click picks from the marks (layer L6). An item's first click
-// selects it and opens its details. Its second glides it to the middle (second_tap_centres). A group opens like a
-// folder: picked first, then opened (stage-rooms.ts). A click on empty space clears the selection.
+// Ctrl or Cmd with the wheel, or a pinch, zooms smoothly at the pointer (Roger, 6 Nov). Dragging pans; scrolling is
+// left to the page. An item's first click selects it and opens its details. Its second centres it (second_tap_centres).
+// A group opens like a folder (stage-rooms.ts). A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import type { Scene } from '../../render/render-scene.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import { detailAt, roomSizes } from '../../render/render-detail.ts';
 import { DARK, LIGHT } from '../../render/render-look.ts';
-import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
+import { coloursOf, marksOf, type Mark, type View } from '../../render/render-marks.ts';
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
-import { isGlobe, middleOf } from '../../render/render-globe.ts';
+import { aroundAgain, ballFitted, isGlobe, middleOf } from '../../render/render-globe.ts';
 import { flatOf, laidOut, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import type { StageKind } from './stage-look.ts';
 import { morphIn, seenOf, type Seen } from './stage-morph.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
-import { StageFocus, pickRoad } from './stage-focus.ts';
+import { StageFocus, StageUntangle, pickRoad } from './stage-focus.ts';
 import { FaintRoads } from './stage-faint.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
 import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
-import { StageRooms, type StageRoom } from './stage-rooms.ts';
+import { StageRooms } from './stage-rooms.ts';
+import type { StageHands } from './stage-hands.ts';
+import { CardsSwitch } from './stage-cards-switch.ts';
 
 export { GLIDE_MS } from './stage-glide.ts';
 /** How far a pointer may move, in pixels, and still be a click rather than a drag. */
 const CLICK_PX = 6;
-
-/** What a click on the stage does in its card: choose a thing (its details open), or clear the choice. */
-export interface StageHands {
-  open: (key: string) => void;
-  clear: () => void;
-  /** The thing chosen now, by its key. */
-  selected: () => string | null;
-  /** Whether another view shows in the card now, as in space, so the stage leaves the pointer and wheel to it. */
-  away?: () => boolean;
-  /** Told after each drawing, so the level badge and its colour key say the level shown now. */
-  drawn?: () => void;
-  /** The colour each subject was given on the colour key, if any, so the drawing and its key agree. */
-  own?: OwnColour;
-  /** A room picked: its details list what is in it (render_room_folders). */
-  room?: (r: StageRoom) => void;
-}
 
 export { hasLevels } from './stage-look.ts';
 export { stageFor } from './render-stage-for.ts';
@@ -68,10 +53,14 @@ export class RenderStage {
   private marks: Mark[] = [];
   private gliding = 0;
   private readonly mover: StageMover | undefined;
+  /** Each item drawn as a card with its whole note, while Cards is on (render_cards). */
+  readonly cardsOn = new CardsSwitch();
+  private readonly drawn: { drawing: GraphDrawing; g: Graph | undefined; draw: () => void; kind: StageKind };
   private readonly focus = new StageFocus(() => this.draw());
   /** The room picked and the room open: the badge's way in, and its Back (render_room_folders). */
   readonly rooms: StageRooms;
   private readonly faint = new FaintRoads({ viewport: () => this.viewport, changed: () => this.draw() });
+  private readonly shown = new StageUntangle(() => this.draw()); // what the legend or filter brings forward (ES§25)
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
@@ -92,7 +81,7 @@ export class RenderStage {
     kind: StageKind = 'network',
     seen?: Seen,
   ) {
-    this.viewport = viewport;
+    [this.viewport, this.drawn] = [viewport, { drawing, g, draw: () => this.draw(), kind }];
     ({ scene: this.scene, spots: this.spots, hands: this.hands } = laidOut(drawing, g, kind, hands, places?.saved));
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
     const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };
@@ -165,7 +154,7 @@ export class RenderStage {
     }
     // a fit keeps the angle the camera looks from: 2.5D stays 2.5D, and the globe a globe
     const { tilt, turn, lift, globe } = this.view ?? {};
-    if (tilt || turn || globe) Object.assign(view, { tilt, turn, lift, globe });
+    if (tilt || turn || globe) view = ballFitted(Object.assign(view, { tilt, turn, lift, globe }));
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;
@@ -181,7 +170,7 @@ export class RenderStage {
     this.draw();
   }
 
-  private readonly onWheel = (e: WheelEvent): void => this.wheel(e);
+  private readonly onWheel = (e: WheelEvent): void => void (this.cardsOn.cards?.scrolls(e) || this.wheel(e));
   private readonly onKey = (e: KeyboardEvent): void => this.rooms.key(e);
 
   /**
@@ -220,7 +209,7 @@ export class RenderStage {
       // seen from an angle, a drag with Shift or the right button turns and tips the camera; else it moves the drawing
       const turning = isTilted(this.view) && (e.shiftKey || e.button === 2),
         r = this.canvas.getBoundingClientRect();
-      const moving = !turning && !!this.mover?.grab(e.clientX - r.left, e.clientY - r.top);
+      const moving = !turning && !this.cardsOn.cards && !!this.mover?.grab(e.clientX - r.left, e.clientY - r.top);
       this.drag = { x: e.clientX, y: e.clientY, moved: false, turning, moving };
     }
   }
@@ -276,7 +265,7 @@ export class RenderStage {
   /** A click at `x`, `y` on the canvas: what it picks is chosen, glided to, or opened. */
   clicked(x: number, y: number): void {
     // a click on the room open, or a room round it, is a click on its empty floor
-    const at = pickAt(this.marks, x, y),
+    const at = this.cardsOn.cards?.pickAt(x, y) ?? pickAt(this.marks, x, y),
       key = at && !this.rooms.around(at) ? at : null,
       spot = key ? this.spots.get(key) : undefined;
     // a click on a road chooses it, and a click on anything else lets it go
@@ -342,13 +331,15 @@ export class RenderStage {
 
   /** Paints a whole new frame, at the device's own pixels. */
   draw(): void {
-    const { w, h } = this.view;
+    const { w, h } = (this.view = aroundAgain(this.view, this.spots.values())); // a pan round the globe comes back
     const ratio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
     const detail = { ...detailAt(this.sizes, this.view.scale), faintRoads: this.faint.drawn() };
     const focus = this.focus.of(this.hands?.selected() ?? this.rooms.picked);
     this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
+    this.marks = this.shown.of(this.marks, this.viewport, this.scene);
+    this.marks = this.cardsOn.cards?.under(this.marks, this.view, this.hands?.selected()) ?? this.marks; // cards for dots
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
@@ -357,9 +348,17 @@ export class RenderStage {
     this.said = level;
     this.mini?.draw();
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
-    if (!c) return;
-    c.setTransform(ratio, 0, 0, ratio, 0, 0);
-    paintCanvas(c, this.marks, w, h);
+    if (c) c.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if (c) paintCanvas(c, this.marks, w, h);
+    this.cardsOn.cards?.draw(this.view, this.look(), c ?? null, (k) => this.colourOf(k), this.hands?.selected());
+  }
+
+  /** Cards on or off (render_cards): the drawing spreads to make room for them, or draws back, gliding either way. */
+  showCards(on: boolean, atOnce = false): void {
+    const untouched = this.untouched,
+      done = () => (untouched ? (this.view = this.fitted()) : (this.fitted(), (this.untouched = false)), this.draw());
+    const { viewport, scene, spots, sizes, view } = this;
+    this.view = this.cardsOn.turn({ viewport, scene, spots, sizes, view, ...this.drawn }, on, done, atOnce);
   }
 
   /** The look of the theme shown now, in the window the card is in. */
@@ -376,6 +375,7 @@ export class RenderStage {
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
     this.mover?.unload();
+    this.cardsOn.remove();
     this.focus.cancel();
     this.faint.remove();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });

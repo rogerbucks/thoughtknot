@@ -30,7 +30,8 @@ import { renderCode } from '@thoughtknot/core/display/code';
 import { holdHeight, seenFor } from './kept-view';
 import { DRAWN_AT_ONCE_FROM, LAYOUT_WAIT, shownAtOnce, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
-import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
+import { renderViewBlock, writeViewBlock } from './view-block';
+import { savedFor } from './filter-saving';
 import { movingFor, writeStyle } from './style-write';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
@@ -327,7 +328,7 @@ export async function renderBlock(
       mode: 'note',
       stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
       seen: seenFor(plugin, target.path, graph), // a new type glides from what the last one showed (render_type_morph)
-      exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
+      ...savedFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // exploration, filters (ES§71, ES§25)
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut, asDrawn: !!diagram?.picture } } : {}),
       ...(diagram?.table || diagram?.picture // a box dragged writes a nudge in the style graph (§6, drag_moves_box)

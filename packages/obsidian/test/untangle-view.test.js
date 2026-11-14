@@ -164,7 +164,7 @@ describe('the legend', () => {
     labelled(el, 'Filter by kind or link').click();
     assert.ok(!panel.hidden);
     assert.deepEqual(
-      panel.querySelectorAll('button').map((b) => b.textContent.replace(/\s+/g, ' ').trim()),
+      panel.querySelectorAll('ul button').map((b) => b.textContent.replace(/\s+/g, ' ').trim()),
       ['Option · 2', 'Question · 1', 'Reason · 1', 'answers · 2', 'counts against · 1', 'favours · 1'],
     );
   });

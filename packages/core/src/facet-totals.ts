@@ -60,7 +60,7 @@ export function facetTotals(index: FacetIndex, chosen: Chosen, measure: Measure)
   const facets = new Map<string, FacetTotal[]>();
   index.facets.forEach((facet, f) => {
     const order = index.order[f] ?? [],
-      codes = index.codes[f] as Int32Array;
+      codes = index.codes[f] as Int16Array | Int32Array;
     const runs = order.map(() => new Running());
     for (let i = 0; i < index.keys.length; i++) {
       const v = codes[i] as number;
