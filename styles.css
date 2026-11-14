@@ -1089,11 +1089,13 @@
   box-shadow: inset 3px 0 0 var(--gn-accent);
   font-weight: var(--gn-font-weight-semibold);
 }
-/* the card's folds are quiet too: words and a mark, no box */
+/* the card's folds are quiet too: words and a mark, no box. They take the card's text colour, never a browser's own
+   colour for a button, which is black whatever the theme */
 .thoughtknot-corner :is(.thoughtknot-chip-fold, .thoughtknot-dock-fold) {
   border: 0;
   background: none;
   box-shadow: none;
+  color: inherit;
 }
 /* On a tablet a dock of key controls folds to a rail of their icons, so the drawing keeps the room (controls_keys) */
 @media (min-width: 600px) and (max-width: 1023px) {
