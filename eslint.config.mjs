@@ -66,8 +66,15 @@ export default defineConfig([
     // family mean nothing there (packages/claude-code/GUIDE.md). Every other rule holds, the ones against HTML strings
     // among them.
     // The desktop app's pages are the same kind of page, in the app's own window (packages/app/GUIDE.md).
-    files: ['packages/claude-code/page/**/*.ts', 'packages/app/src/**/*.ts'],
-    rules: { 'obsidianmd/prefer-create-el': 'off', 'obsidianmd/no-global-this': 'off' },
+    // The VS Code editor's page is one too: a web view with one window. Obsidian's `activeDocument` is not there, and a
+    // pop-out window means nothing, so the rule that points to it is off.
+    files: ['packages/claude-code/page/**/*.ts', 'packages/app/src/**/*.ts', 'packages/vscode/src/**/*.ts'],
+    rules: {
+      'obsidianmd/prefer-create-el': 'off',
+      'obsidianmd/no-global-this': 'off',
+      'obsidianmd/prefer-active-doc': 'off',
+      'obsidianmd/prefer-instanceof': 'off',
+    },
   },
   {
     // The sync package runs in every host: Node, a page and Obsidian alike (packages/sync/GUIDE.md). So it reaches Web

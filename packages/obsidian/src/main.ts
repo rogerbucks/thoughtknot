@@ -91,7 +91,15 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.settings = settingsFrom(this.saved.settings);
     afterSettings(this); // the routines kept through an update, and Where was I? (ES§74)
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
-    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
+    this.windows.add(activeDocument); // the window this opens in; a pop-out window joins when it opens
+    this.markWindows(); // the view preset's motion and words (§69), and the spacing of its text
+    this.registerEvent(
+      this.app.workspace.on('window-open', (win) => {
+        this.windows.add(win.doc);
+        this.markWindows();
+      }),
+    );
+    this.registerEvent(this.app.workspace.on('window-close', (win) => void this.windows.delete(win.doc)));
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -178,7 +186,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
     chooseLanguage(this.settings.language);
-    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
+    this.markWindows(); // the view preset's motion and words (§69), and the spacing of its text
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
     if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
@@ -323,9 +331,18 @@ export default class ThoughtKnotPlugin extends Plugin {
     return this.layouts;
   }
 
+  /** The windows the plug-in marks for the person's settings: the one it opened in and each pop-out window open. */
+  private readonly windows = new Set<Document>();
+
+  /** Marks every window's body for the settings, so a pop-out window is as still and as plain as the main one. */
+  private markWindows(): void {
+    for (const doc of this.windows) markBody(doc.body, this.settings);
+  }
+
   override onunload(): void {
     this.unloaded = true;
-    document.body.classList.remove('thoughtknot-still', 'thoughtknot-easier-reading');
+    for (const doc of this.windows) doc.body.classList.remove('thoughtknot-still', 'thoughtknot-easier-reading');
+    this.windows.clear();
     this.layouts?.close();
     this.layouts = null;
     this.outside.stopAll();
