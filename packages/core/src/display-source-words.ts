@@ -143,7 +143,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.help-pick': 'Click: pick it. Click again: turn to it. Double-click: fly to it',
   'space.help-keys': 'Keys: arrows, Shift + arrows, + and -, Home, Esc',
   'space.help-close': 'Hide tips',
-  // the turn knob in the side rail, while the drawing is seen from an angle (rail_turn_knob, rail-turns.ts)
+  // the turn knob in the side rail, while the drawing is seen from an angle (rail_turn_knob, space-turn-knob.ts)
   'turn.name': 'Turn and tilt the view',
   'turn.how-pad': 'Trackpad: swipe with two fingers',
   'turn.how-mouse': 'Mouse: right-drag, or Shift-drag',

@@ -13,7 +13,7 @@ before(async () => {
   uninstall = installGlobals(fakeDocument());
   const { installHost } = await import('../../core/src/display/host.ts');
   installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
-  turns = await import('../../core/src/display/graph-view/rail-turns.ts');
+  turns = await import('../../core/src/display/graph-view/space-turn-knob.ts');
   rail = await import('../../core/src/display/graph-view/type-rail.ts');
 });
 after(() => uninstall());

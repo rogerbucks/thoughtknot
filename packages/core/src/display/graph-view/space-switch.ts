@@ -16,7 +16,7 @@ import { openSpaceView } from './space-view-panel';
 import type { SpaceMode, SpaceScreen, SpaceView } from './space-view-options.ts';
 import { fadeOut } from './space-view-pad.ts';
 import { sayWay } from './type-rail';
-import { railTurns } from './rail-turns.ts';
+import { railTurns } from './space-turn-knob.ts';
 import { flatAgain } from './lens-svg';
 import type { Lens } from '../../lenses.ts';
 import { lensIn, viewOf } from '../../view-support.ts';
