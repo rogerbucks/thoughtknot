@@ -16,6 +16,7 @@ import { openSpaceView } from './space-view-panel';
 import type { SpaceMode, SpaceScreen, SpaceView } from './space-view-options.ts';
 import { fadeOut } from './space-view-pad.ts';
 import { sayWay } from './type-rail';
+import { railTurns } from './space-turn-knob.ts';
 import { flatAgain } from './lens-svg';
 import type { Lens } from '../../lenses.ts';
 import { lensIn, viewOf } from '../../view-support.ts';
@@ -39,6 +40,8 @@ export class SpaceSwitch {
   private view: SpaceView | null = null;
   private now: SpaceMode | null = null;
   private button: HTMLElement | null = null;
+  /** The rail's turn knob, shown while the drawing is seen from an angle (rail_turn_knob). */
+  private turns: { shown: (on: boolean) => void } | null = null;
   /** Counts each press, so only the last one is shown once a view still opening is open. */
   private turn = 0;
   /** The view open or opening now, so the close of one already gone is not taken for this one's (space_press_kept). */
@@ -109,11 +112,18 @@ export class SpaceSwitch {
 
   /**
    * What says how the drawing is shown now, none for a table; and the graph's name. It is the side rail's four ways
-   * (type_rail), or one button that goes through them in turn.
+   * (type_rail), or one button that goes through them in turn. With the `rail` and how the new rendering turns, the
+   * rail's ways get the turn knob too (rail_turn_knob).
    */
-  bar(b: HTMLElement | null, graph: string): void {
+  bar(b: HTMLElement | null, graph: string, rail?: HTMLElement, turn?: (dx: number, dy: number) => unknown): void {
     this.button = b;
     this.graph = graph;
+    // seen from an angle, a knob in the rail turns and tilts it, and says how (rail_turn_knob)
+    if (b?.querySelector('[data-space]') && rail && turn)
+      this.turns = railTurns(rail, b, {
+        turn: (dx, dy) => void (this.move({ turn: [dx, dy] }) || turn(dx, dy)),
+        inSpace: () => !!this.view,
+      });
     this.label();
   }
 
@@ -231,6 +241,7 @@ export class SpaceSwitch {
 
   /** The button says how the drawing is shown now, and is pressed while it is in space. */
   private label(): void {
+    this.turns?.shown(this.now !== null);
     const b = this.button;
     if (!b) return;
     if (b.querySelector('[data-space]')) return sayWay(b, this.now); // the rail's four ways: the one shown now is pressed

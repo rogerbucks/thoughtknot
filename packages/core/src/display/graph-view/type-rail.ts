@@ -129,6 +129,8 @@ const GLYPHS: Readonly<Record<string, readonly Shape[]>> = {
     ['ring', 12, 12, 9],
     ['path', 'M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18'],
   ],
+  // the turn knob (rail_turn_knob): an upright axis, with an arrow going round it
+  turn: [['path', 'M12 3v18M7 16.2C4.6 15.4 3 14.3 3 13c0-2.2 4-4 9-4s9 1.8 9 4-4 4-9 4M7 16.2l1.2-2.6M7 16.2l2.8.9']],
 };
 
 /** The names that have a picture, so a test can check every type has one. */

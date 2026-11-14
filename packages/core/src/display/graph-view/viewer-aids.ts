@@ -140,7 +140,7 @@ export class Aids {
   /** The badge's one-line hint and arrow legend (level_hints). */
   private hints: LevelHints | null = null;
   /** The new rendering's canvas over the drawing, while its setting is on (render_switch); none for a table. */
-  private readonly stage: RenderStage | null;
+  readonly stage: RenderStage | null;
   /** The stage's turn buttons and keys, shown while it is tilted. */
   private readonly turns: ReturnType<typeof turnControls> | null;
 
