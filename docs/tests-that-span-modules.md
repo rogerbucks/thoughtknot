@@ -384,6 +384,10 @@ after a module nor listed here, and on a listed file that is missing.
   (spec_glossary).
 - `test/graph-spec-display-rules.test.js` — no rule in `requirements/graph-spec.gql` says how something looks, and
   a judgement that supersedes another is the current one while the old one is kept.
+- `test/graph-spec-ai-rules.test.js` — one spec rule says what a change set may remove. Who proposed it is stated
+  once, in the change-set header (spec_ai_rules_agree).
+- `test/gentle-words.test.js` — no shown sentence calls a state overdue, paradox or excuse. Every likelihood word
+  is said with its range. Altitude has a plain first sentence (spec_gentle_words).
 - `test/graph-spec-conformance.test.js` — the engine catalogue names the spec's current version. Its known answers are
   the suite's. The reference engine is pinned to the version in the Python lock file (spec_engine_catalogue).
 - `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library

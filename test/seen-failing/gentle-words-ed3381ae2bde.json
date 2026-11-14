@@ -1,0 +1,6 @@
+{
+  "file": "test/gentle-words.test.js",
+  "test": "spec_gentle_words: words shown for a graph's states > altitude is defined by a plain first sentence",
+  "seen_failing_first": false,
+  "evidence": "The behaviour shipped earlier (#2210, #2218, Graph Spec 1.1 and 1.3); this test was written afterwards to prove it, so it passed against the code before it."
+}
