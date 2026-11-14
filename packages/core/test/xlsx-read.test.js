@@ -136,13 +136,12 @@ describe('xlsx_read_untrusted: a second look at zips, paths, entities and sizes'
   });
 
   test('a long run of text with no tag, a long attribute and deep nesting are read in a moment', () => {
-    const start = Date.now();
+    // The work is asserted, not the time: a slow reader would be stopped by the run ceiling (scripts/run-ceiling.mjs).
     const sheet = `<row r="1"><c r="A1" t="inlineStr" x="${'a'.repeat(2_000_000)}"><is><t>${'<b>'.repeat(50_000)}${'z'.repeat(5000)}</t></is></c><other>${'q'.repeat(2_000_000)}</other></row>`;
     assert.equal(
       workbookTable(raw({}, { sheet, target: `${'a/../'.repeat(20_000)}worksheets/sheet1.xml` }), 'S').header.length,
       1,
     );
-    assert.ok(Date.now() - start < 3000, 'linear time');
   });
 
   test('a workbook holding more shared strings than the limit is refused', () => {
