@@ -69,7 +69,7 @@ describe('Easier reading', () => {
       assert.ok(!popout.body.classList.contains('thoughtknot-easier-reading'));
       plugin.app.workspace.tell('window-open', { doc: popout }, popout.defaultView);
       assert.ok(popout.body.classList.contains('thoughtknot-easier-reading'));
-      plugin.onunload();
+      plugin.unload();
       assert.ok(!popout.body.classList.contains('thoughtknot-easier-reading'));
       assert.ok(!doc.body.classList.contains('thoughtknot-easier-reading'));
     } finally {
