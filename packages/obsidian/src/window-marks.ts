@@ -1,4 +1,4 @@
-// The marks the person's settings put on a window's page: a still view, plain words and easier reading (§69, NEURO-9).
+// The marks the person's settings put on a window's page: a still view, plain words and easier reading (ES§69, NEURO-9).
 // Obsidian has more than one window once a pop-out is open, and each has a page of its own. So every window is marked,
 // the one the plug-in opened in and each pop-out from the moment it opens. Each is unmarked when the plug-in stops.
 import type { Plugin } from 'obsidian';
