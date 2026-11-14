@@ -4289,7 +4289,7 @@
       "id": "LEGAL-3",
       "role": "Senior security engineer",
       "area": "release",
-      "title": "The iPhone app's encryption has no export answer yet",
+      "title": "The iPhone app's encryption answer has no lawyer's check yet",
       "risk": "ios_app keeps notes encrypted with keys in the Keychain, and sync may add more. TestFlight, the App Store and notarising each ask about encryption, and some answers need a report in the US or France. A wrong answer can pull the app.",
       "evidence": [
         "requirements/editor-requirements.md",
@@ -4298,8 +4298,8 @@
       "likelihood": "medium",
       "impact": "high",
       "decision": "fix-later",
-      "fix": "Before the first TestFlight build, a lawyer confirms the export answer and any report due. Use Apple's own encryption where possible. Set ITSAppUsesNonExemptEncryption to match.",
-      "check": "A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.",
+      "fix": "The app uses only Apple's built-in encryption, so ITSAppUsesNonExemptEncryption is false (Roger, 14 Nov 2026, for TestFlight builds he alone tests). Before any public release, a lawyer confirms the export answer and any report due.",
+      "check": "A test holds the Info.plist value (packages/app/test/app-config.test.js). A person checks, with a lawyer, before any public release.",
       "paths": [
         "requirements/editor-requirements.md",
         "packages/app/**"

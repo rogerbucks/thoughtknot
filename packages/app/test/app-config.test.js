@@ -171,6 +171,11 @@ test('the phone and tablet app has an id of its own under thoughtknot.app, and i
     assert.match(plist, new RegExp(`<key>${key}</key>\\s*<true/>`), `${key} is on`);
 });
 
+test('the iPhone app answers Apple\'s encryption question as built-in only, so a TestFlight build needs no manual answer (LEGAL-3)', () => {
+  const plist = read('src-tauri/Info.ios.plist');
+  assert.match(plist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/, 'only Apple\'s own encryption');
+});
+
 test('the folder dialog is a computer’s only: a phone build carries no dialog plug-in', () => {
   const cargo = read('src-tauri/Cargo.toml');
   const desktopOnly = cargo.indexOf(`[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]`);

@@ -90,9 +90,11 @@ Notarising and the App Store both ask about encryption. The Mac app has none of 
 notes encrypted with keys in the iPhone's Keychain (`ios_app`), and sync may add more later (LEGAL-3).
 
 - Use Apple's own encryption where possible. That keeps the export answer simplest.
-- Before the first iPhone build goes to TestFlight, a lawyer confirms the export answer. They also say whether a
-  report is due in the US or France.
-- Then set `ITSAppUsesNonExemptEncryption` in the iPhone app to match that answer.
+- The iPhone app has no encryption of its own. Its vault key sits in Apple's Keychain, and sync uses the Web Crypto in
+  Apple's WebKit. So it uses only Apple's built-in encryption, and `ITSAppUsesNonExemptEncryption` is `false`.
+- **Roger chose (14 Nov 2026):** that answer stands for TestFlight builds he alone tests.
+- Before any public release, a lawyer confirms the export answer. They also say whether a report is due in the US or
+  France.
 
 ## The iPhone app
 
