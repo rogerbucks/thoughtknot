@@ -52,7 +52,7 @@ function most(values: readonly string[]): string | undefined {
 }
 
 /** A plain word from some words, for an id: `Tea break` is `tea_break`. Empty when they hold no letter. */
-function idWord(text: string): string {
+export function idWord(text: string): string {
   let id = text
     .toLowerCase()
     .split(/[^a-z0-9]/)
@@ -63,7 +63,7 @@ function idWord(text: string): string {
 }
 
 /** A link's type from a connector's label, `works with` is `WORKS_WITH`; undefined when it is not plain words. */
-const typeWord = (text: string | undefined) =>
+export const typeWord = (text: string | undefined) =>
   text && /^[A-Za-z][A-Za-z0-9 _-]*$/.test(text.trim())
     ? text
         .trim()
