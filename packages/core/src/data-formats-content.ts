@@ -1,5 +1,5 @@
 // A table that is both a node and a graph (editor spec §67, format_content_node, format_graph_from_data; DF1). A CSV
-// file is drawn as one node whose content is the table. Through its written mapping (§63) it is also things and links.
+// file is drawn as one node whose content is the table. Through its written mapping (ES§63) it is also things and links.
 // - Both views are made from the one file text and cite its hash. So turning one off changes nothing in the other
 //   (format_parallel_views).
 // - Each row links the file's node to the things it gave, so a person can go from a row to its things and back.
