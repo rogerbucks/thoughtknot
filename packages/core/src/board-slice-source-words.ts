@@ -60,5 +60,12 @@ export const BOARD_SLICE_SOURCE_WORDS = {
   'board.people.went': 'Showing where {name} is.',
   'board.access.none': 'You may not open this board.',
   'board.access.view': 'You may look at this board but not change it.',
+  'board.decompose.item': 'From the board item {item}',
+  'board.decompose.list': 'A line of the list in the board item {item}',
+  'board.decompose.connector': 'From the board connector between {from} and {to}',
+  'board.decompose.frame': 'From the board frame {item}',
+  'board.decompose.free': 'This board is not on a graph, so there is nothing to add things to.',
+  'board.decompose.gone': 'The graph {graph} is not in this note.',
+  'board.decompose.nothing': 'Nothing on the board is left to offer as things, links or groups.',
   'board.access.comment': 'You may comment and vote on this board but not change it.',
 } as const;
