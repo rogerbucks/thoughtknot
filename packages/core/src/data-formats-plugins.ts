@@ -1,7 +1,7 @@
 // Format plug-ins (editor spec §67, format_plugin_contracts, format_parallel_views; DF1; Roger, 25 Oct 2026).
 // A new data format adds plug-ins. It never changes the join, the layouts or the details panel.
 // - Three contracts. A source plug-in turns a file's text into GQL statements, each with the line it was read on. A
-//   content plug-in gives the file as one node: its size and its marks. A layout plug-in places things (§15).
+//   content plug-in gives the file as one node: its size and its marks. A layout plug-in places things (ES§15).
 // - A format is found by its file's extension. It may bring one plug-in of each contract, or only some.
 // - Parallel views. One file gives a graph view and a content view together, both citing the hash of the same text.
 //   Turning one off leaves the other as it was, because each is made from the file alone.

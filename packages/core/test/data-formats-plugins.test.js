@@ -4,7 +4,7 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { joinPlaces } from '../src/connectors.ts';
-import { formatGraph, formatLayouts, formatViews, pluginFormatOf, registerFormat } from '../src/format-plugins.ts';
+import { formatGraph, formatLayouts, formatViews, pluginFormatOf, registerFormat } from '../src/data-formats-plugins.ts';
 import { LAYOUTS, layoutById } from '../src/layouts/layouts.ts';
 
 // the sample format: each line `a > b` is two things and a link between them
