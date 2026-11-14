@@ -76,6 +76,8 @@ export interface SendAsk {
   host?: HostModel;
   /** An answer of another shape, such as suggestions (ai-suggestions.ts): its instructions and its reader. */
   answers?: AnswerShape;
+  /** Where an answer's changes go, when that is not what was read: a board's items read, its graph changed (board-ai.ts). */
+  into?: { graph: string; note: string };
   /** The person asked for a rewrite, with the dialog's own switch: an edit may then change more (ai_smallest_edit). */
   rewrite?: boolean;
   /** The sends recorded, and the time now, for the time box and quiet hours (ai_time_box): this device's own. */
@@ -237,10 +239,10 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     ],
     note: ask.notePath,
     level: ask.level,
-    graph: scope.graph,
+    graph: ask.into?.graph ?? scope.graph,
     said: scope.said,
     scope: { kind: scope.kind, things: scope.things.length, links: scope.links },
-    basis: basisOf(ask.note, scope.graph, ask.shared),
+    basis: ask.into ? basisOf(ask.into.note, ask.into.graph, ask.shared) : basisOf(ask.note, scope.graph, ask.shared),
     ...(provider && { provider }),
     ...(ask.answers ? { answers: ask.answers, sent: [...scope.things] } : { edit: editOf(ask, scope.graph) }),
   };

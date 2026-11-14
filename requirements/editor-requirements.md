@@ -1650,7 +1650,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_graph_on_board:Test {proves: 'live cards follow graph edits and their edits are written to the graph block', file: 'packages/core/test/board-live-cards.test.js', where: 'repo', status: 'written'}),
 (test_board_relations_drawn:Test {proves: 'links between things on a board appear as connectors in the drawing style and the switch hides them', file: 'packages/core/test/board-live-cards.test.js', where: 'repo', status: 'written'}),
 (test_board_checked:Test {proves: 'broken board blocks list problems with fixes and still draw what can be read', file: 'packages/core/test/board-check.test.js', where: 'repo', status: 'partial'}),
-(test_board_ai_decompose:Test {proves: 'an AI decomposition arrives as proposals, one by one, and nothing is written until accepted', file: 'packages/core/test/board-ai.test.js', where: 'repo', status: 'planned'}),
+(test_board_ai_decompose:Test {proves: 'an AI decomposition arrives as proposals, one by one, and nothing is written until accepted', file: 'packages/core/test/board-ai.test.js', where: 'repo', status: 'written'}),
 (test_board_arranged_by_graph:Test {proves: 'arranging by a diagram type moves linked items to its layout and undo puts them back', file: 'packages/core/test/board-arrange.test.js', where: 'repo', status: 'written'}),
 (test_board_quick_capture:Test {proves: 'typing makes a sticky, Enter the next and Tab a joined child', file: 'packages/core/test/board-capture.test.js', where: 'repo', status: 'written'}),
 (test_board_cluster:Test {proves: 'stickies are grouped into frames by shared words and tags with no network call', file: 'packages/core/test/board-cluster.test.js', where: 'repo', status: 'written'}),
