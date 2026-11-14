@@ -1,0 +1,6 @@
+{
+  "file": "test/graph-spec-ai-rules.test.js",
+  "test": "spec_ai_rules_agree: the rules for AI change sets do not disagree > no other rule lets a change set remove a record or a cache, or forbids removing any other thing",
+  "seen_failing_first": false,
+  "evidence": "The behaviour shipped earlier (#2210, #2218, Graph Spec 1.1 and 1.3); this test was written afterwards to prove it, so it passed against the code before it."
+}
