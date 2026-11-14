@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/xlsx-read.test.js",
+  "test": "xlsx_read_untrusted: a second look at zips, paths, entities and sizes > entities are never expanded past the five named and the numeric ones",
+  "seen_failing_first": false,
+  "evidence": "A guard that holds already: the earlier reader was safe against this too. The test pins the behaviour so the change cannot loosen it."
+}

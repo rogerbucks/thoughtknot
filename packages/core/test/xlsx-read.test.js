@@ -90,3 +90,78 @@ describe('xlsx_read_untrusted: a file that is no workbook, or is made to harm, i
     assert.match(workbookTable(workbook({ Wide: rows }), 'Wide').refused, /more than 10000 characters/);
   });
 });
+
+describe('xlsx_read_untrusted: a second look at zips, paths, entities and sizes', () => {
+  const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="x"';
+  /** A one-sheet workbook of raw parts, so a test can make the parts hostile. */
+  const raw = (
+    extra = {},
+    {
+      book = '',
+      target = 'worksheets/sheet1.xml',
+      sheet = '<row r="1"><c r="A1" t="inlineStr"><is><t>h</t></is></c></row>',
+    } = {},
+  ) =>
+    zip({
+      'xl/workbook.xml': `<workbook ${NS}><sheets><sheet name="S" sheetId="1" r:id="rId1"/>${book}</sheets></workbook>`,
+      'xl/_rels/workbook.xml.rels': `<Relationships><Relationship Id="rId1" Target="${target}"/></Relationships>`,
+      'xl/worksheets/sheet1.xml': `<worksheet ${NS}><sheetData>${sheet}</sheetData></worksheet>`,
+      ...extra,
+    });
+
+  test('a relation path is looked up in the zip by its name, steps such as .. resolved, never as a file path', () => {
+    for (const target of ['worksheets/sheet1.xml', '/xl/worksheets/sheet1.xml', '../xl/./worksheets/sheet1.xml'])
+      assert.deepEqual(workbookTable(raw({}, { target }), 'S').header, ['h'], target);
+    for (const target of ['../../../etc/passwd', 'C:\\x.xml', 'http://example.com/a.xml', ''])
+      assert.match(workbookTable(raw({}, { target }), 'S').refused, /no sheet S|damaged/, target);
+  });
+
+  test('two files of one name in the zip are refused, so no checker and reader can see different ones', () => {
+    const dup = zip({ 'xl/workbook.xml': '<workbook/>', 'XL/Workbook.xml': '<workbook/>' });
+    assert.match(workbookSheets(dup).refused, /damaged/);
+  });
+
+  test('entities are never expanded past the five named and the numeric ones', () => {
+    const sheet =
+      '<row r="1"><c r="A1" t="inlineStr"><is><t>&lol9; &amp; &#65;&#x42; &#0; &#xD800; &quot;</t></is></c></row>';
+    assert.deepEqual(workbookTable(raw({}, { sheet }), 'S').header, ['&lol9; & AB   "']);
+  });
+
+  test('attribute names such as __proto__ change nothing', () => {
+    const sheet =
+      '<row r="1" __proto__="x" constructor="y"><c r="A1" __proto__="z" t="inlineStr"><is><t>h</t></is></c></row>';
+    const t = workbookTable(raw({}, { sheet }), 'S');
+    assert.deepEqual(t.header, ['h']);
+    assert.equal({}.polluted, undefined);
+  });
+
+  test('a long run of text with no tag, a long attribute and deep nesting are read in a moment', () => {
+    // The work is asserted, not the time: a slow reader would be stopped by the run ceiling (scripts/run-ceiling.mjs).
+    const sheet = `<row r="1"><c r="A1" t="inlineStr" x="${'a'.repeat(2_000_000)}"><is><t>${'<b>'.repeat(50_000)}${'z'.repeat(5000)}</t></is></c><other>${'q'.repeat(2_000_000)}</other></row>`;
+    assert.equal(
+      workbookTable(raw({}, { sheet, target: `${'a/../'.repeat(20_000)}worksheets/sheet1.xml` }), 'S').header.length,
+      1,
+    );
+  });
+
+  test('a workbook holding more shared strings than the limit is refused', () => {
+    const sst = `<sst>${'<si/>'.repeat(1_000_001)}</sst>`;
+    assert.match(workbookTable(raw({ 'xl/sharedStrings.xml': sst }), 'S').refused, /larger than/);
+  });
+
+  test('more sheets than the limit, parts that together declare too much, and a big sheet list are refused', () => {
+    const many = Array.from({ length: 101 }, (_, i) => `<sheet name="S${i}" sheetId="${i + 2}" r:id="rId1"/>`).join('');
+    assert.match(workbookSheets(raw({}, { book: many })).refused, /larger than/);
+    const together = zip(
+      {
+        'xl/workbook.xml': '<workbook/>',
+        'a.bin': 'x',
+        'b.bin': 'x',
+      },
+      { lie: WORKBOOK_LIMITS.total / 2 },
+    );
+    assert.match(workbookSheets(together).refused, /larger than/);
+    const bigList = zip({ 'xl/workbook.xml': '<workbook/>' }, { lie: WORKBOOK_LIMITS.meta });
+    assert.match(workbookSheets(bigList).refused, /larger than/);
+  });
+});

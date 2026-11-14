@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zip-read.test.js",
+  "test": "zip_read: a big part is decoded in pieces without splitting a character > text of two-, three- and four-byte characters across the piece edges reads back whole",
+  "seen_failing_first": false,
+  "evidence": "A guard that holds already: the earlier reader was safe against this too. The test pins the behaviour so the change cannot loosen it."
+}
