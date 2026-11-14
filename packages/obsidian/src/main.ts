@@ -4,7 +4,6 @@ import type { EditorView } from '@codemirror/view';
 import {
   gqlBlocks,
   labelsFor,
-  markBody,
   isSharedSchema,
   LAYOUT_LIMITS,
   settingsFrom,
@@ -61,6 +60,7 @@ import { OutsidePlugins } from './outside/outside-plugins';
 import { Profiles } from './profile/profiles';
 import type { Drafts, Saved } from './saved';
 import { afterSettings } from './after-settings';
+import { WindowMarks } from './window-marks';
 import { noteText, shownNotes } from './storage/plugin-notes';
 import { expandFor } from './ai/ai';
 
@@ -78,6 +78,7 @@ export default class ThoughtKnotPlugin extends Plugin {
   saved: Saved = {};
   /** The vault's shared schema blocks, by note: read once, the first time a graph names one, then kept up to date. */
   private schemas: Map<string, string[]> | null = null;
+  private marks!: WindowMarks; // the settings' marks on each window's page (ES§69)
 
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
@@ -91,7 +92,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.settings = settingsFrom(this.saved.settings);
     afterSettings(this); // the routines kept through an update, and Where was I? (ES§74)
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
-    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
+    this.marks = new WindowMarks(this, () => this.settings); // the view preset's motion and words (§69)
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -178,7 +179,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
     chooseLanguage(this.settings.language);
-    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
+    this.marks.mark(); // the view preset's motion and words (§69), and the spacing of its text
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
     if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
@@ -325,7 +326,6 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   override onunload(): void {
     this.unloaded = true;
-    document.body.classList.remove('thoughtknot-still', 'thoughtknot-easier-reading');
     this.layouts?.close();
     this.layouts = null;
     this.outside.stopAll();

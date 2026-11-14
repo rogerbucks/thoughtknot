@@ -8,7 +8,9 @@ const CLASS = 'thoughtknot-focus-ring';
 const GAP = 5;
 
 /** The box a focus event reached, if it is one of the drawing's. */
-const boxOf = (e: FocusEvent): Element | null => (e.target instanceof Element ? e.target.closest('g.node') : null);
+// Checked by node type, not `instanceof Element`: an element of a pop-out window is not an `Element` of this one.
+const boxOf = (e: FocusEvent): Element | null =>
+  (e.target as Node | null)?.nodeType === 1 ? (e.target as Element).closest('g.node') : null;
 
 /** The ring on `g`, if it has one. */
 const ringOf = (g: Element): Element | undefined => Array.from(g.children).find((c) => c.classList.contains(CLASS));

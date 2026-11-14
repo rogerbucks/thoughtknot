@@ -61,4 +61,19 @@ describe('Easier reading', () => {
       off.uninstall();
     }
   });
+
+  test('marks a pop-out window too, from the moment it opens, and unmarks it with the rest', async () => {
+    const { plugin, doc, uninstall } = await load({ data: { settings: { easierReading: 'on' } } });
+    const popout = new JSDOM('<body></body>', { virtualConsole: new VirtualConsole() }).window.document;
+    try {
+      assert.ok(!popout.body.classList.contains('thoughtknot-easier-reading'));
+      plugin.app.workspace.tell('window-open', { doc: popout }, popout.defaultView);
+      assert.ok(popout.body.classList.contains('thoughtknot-easier-reading'));
+      plugin.unload();
+      assert.ok(!popout.body.classList.contains('thoughtknot-easier-reading'));
+      assert.ok(!doc.body.classList.contains('thoughtknot-easier-reading'));
+    } finally {
+      uninstall();
+    }
+  });
 });
