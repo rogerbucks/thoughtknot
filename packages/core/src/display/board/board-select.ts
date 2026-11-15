@@ -5,6 +5,7 @@
 // rings what the old one had.
 const chosen = new Map<string, Set<string>>();
 
+/** The items chosen on one board: added and taken out by a press, ringed when the board is drawn. */
 export class BoardSelection {
   private ids = new Set<string>();
 
