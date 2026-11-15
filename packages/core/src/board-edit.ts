@@ -6,7 +6,7 @@
 // Nothing else on the board moves when one item does (nodes stay put). A new item goes in a free place beside the
 // one in focus, never on top of another.
 import { gqlSpans } from './blocks.ts';
-import { boardOf, itemGql, readBoard, writeBoard } from './board.ts';
+import { boardOf, itemGql, moveItem, readBoard, writeBoard } from './board.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
 import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
@@ -20,6 +20,7 @@ import { word } from './words.ts';
 /** One edit to a board. */
 export type BoardChange =
   | { kind: 'move'; id: string; x: number; y: number }
+  | { kind: 'moves'; moves: { id: string; x: number; y: number }[] }
   | { kind: 'size'; id: string; w: number; h: number }
   | { kind: 'text'; id: string; text: string }
   | { kind: 'layer'; id: string; layer: number }
@@ -47,6 +48,15 @@ export const GAP = 40;
 export function boardEdit(text: string, change: BoardChange, undoing = false): { text: string } | { refused: string } {
   const { board, problems } = readBoard(text);
   const find = (id: string) => board.items.find((i) => i.id === id);
+  if (change.kind === 'moves') {
+    // several items at once, each by its own text alone, as an arrangement puts them; a locked one stays
+    const open = change.moves.filter((m) => {
+      const item = find(m.id);
+      return item && (undoing || !item.locked);
+    });
+    if (!open.length) return { refused: word('board.edit.locked') };
+    return { text: open.reduce((t, m) => moveItem(t, m.id, m.x, m.y), text) };
+  }
   if (isItemSet(change)) {
     const set = change;
     const item = find(set.id);

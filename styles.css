@@ -2820,6 +2820,11 @@ button.thoughtknot-stage-card-more {
 .thoughtknot-board [data-item] {
   cursor: grab;
 }
+.thoughtknot-board-bar {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 0.4em;
+}
 .thoughtknot-board-help,
 .thoughtknot-board-said {
   margin: var(--gn-space-1) 0;

@@ -7,6 +7,7 @@
 import { gqlBlocks } from './blocks.ts';
 import { moveItem, readBoard } from './board.ts';
 import { readNote } from './drawing.ts';
+import { FORCE_2D } from './layouts/layouts.ts';
 import type { Layout } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { word } from './words.ts';
@@ -77,4 +78,19 @@ export function arrangeBoard(
   });
   if (!glide.length) return { refused: word('board.arrange.already') };
   return { note: note.replace(text, () => out), undo: note, glide };
+}
+
+/**
+ * What a host gives its board so a button can arrange it. It reads the note as it is now. Then it works out where
+ * the items go by `layout`. It writes nothing; the board writes the moves as one change, and the glide shows them.
+ */
+export function arrangerOf(
+  note: () => string | Promise<string>,
+  board: string,
+  layout: Layout<2> = FORCE_2D,
+): () => Promise<{ glide: Glide[] } | { refused: string }> {
+  return async () => {
+    const r = arrangeBoard(await note(), board, layout);
+    return 'refused' in r ? r : { glide: r.glide };
+  };
 }

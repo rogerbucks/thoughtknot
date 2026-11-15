@@ -20,7 +20,8 @@ import { openCapture, openEditor } from './board-fields.ts';
 import type { FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
-import { fromTrackpad } from '../../render/render-tilt.ts';
+import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
+import { bindWheel, outlined } from './board-wheel.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -34,6 +35,8 @@ export interface BoardHost {
   key: string;
   /** The seat of this person at a shared board: the others are drawn over it, and the edits go through it. */
   together?: Together;
+  /** Where the linked items go by the graph; with it the board offers an Arrange by graph button. */
+  arrange?: ArrangeHooks['arrange'];
 }
 
 /** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
@@ -62,6 +65,7 @@ class BoardView {
   private readonly list: HTMLElement;
   /** The others at a shared board, and the clashes to settle. */
   private readonly people: BoardPeople | null;
+  private readonly bar: ArrangeBar | null = null;
   /** The text of the shared board as last read, to tell when someone else has changed it. */
   private seen = '';
   private frame: Box;
@@ -96,6 +100,8 @@ class BoardView {
     });
     const text = word(this.readOnly ? 'board.help-read' : 'board.help');
     root.createEl('p', { cls: 'thoughtknot-board-help', text, attr: { id: helpId } });
+    if (host.arrange && !this.readOnly)
+      this.bar = new ArrangeBar(root, this.vp, host.arrange, this.arranging(), host.key);
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
     this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
     this.editor.hidden = true;
@@ -149,10 +155,7 @@ class BoardView {
     this.svg = next;
     for (const g of Array.from(next.querySelectorAll('[data-item]')))
       g.toggleClass('is-focused', g.getAttribute('data-item') === this.cursor.focus);
-    this.list.empty();
-    for (const line of boardOutline(this.board))
-      this.list.createEl('li', { text: line.said, attr: { 'data-item': line.id, 'data-depth': line.depth } });
-    if (!this.board.items.length) this.list.createEl('li', { text: word('board.empty') });
+    outlined(this.list, this.board);
     this.apply(this.zoom.view());
     this.people?.paint(next);
     this.people?.refresh();
@@ -174,6 +177,10 @@ class BoardView {
         this.reveal();
       },
     };
+  }
+
+  private arranging() {
+    return { write: this.write.bind(this), say: this.say.bind(this), board: () => this.board, svg: () => this.svg };
   }
 
   /** The hooks the lists under the board work by. */
@@ -209,6 +216,7 @@ class BoardView {
 
   /** Writes an edit, then draws what was written; a refusal is said and changes nothing. */
   private async write(change: BoardChange): Promise<void> {
+    this.bar?.forget();
     const t = this.host.together;
     if (t) {
       const why = await t.change(change).catch((e: unknown) => word('board.write-failed', { why: String(e) }));
@@ -257,17 +265,7 @@ class BoardView {
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
     vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
-    const wheel = (e: WheelEvent) => {
-      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      const keys = { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad: fromTrackpad(e) };
-      if (zoom.handle({ kind: 'wheel', ...this.point(e), dy, ...keys })) e.preventDefault();
-    };
-    vp.addEventListener('wheel', wheel, { passive: false });
-    vp.addEventListener('dblclick', (e: MouseEvent) => {
-      const onBox = !!(e.target as Element | null)?.closest?.('[data-item]');
-      if (zoom.handle({ kind: 'dblclick', ...this.point(e), onBox })) e.preventDefault();
-    });
-    vp.addEventListener('touchend', (e: TouchEvent) => zoom.settle(e.touches?.length ?? 0));
+    bindWheel(vp, zoom, (e) => this.point(e));
     new ResizeObserver(() => zoom.resize(this.size())).observe(vp);
   }
 

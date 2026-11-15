@@ -1,7 +1,7 @@
 // The note's whiteboards on the browser editor's page (editor spec §45, board_view). It is the page VS Code's tab, the
 // desktop app and the phone app run too. Each board block opens as the display layer's board, to pan, zoom and edit
 // by pointer, touch and keyboard, offline. Each edit goes through the page's own version-checked write.
-import { gqlBlocks, PALETTES, word } from '@thoughtknot/core';
+import { arrangerOf, gqlBlocks, PALETTES, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
 
@@ -71,6 +71,7 @@ export function boardSection(
         const w = await note.writeWhole(r.note);
         return w.ok ? { text: r.text } : { refused: w.why };
       },
+      arrange: arrangerOf(() => note.text, name),
     });
   }
   return section;

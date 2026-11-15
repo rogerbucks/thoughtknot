@@ -127,3 +127,25 @@ describe('a board edited in its note', () => {
     assert.match(boardEditInNote('# Empty\n', 'ideas', { kind: 'remove', id: 'a' }).refused, /ideas/);
   });
 });
+
+describe('several items moved as one change', () => {
+  // proves: board_arranged_by_graph
+  test('each moves by its own text alone, a locked one stays, and nothing moved is refused', () => {
+    const text = `// graph: ideas · BOARD
+(a:Sticky {x: 0, y: 0, text: 'A'}),
+(b:Sticky {x: 5, y: 5, text: 'B', locked: true}),
+(c:Sticky {x: 9, y: 9, text: 'C'})`;
+    const r = boardEdit(text, {
+      kind: 'moves',
+      moves: [
+        { id: 'a', x: 100, y: 110 },
+        { id: 'b', x: 1, y: 1 },
+        { id: 'zz', x: 2, y: 2 },
+      ],
+    });
+    assert.match(r.text, /\(a:Sticky \{x: 100, y: 110,/);
+    assert.match(r.text, /\(b:Sticky \{x: 5, y: 5,/, 'the locked item stays');
+    assert.match(r.text, /\(c:Sticky \{x: 9, y: 9,/, 'an item not named stays');
+    assert.match(boardEdit(text, { kind: 'moves', moves: [{ id: 'b', x: 1, y: 1 }] }).refused, /locked/);
+  });
+});
