@@ -3,159 +3,159 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "5fc0522ad6ba39f36609546cff94277336dcc2dda2d7028b53dc8fbfbf1d8abe",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "6883d784adef282a5940a181572357d0b0581139a9ddff4b717fe32f44a4e2fc",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "6923422d2bc9178ec2b9bc89d743297b671be8bca26646e2a8ac7fa149dcaf57",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "965c76b99e89a6fe8b6cfd629234ad4746950a472365db16752c372746d72ec1",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "f838f333079284f8aed596621f84f42cd2592e743c01f8497027046385c1cc6f",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7264290e19fd90975905e7f11c6cef05076a5108074d301208c551664cbc4edb",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "145d0eac25c67ce30e8e76da916000e4346a634fc44eecbe250f4c11966fabff",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "1e6a2a7abda6213c96a36213a9e6b76333a234e7897691227837c3b3e17c406f",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "678c98949ca07645974a10374b0b61458deb23ae3976b75760be86b1c0fac2b1",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "d63db6f50d0e8ed8cee2a5f27edfff2065f2980973a52be1749c9fbd4fd18c9a",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "05e9238da30c8077fdf6bc73cb9ed582371e9f83da0dd5d386e4cbdd61f5c17a",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "2b3e644df49434b0349c72b43cf4032b89bde617913af47194187469b4d85a32",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7fc03d7974ce39199d47e48b8853b733a0b76a731709972f7d359cc61f182615",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "93d419284f842a587cceb67a98f5d6b0dc7de30fbe7330865e772bf9c9836125",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
+      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",

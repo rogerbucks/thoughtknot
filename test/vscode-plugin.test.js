@@ -236,7 +236,10 @@ describe('the tab’s page, in a real browser', () => {
   });
 
   test('it draws the note’s graph', options, async () => {
-    assert.equal(await until("document.querySelectorAll('.thoughtknot-svg g.node').length"), 3);
+    assert.equal(
+      await until("document.querySelectorAll('.thoughtknot-pane-drawing .thoughtknot-svg g.node').length"),
+      3,
+    );
   });
 
   test('an edit typed in the tab is written to the note on disk', options, async () => {
@@ -248,7 +251,10 @@ describe('the tab’s page, in a real browser', () => {
       t.dispatchEvent(new Event('input', { bubbles: true }));
     })()`);
     await untilTrue(() => readFileSync(join(vs.workspace, 'Reader.md'), 'utf8') === edited, 20_000);
-    assert.equal(await until("document.querySelectorAll('.thoughtknot-svg g.node').length === 4"), true);
+    assert.equal(
+      await until("document.querySelectorAll('.thoughtknot-pane-drawing .thoughtknot-svg g.node').length === 4"),
+      true,
+    );
   });
 
   test('it loads only the extension’s own files, and its content policy stops any other script', options, async () => {

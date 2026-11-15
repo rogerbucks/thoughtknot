@@ -1,0 +1,6 @@
+{
+  "file": "test/vscode-plugin.test.js",
+  "test": "the tab’s page, in a real browser > an edit typed in the tab is written to the note on disk",
+  "seen_failing_first": false,
+  "evidence": "Only its selector changed, to count the graph's things alone now that a board is drawn first on the page (board_main_screen). The behaviour it proves is unchanged, so it passes on the code before too."
+}

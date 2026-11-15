@@ -144,7 +144,9 @@ export async function livePage(
     press: (label) => page.done(() => page.button(label).click()),
     /** Waits for the editor and the drawing to be there. */
     ready: async () => {
-      await until(() => !!page.field() && !!doc.querySelector('.thoughtknot-svg'), 8000);
+      // the graph drawn, not a board's picture: the board comes first on the page now (board_main_screen)
+      const drawn = () => [...doc.querySelectorAll('.thoughtknot-svg')].some((s) => !s.closest('.thoughtknot-board'));
+      await until(() => !!page.field() && drawn(), 8000);
       return page;
     },
     stop: async () => {

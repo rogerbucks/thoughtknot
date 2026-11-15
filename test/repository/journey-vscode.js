@@ -34,7 +34,7 @@ export async function vscodeJourney() {
     await page.ready();
     const doc = page.doc;
     const tap = (el) => el.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    await until(() => doc.querySelectorAll('.thoughtknot-svg g.node').length === 3, 8000);
+    await until(() => doc.querySelectorAll('.thoughtknot-pane-drawing .thoughtknot-svg g.node').length === 3, 8000);
 
     person.stage('read the graph');
     await person.use(SAYS.question, () => tap(control(doc, SAYS.question)));

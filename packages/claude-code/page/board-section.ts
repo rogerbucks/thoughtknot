@@ -4,6 +4,7 @@
 import { arrangerOf, gqlBlocks, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
+import { boardFirst, chooseFirst, firstLine, firstTimeLine, keptIn, starterBoard, withStarter } from './board-first.ts';
 
 /** The page's note as the board needs it: its text now, and its write against the version the page last saw. */
 export interface BoardNote {
@@ -46,7 +47,10 @@ export function boardSection(
   dark: boolean,
   seatFor?: SeatFor,
 ): HTMLElement | null {
-  const boards = gqlBlocks(note.text).filter((b) => boardOf(b.text));
+  const written = gqlBlocks(note.text).filter((b) => boardOf(b.text));
+  // a note with graphs and no board opens on a starter board, written to the note only once it is changed
+  const starter = written.length ? null : starterBoard(note.text, (t) => !!boardOf(t));
+  const boards = starter ? [{ text: starter.text }] : written;
   if (!boards.length) return null;
   const section = doc.createElement('section');
   section.setAttribute('class', 'gn-boards');
@@ -66,19 +70,33 @@ export function boardSection(
     showBoard(holder, b.text, {
       ...own,
       write: async (change) => {
-        const r = boardEditInNote(note.text, name, change);
+        const now =
+          starter && !gqlBlocks(note.text).some((x) => boardOf(x.text))
+            ? withStarter(note.text, starter.text)
+            : note.text;
+        const r = boardEditInNote(now, name, change);
         if ('refused' in r) return r;
         const w = await note.writeWhole(r.note);
         return w.ok ? { text: r.text } : { refused: w.why };
       },
-      arrange: arrangerOf(() => note.text, name),
+      arrange: starter ? undefined : arrangerOf(() => note.text, name),
       views: viewerOf(() => note.text),
     });
   }
   return section;
 }
 
-/** Keeps the note's boards at the end of `parent`: each call opens them again from the note as it is now. */
+/** The button that turns the page round: the graph first, or the board first again. */
+function firstButton(doc: Document, boardIsFirst: boolean, then: () => void): HTMLElement {
+  const b = doc.createElement('button');
+  b.setAttribute('type', 'button');
+  b.setAttribute('class', 'gn-board-turn');
+  b.textContent = word(boardIsFirst ? 'page.board-first.graph' : 'page.board-first.board');
+  b.addEventListener('click', then);
+  return b;
+}
+
+/** Keeps the note's boards in `parent`, first unless the person chose the graph first: each call opens them again. */
 export function boardsKept(
   parent: HTMLElement,
   note: BoardNote,
@@ -87,10 +105,21 @@ export function boardsKept(
   seatFor?: SeatFor,
 ): () => void {
   let boards: HTMLElement | null = null;
+  const kept = keptIn(parent.ownerDocument.defaultView);
   const draw = () => {
     boards?.remove();
     boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor);
-    if (boards) parent.append(boards);
+    if (!boards) return;
+    // the board is the main screen: it comes first, unless this person chose the graph first (board_main_screen)
+    const first = boardFirst(kept);
+    const turn = (board: boolean) => () => {
+      chooseFirst(kept, board);
+      draw();
+    };
+    boards.prepend(firstButton(parent.ownerDocument, first, turn(!first)));
+    if (first && firstTimeLine(kept)) boards.prepend(firstLine(parent.ownerDocument, turn(false)));
+    if (first) parent.prepend(boards);
+    else parent.append(boards);
   };
   // sharing may start after the page first drew: boards drawn before then take their seats once it has
   const win = parent.ownerDocument.defaultView;
