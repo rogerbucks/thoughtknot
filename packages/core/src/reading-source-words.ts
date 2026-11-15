@@ -197,7 +197,7 @@ export const READING_SOURCE_WORDS = {
   // a board read from and written as an Excalidraw drawing in plain JavaScript (board-excalidraw.ts)
   'reading.excalidraw.not-excalidraw': 'This file is not an Excalidraw drawing (.excalidraw), so it was not read.',
   'reading.excalidraw.compressed':
-    'This drawing is compressed, so it was not read. In Obsidian, run Decompress current Excalidraw file, then import it again.',
+    'This compressed drawing could not be unpacked, so it was not read. In Obsidian, run Decompress current Excalidraw file, then import it again.',
   'reading.excalidraw.too-large': 'This drawing is larger than {most} characters, so it was not read.',
   'reading.excalidraw.too-many': 'This drawing holds more than {most} shapes, so it was not read.',
   'reading.excalidraw.text-too-long': 'A text holds more than {most} characters, so the drawing was not read.',

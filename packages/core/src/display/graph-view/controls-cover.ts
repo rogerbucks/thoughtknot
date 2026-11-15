@@ -1,6 +1,7 @@
 // What the floating controls cover of the drawing (editor spec §25, controls_uncover). Roger, 1 Nov 2026: the controls
 // lie over the drawing and never shrink it. So a thing chosen must never hide behind them. Each card over the drawing
-// covers a strip from the edge it is nearest. The chip and docks sit in the top start corner. The phone's sheet sits
+// covers a strip from the edge it is nearest. The side rail runs down the start edge. The chip and docks sit in the
+// top start corner. The phone's sheet sits
 // at the foot, and the mini-map in the bottom end corner. The selection glides into the part they leave clear, as it
 // does for the details (sheet_keeps_thing_clear).
 import type { Clear } from '@thoughtknot/core';
@@ -15,6 +16,8 @@ export interface ScreenBox {
 
 /** The cards that float over the drawing and may cover a thing chosen. */
 const CARDS = [
+  // the side rail down the start edge: a name drawn under it was cut off (review, 15 Nov 2026)
+  '.thoughtknot-rail',
   '.thoughtknot-corner',
   '.thoughtknot-dock.is-free',
   '.thoughtknot-phone-sheet',
