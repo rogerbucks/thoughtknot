@@ -187,6 +187,23 @@ describe('a host that draws the board afresh as soon as the note is written', ()
   });
 });
 
+describe('a board with a line that cannot be read', () => {
+  test('lists what is wrong under the board, as its refusal of an edit says it does', async () => {
+    const { env, el, press, said, noteNow } = await board(NOTE.replace('(a)-[:CONNECTS]->(b)', '(a)-[:LEADS_TO]->(b)'));
+    try {
+      const listed = el.querySelectorAll('.thoughtknot-problems li').map((li) => li.text);
+      assert.equal(listed.length, 1);
+      assert.match(listed[0], /Line 5: .*CONNECTS only, not LEADS_TO.*Write it as -\[:CONNECTS\]->/);
+      press('n');
+      await settled();
+      assert.match(said(), /Fix the problems listed under the board first/);
+      assert.ok(!/sticky1/.test(noteNow()), 'nothing was written');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('editing by keyboard, written to the note', () => {
   test('Tab reaches an item and says it; an arrow moves it, and only its line changes', async () => {
     const { env, el, press, said, noteNow, place } = await board();
