@@ -40,4 +40,8 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.view.gone': 'That view is no longer on the board.',
   'board.view.no-graph': 'This board is not on a graph, so the view has nothing to show.',
   'board.view.empty': 'The graph {graph} has nothing in it to show yet.',
+  'board.pane-title': 'Board',
+  'board.pane-open': 'Open the board of this note',
+  'board.pane-note-alone': 'Show the note alone, as before',
+  'board.pane-empty': 'This note has no graph or board yet.',
 } as const;

@@ -55,12 +55,15 @@ export function paintViews(svg: SVGSVGElement, board: Board, viewer: Viewer | un
     const at = `${key}\n${id}\n${box.w}x${box.h}`;
     const kept = last.get(at);
     if (kept) nest(g, board, id, kept);
-    void viewer(board, id).then((r) => {
-      if ('svg' in r) {
-        last.set(at, r.svg);
-        if (r.svg !== kept) nest(g, board, id, r.svg);
-      } else said(g, box, r.refused);
-    });
+    void viewer(board, id)
+      .then((r) => {
+        if ('svg' in r) {
+          last.set(at, r.svg);
+          if (r.svg !== kept) nest(g, board, id, r.svg);
+        } else said(g, box, r.refused);
+      })
+      // a picture that cannot be drawn here says why in its frame, and the board goes on
+      .catch((e: unknown) => said(g, box, e instanceof Error ? e.message : String(e)));
   }
 }
 
