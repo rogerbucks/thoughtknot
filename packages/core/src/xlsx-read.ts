@@ -4,6 +4,8 @@
 // - Read-only. It never runs a macro, a formula or a link. A formula's cell gives the value Excel last saved.
 // - Untrusted: every size and offset is checked. A part is inflated only to the size it declares.
 //   A file with a document type line is refused, and so is one over the limits. Each sheet is a table.
+//   The work is bounded too: a sheet's text together has a most, however few bytes name it. What every sheet shares
+//   is read once for a workbook. A number format is looked over once, in step with its length.
 // - Loss stated: dates come back as ISO text, an error cell as nothing, and merged cells and styles are not read.
 import type { CsvTable } from './csv-read.ts';
 import { word } from './words.ts';
@@ -24,6 +26,7 @@ export interface WorkbookRefusal {
 /**
  * The most a workbook may hold before it is refused. That is its bytes, one inflated part, a small part such as the
  * sheet list, and all its parts together. Also its sheets, its shared strings, a sheet's rows and columns, and a cell.
+ * And the text of one sheet's cells together: a few bytes can name one long shared string in every cell.
  */
 export const WORKBOOK_LIMITS = {
   bytes: 32 * 1024 * 1024,
@@ -35,6 +38,7 @@ export const WORKBOOK_LIMITS = {
   rows: 20_000,
   columns: 500,
   cell: 10_000,
+  text: 64 * 1024 * 1024,
 };
 
 /** Thrown inside the reader when a limit is passed; turned into a refusal at the edge. */
@@ -92,13 +96,38 @@ function relations(xml: string): Map<string, string> {
 function isDateFormat(id: number, code: string | undefined): boolean {
   if (code === undefined)
     return (id >= 14 && id <= 22) || (id >= 27 && id <= 36) || (id >= 45 && id <= 47) || (id >= 50 && id <= 58);
-  const bare = code.replace(/"[^"]*"|\[[^\]]*\]|\\.|_.|\*./g, '');
+  const bare = bareFormat(code);
   return /[ymdhs]/i.test(bare) && !/^general$/i.test(bare);
+}
+
+/**
+ * A format's code without its quoted text, its bracketed parts, and the character after a backslash, underscore or
+ * star. Each character is looked at once: a code of unclosed quotes or brackets takes no longer than its length.
+ */
+const ENDS_LINE = /[\n\r\u2028\u2029]/;
+function bareFormat(code: string): string {
+  let out = '';
+  // where the next closing mark is, found once and kept: -1 once there is none left
+  const next = { '"': 0, ']': 0 };
+  const closing = (mark: '"' | ']', from: number) => {
+    if (next[mark] !== -1 && next[mark] < from) next[mark] = code.indexOf(mark, from);
+    return next[mark];
+  };
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i] as string;
+    const end = c === '"' ? closing('"', i + 1) : c === '[' ? closing(']', i + 1) : -1;
+    if (end !== -1) i = end;
+    else if ((c === '\\' || c === '_' || c === '*') && i + 1 < code.length && !ENDS_LINE.test(code[i + 1] as string))
+      i++;
+    else out += c;
+  }
+  return out;
 }
 
 /** Which cell styles (by index) are dates, from styles.xml. */
 function dateStyles(xml: string): boolean[] {
   const formats = new Map<number, string>();
+  const isDate = new Map<number, boolean>(); // each format looked over once, however many styles name it
   const styles: boolean[] = [];
   let inXfs = false;
   for (const t of tokens(xml)) {
@@ -107,7 +136,8 @@ function dateStyles(xml: string): boolean[] {
       else if (t.open === 'cellXfs') inXfs = true;
       else if (t.open === 'xf' && inXfs) {
         const id = Number(t.attrs['numFmtId'] ?? 0);
-        styles.push(isDateFormat(id, formats.get(id)));
+        if (!isDate.has(id)) isDate.set(id, isDateFormat(id, formats.get(id)));
+        styles.push(isDate.get(id) as boolean);
       }
     } else if ('close' in t && t.close === 'cellXfs') inXfs = false;
   }
@@ -154,7 +184,7 @@ function sheetRows(xml: string, strings: string[], dates: boolean[], date1904: b
   const rows: SheetRow[] = [];
   let row: SheetRow | null = null;
   let cell: { col: number; type: string; style: number; v: string; inline: string } | null = null;
-  let [field, nextCol, nextRow] = ['', 0, 0];
+  let [field, nextCol, nextRow, all] = ['', 0, 0, 0];
   for (const t of tokens(xml)) {
     if ('open' in t) {
       if (t.open === 'row') {
@@ -171,6 +201,7 @@ function sheetRows(xml: string, strings: string[], dates: boolean[], date1904: b
       else if (t.close === 'c' && row && cell) {
         const text = cellText(cell, strings, dates, date1904);
         if (text.length > WORKBOOK_LIMITS.cell) throw new Over('cell-too-long');
+        if ((all += text.length) > WORKBOOK_LIMITS.text) throw new Over('too-large');
         while (row.cells.length < cell.col) row.cells.push('');
         row.cells[cell.col] = text;
         cell = null;
@@ -219,6 +250,26 @@ interface Opened {
   zip: Map<string, ZipEntry>;
   sheets: { name: string; part: string }[];
   date1904: boolean;
+  /** The shared strings and the date styles, read when a sheet first needs them; or why they could not be read. */
+  shared?: { strings: string[]; dates: boolean[] } | Error;
+}
+
+/** Each workbook opened, by its bytes: a workbook's sheets are read one by one, and share what is read here. */
+const OPENED = new WeakMap<Uint8Array, Opened>();
+
+/** What every sheet of a workbook shares, read once for the workbook. A failure is kept too, and thrown again. */
+function sharedOf(o: Opened): { strings: string[]; dates: boolean[] } {
+  if (!o.shared)
+    try {
+      o.shared = {
+        strings: sharedStrings(partText(o.bytes, o.zip, 'xl/sharedStrings.xml') ?? ''),
+        dates: dateStyles(partText(o.bytes, o.zip, 'xl/styles.xml', WORKBOOK_LIMITS.meta) ?? ''),
+      };
+    } catch (e) {
+      o.shared = e instanceof Error ? e : new Error(String(e));
+    }
+  if (o.shared instanceof Error) throw o.shared;
+  return o.shared;
 }
 
 /** A part's path with its `.` and `..` steps taken out. It is only a name to look up in the zip, never a file path. */
@@ -232,6 +283,8 @@ function normal(path: string): string {
 }
 
 function open(bytes: Uint8Array): Opened | WorkbookRefusal {
+  const was = OPENED.get(bytes);
+  if (was) return was;
   if (bytes.length > WORKBOOK_LIMITS.bytes)
     return { why: 'too-large', refused: word('reading.xlsx.too-large', { most: String(WORKBOOK_LIMITS.bytes) }) };
   if (u32(bytes, 0) !== 0x04034b50) return { why: 'not-xlsx', refused: word('reading.xlsx.not-xlsx') };
@@ -251,7 +304,9 @@ function open(bytes: Uint8Array): Opened | WorkbookRefusal {
     const part = target.startsWith('/') ? target.slice(1) : `xl/${target}`;
     return [{ name: s.name, part: normal(part) }];
   });
-  return { bytes, zip, sheets: parts, date1904 };
+  const opened = { bytes, zip, sheets: parts, date1904 };
+  OPENED.set(bytes, opened);
+  return opened;
 }
 
 const MOST = {
@@ -266,9 +321,7 @@ function refusalOf(e: unknown): WorkbookRefusal {
   if (e instanceof Over)
     return {
       why: e.why,
-      refused: word(`reading.xlsx.${e.why}`, {
-        most: String(MOST[e.why]),
-      }),
+      refused: word(`reading.xlsx.${e.why}`, { most: String(MOST[e.why]) }),
     };
   if (e instanceof Damaged || e instanceof RangeError) return { why: 'damaged', refused: word('reading.xlsx.damaged') };
   throw e;
@@ -308,8 +361,7 @@ export function workbookTable(bytes: Uint8Array, name: string): CsvTable | Workb
     if (!sheet) return { why: 'no-sheet', refused: word('reading.xlsx.no-sheet', { name }) };
     const xml = partText(bytes, o.zip, sheet.part);
     if (xml === null) return { why: 'damaged', refused: word('reading.xlsx.damaged') };
-    const strings = sharedStrings(partText(bytes, o.zip, 'xl/sharedStrings.xml') ?? '');
-    const dates = dateStyles(partText(bytes, o.zip, 'xl/styles.xml', WORKBOOK_LIMITS.meta) ?? '');
+    const { strings, dates } = sharedOf(o);
     const [head, ...rest] = sheetRows(xml, strings, dates, o.date1904);
     const width = head ? head.cells.length : 0;
     if (!head || head.cells.every((c) => c === ''))

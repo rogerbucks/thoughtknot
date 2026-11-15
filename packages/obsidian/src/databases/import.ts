@@ -7,6 +7,8 @@ import { Modal, Notice, Setting } from 'obsidian';
 import type { TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
 import {
+  boardFileBlock,
+  boardFormatOf,
   columnsOf,
   documentBlock,
   documentText,
@@ -25,7 +27,7 @@ import {
 import type { DbRow, SqliteEntry, SqliteTable, WordKey } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
-import { changeVaultNote } from '../storage/plugin-notes';
+import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
 /** The command's id and name. */
 export const IMPORT_COMMAND = {
@@ -39,7 +41,7 @@ export const IMPORT_COMMAND = {
 export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
   const files = plugin.app.vault
     .getFiles()
-    .filter((f) => isDbFile(f.path) || isWorkbook(f.path) || isDocumentPlace(f.path))
+    .filter((f) => isDbFile(f.path) || isWorkbook(f.path) || isDocumentPlace(f.path) || boardFormatOf(f.path))
     .sort((a, b) => a.path.localeCompare(b.path));
   if (!files.length) {
     new Notice(word('db.none'));
@@ -69,6 +71,8 @@ class ImportDialog extends Modal {
   private bytes: Uint8Array | null = null;
   /** The file chosen is a Word document or a PDF: the dialog then only names the graph, and adds a linked block. */
   private doc = false;
+  /** The text of the whiteboard file chosen: the dialog then only names the board, and copies it into the note. */
+  private board: string | null = null;
   private refused = '';
   private things = '';
   private id = '';
@@ -155,7 +159,8 @@ class ImportDialog extends Modal {
           this.graph = v.trim();
         }),
       );
-    if (this.doc) return this.drawDocument();
+    if (this.board !== null) return this.drawDocument(word('import.board.copy'), () => void this.addBoard());
+    if (this.doc) return this.drawDocument(word('import.document.copy'), () => void this.addDocument());
     const tables = this.entries.filter((e) => !e.unread).map((e) => e.name);
     this.pick('import.things', 'import.things.sentence', tables, this.things, (v) => {
       [this.things, this.id, this.kind] = [v, this.columns(v)[0] ?? '', ''];
@@ -203,17 +208,12 @@ class ImportDialog extends Modal {
       .addButton((b) => b.setButtonText(word('import.cancel')).onClick(() => this.close()));
   }
 
-  /** What a document offers: a name for its graph, and one button that adds the linked block to the note. */
-  private drawDocument(): void {
+  /** What a document or a board offers: a name for its graph, and one button that adds its block to the note. */
+  private drawDocument(copy: string, add: () => void): void {
     const el = this.contentEl;
-    el.createEl('p', { text: word('import.document.copy') });
+    el.createEl('p', { text: copy });
     new Setting(el)
-      .addButton((b) =>
-        b
-          .setButtonText(word('import.document.run'))
-          .setCta()
-          .onClick(() => void this.addDocument()),
-      )
+      .addButton((b) => b.setButtonText(word('import.document.run')).setCta().onClick(add))
       .addButton((b) => b.setButtonText(word('import.cancel')).onClick(() => this.close()));
   }
 
@@ -233,6 +233,23 @@ class ImportDialog extends Modal {
     }
   }
 
+  /** Writes the board the whiteboard file holds into the note, and says what was left out; or why nothing was written. */
+  private async addBoard(): Promise<void> {
+    const file = this.files[this.chosen];
+    if (!file || this.board === null || this.running) return;
+    this.running = true;
+    try {
+      const made = boardFileBlock(this.graph, file.path, this.board);
+      if ('refused' in made) return void new Notice(word('import.failed', { file: file.basename, why: made.refused }));
+      await changeVaultNote(this.app, this.file.path, (now) => withImport(now, made.block));
+      const done = word('import.board.done', { graph: this.graph, file: file.path, note: this.file.basename });
+      new Notice([done, ...made.notes].join(' '));
+      this.close();
+    } finally {
+      this.running = false;
+    }
+  }
+
   /** Reads the file chosen, once, to list its tables; nothing is written. */
   private async choose(i: number): Promise<void> {
     this.chosen = i;
@@ -240,8 +257,22 @@ class ImportDialog extends Modal {
     this.entries = [];
     this.refused = '';
     this.doc = false;
+    this.board = null;
     const db = this.files[i];
-    if (db && isDocumentPlace(db.path)) {
+    if (db && boardFormatOf(db.path)) {
+      // A whiteboard file is read once here, so one that cannot be read is said now. Nothing is written.
+      // A drawing kept in a note is read as any note is. Any other whiteboard file is not a note: its bytes are read.
+      const text = /\.md$/i.test(db.path)
+        ? ((await noteText(this.app, db.path)) ?? '')
+        : new TextDecoder().decode(await this.app.vault.readBinary(db));
+      this.graph = db.basename
+        .replace(/\.excalidraw$/i, '')
+        .replace(/\W+/g, '_')
+        .replace(/^(\d)/, '_$1');
+      const read = boardFileBlock(this.graph, db.path, text);
+      if ('refused' in read) this.refused = read.refused;
+      else [this.bytes, this.board] = [new Uint8Array(), text];
+    } else if (db && isDocumentPlace(db.path)) {
       // a document is read once here, so a file that cannot be read is said now; the block that draws it reads it again
       const bytes = new Uint8Array(await this.app.vault.readBinary(db));
       const read = documentText(bytes, db.path);
