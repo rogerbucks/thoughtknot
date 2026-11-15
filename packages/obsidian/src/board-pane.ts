@@ -1,11 +1,20 @@
 // The board as the main screen in Obsidian (editor spec §45, board_main_screen). A note with graphs opens with its board
-// beside it, in a view of the plugin's own. It shows the note's first board, or a starter board with a view of each
-// graph, written to the note only once it is changed. Until the person first chooses, one line says what changed,
+// beside it, in a view of the plugin's own. It shows the note's board in front, under the list of its boards. A note
+// with no board shows a starter board with a view of each graph, written to the note only once it is changed.
+// Until the person first chooses, one line says what changed,
 // with a way back: the note alone, as before. The command Open the note's board brings it back. The choice is kept
 // in this vault on this device.
 import { ItemView, TFile } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import { arrangerOf, gqlBlocks, PALETTES, starterBoard, viewerOf, withStarter, word } from '@thoughtknot/core';
+import {
+  boardInFront,
+  boardListChanged,
+  boardNames,
+  glideIn,
+  putInFront,
+  showBoardList,
+} from '@thoughtknot/core/display/board/board-list';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
 import type ThoughtKnotPlugin from './main';
 import type { HostCommand } from './host-commands';
@@ -27,13 +36,15 @@ function choose(plugin: ThoughtKnotPlugin, first: 'board' | 'note'): void {
   plugin.app.saveLocalStorage(FIRST_KEY, first);
 }
 
-/** The board a note opens on: its first written board, else its starter board, else none. */
-function boardIn(note: string): { name: string; text: string; starter: boolean } | null {
-  const written = gqlBlocks(note).find((b) => boardOf(b.text));
-  const name = written && boardOf(written.text)?.name;
-  if (written && name !== undefined) return { name, text: written.text, starter: false };
+/** The boards a note opens on: those written, else its starter board alone, else none. */
+function boardsIn(note: string): { name: string; text: string; starter: boolean }[] {
+  const written = gqlBlocks(note).flatMap((b) => {
+    const name = boardOf(b.text)?.name;
+    return name === undefined ? [] : [{ name, text: b.text, starter: false }];
+  });
+  if (written.length) return written;
   const s = starterBoard(note, (t) => !!boardOf(t));
-  return s && { ...s, starter: true };
+  return s ? [{ ...s, starter: true }] : [];
 }
 
 /** The board pane: the board of one note, drawn again whenever the note changes. */
@@ -93,20 +104,42 @@ export class BoardPane extends ItemView {
         this.leaf.detach();
       });
     }
-    const board = boardIn(note);
+    const boards = boardsIn(note);
+    const names = boards.map((b) => b.name);
+    const board = boards.find((b) => b.name === boardInFront(path, names));
     if (!board) {
       root.createEl('p', { cls: 'thoughtknot-board-pane-empty', text: word('board.pane-empty') });
       return;
     }
     const app = this.app;
-    showBoard(root.createDiv(), board.text, {
+    // the note as a change is made to: with its starter board written first, when that is the board shown
+    const base = (now: string) => (board.starter && !boardNames(now).length ? withStarter(now, board.text) : now);
+    showBoardList(root, {
+      key: path,
+      names,
+      current: board.name,
+      open: () => void this.draw(),
+      change: async (ask) => {
+        let refused: string | null = word('blocks.note-gone');
+        await changeVaultNote(app, path, (now) => {
+          const r = boardListChanged(base(now), board.name, ask);
+          refused = 'refused' in r ? r.refused : null;
+          if ('refused' in r) return now;
+          putInFront(path, r.name);
+          return r.note;
+        });
+        return refused;
+      },
+    });
+    const holder = root.createDiv();
+    glideIn(holder, path);
+    showBoard(holder, board.text, {
       palette: PALETTES.obsidian,
       key: `${path}\n${board.name}`,
       write: async (change) => {
         let out: { text: string } | { refused: string } = { refused: word('blocks.note-gone') };
         await changeVaultNote(app, path, (now) => {
-          const has = gqlBlocks(now).some((b) => boardOf(b.text)?.name === board.name);
-          const r = boardEditInNote(board.starter && !has ? withStarter(now, board.text) : now, board.name, change);
+          const r = boardEditInNote(base(now), board.name, change);
           out = 'refused' in r ? r : { text: r.text };
           return 'refused' in r ? now : r.note;
         });
@@ -127,7 +160,7 @@ export async function openBoard(plugin: ThoughtKnotPlugin, path: string): Promis
 
 /** Whether a note holds a graph or a board, so it has a board to open on. */
 function hasBoard(note: string): boolean {
-  return !!boardIn(note);
+  return boardsIn(note).length > 0;
 }
 
 /** Opens each note with graphs on its board, beside it, unless the person chose the note alone. */
