@@ -153,7 +153,9 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
   });
 
   test("it draws the note's graph", options, async () => {
-    const boxes = await until("return document.querySelectorAll('.thoughtknot-svg g.node').length");
+    const boxes = await until(
+      "return document.querySelectorAll('.thoughtknot-pane-drawing .thoughtknot-svg g.node').length",
+    );
     assert.equal(boxes, 3);
   });
 
