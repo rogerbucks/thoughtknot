@@ -20,6 +20,8 @@ export interface FieldsHost {
   centre(): [number, number];
   /** Puts the keyboard on an item and brings it into view. */
   focus(id: string): void;
+  /** The fields of the board as drawn now: after a write the host may have drawn it afresh, and this one is gone. */
+  live?(): FieldsHost;
 }
 
 /** Opens `editor`, empty, and gives a function that closes it and returns the focus to the board. */
@@ -81,9 +83,10 @@ export function openCapture(host: FieldsHost, last: string | null, first = ''): 
     void r.changes
       .reduce((p, c) => p.then(() => host.write(c)), Promise.resolve())
       .then(() => {
-        host.say(r.said);
-        host.focus(r.item.id);
-        openCapture(host, r.item.id);
+        const now = host.live?.() ?? host; // the next idea is caught on the board that is on screen now
+        now.say(r.said);
+        now.focus(r.item.id);
+        openCapture(now, r.item.id);
       });
   });
   field.focus();

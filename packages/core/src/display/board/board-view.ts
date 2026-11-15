@@ -180,6 +180,7 @@ class BoardView {
       write: (c) => this.write(c),
       say: (w) => this.say(w),
       centre: () => this.space.centre(),
+      live: () => current(this.host.key, this.vp, this).fields(),
       focus: (id) => {
         this.cursor = { ...this.cursor, focus: id };
         this.reveal();

@@ -257,6 +257,40 @@ describe('a host that draws the board afresh as soon as the note is written', ()
       env.uninstall();
     }
   });
+
+  test('ideas are caught one after another: the field opens again on the board drawn afresh, with the keyboard in it', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      press('q'); // a letter on an empty spot starts catching ideas
+      const first = el.querySelector('.thoughtknot-board-edit textarea');
+      first.value = 'First idea';
+      first.dispatch('keydown', { key: 'Enter' });
+      await until(() => /First idea/.test(noteNow()) && fresh);
+      await settled();
+      const next = fresh.querySelector('.thoughtknot-board-edit textarea');
+      assert.ok(next, 'the field is open on the board now on screen');
+      assert.equal(fresh.querySelector('.thoughtknot-board-edit').hidden, false);
+      assert.equal(env.doc.activeElement, next, 'and the keyboard is in it');
+      const before = fresh;
+      next.value = 'Second idea';
+      next.dispatch('keydown', { key: 'Enter' });
+      await until(() => /Second idea/.test(noteNow()) && fresh !== before);
+      await settled();
+      assert.equal(env.doc.activeElement, fresh.querySelector('.thoughtknot-board-edit textarea'));
+    } finally {
+      env.uninstall();
+    }
+  });
 });
 
 describe('a board with a line that cannot be read', () => {
