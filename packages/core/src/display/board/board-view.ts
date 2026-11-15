@@ -26,6 +26,7 @@ import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver, type Viewer } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
+import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -86,7 +87,7 @@ class BoardView {
   ) {
     this.board = readBoard(source).board;
     this.seen = source;
-    const was = kept.get(host.key);
+    const was = keptOf(host.key);
     this.cursor = was?.cursor ?? NO_CURSOR;
     this.readOnly = !host.write && !host.together;
     const root = el.createDiv({ cls: ['thoughtknot', 'thoughtknot-board'] });
@@ -123,14 +124,15 @@ class BoardView {
     this.zoom.onChange = (v) => this.apply(v);
     host.together?.watch(() => this.othersChanged());
     this.draw();
-    if (was) this.zoom.restore(was.place.scale, was.place.x, was.place.y);
+    if (was) this.zoom.restore(...placeFrom(was, this.frame.x, this.frame.y));
+    born(host.key, this.vp, this, this.said);
     if (was?.focused) this.vp.focus({ preventScroll: true });
     this.bind();
     this.rail.held((id) => openEditor(this.fields(), id)); // a sticky just made, its board drawn afresh
   }
 
   private say(words?: string) {
-    if (words) this.said.setText(words);
+    if (words) saying(this.host.key, current(this.host.key, this.vp, this).said, words);
   }
 
   /** Puts the picture where the view is, and keeps the view for when the board is drawn again. */
@@ -145,7 +147,7 @@ class BoardView {
     });
     this.vp.toggleClass('is-zoomed', this.zoom.zoomedIn());
     const focused = activeDocument.activeElement === this.vp;
-    kept.set(this.host.key, { place: v, cursor: this.cursor, focused });
+    keep(this.host.key, this.vp, { place: v, origin: [this.frame.x, this.frame.y], cursor: this.cursor, focused });
   }
 
   /** The board drawn again, the view kept on the same spot of the board even when its edges moved. */
@@ -244,6 +246,7 @@ class BoardView {
   /** Writes an edit (also for the tool rail), then draws what was written; a refusal is said and changes nothing. */
   async write(change: BoardChange): Promise<void> {
     this.bar?.forget();
+    this.apply(this.zoom.view()); // kept before the host may draw the board afresh
     const t = this.host.together;
     if (t) {
       const why = await t.change(change).catch((e: unknown) => word('board.write-failed', { why: String(e) }));
@@ -305,8 +308,9 @@ class BoardView {
     this.say(step.said);
     if (step.pan) this.zoom.panBy(...step.pan);
     const after = () => {
-      this.reveal();
-      if (step.edit) openEditor(this.fields(), step.edit);
+      const now = current(this.host.key, this.vp, this);
+      now.reveal();
+      if (step.edit) openEditor(now.fields(), step.edit);
     };
     if (step.change) void this.write(step.change).then(after);
     else {
@@ -377,6 +381,8 @@ class BoardView {
 
   /** A tap on an item puts the keyboard on it and says it, as Tab to it would. */
   private choose(id: string): void {
+    const now = current(this.host.key, this.vp, this);
+    if (now !== this) return now.choose(id);
     if (!this.board.items.some((i) => i.id === id)) return;
     this.cursor = { focus: id, linking: this.cursor.linking };
     this.say(boardOutline(this.board).find((l) => l.id === id)?.said);
