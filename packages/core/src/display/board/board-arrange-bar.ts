@@ -36,6 +36,14 @@ const carried = new Map<string, { back: Glide[]; glide: Glide[]; at: number }>()
 /** How long after a write a board drawn afresh still takes up its glide, in milliseconds. */
 const FRESH_MS = 3000;
 
+/** The words for how the items were arranged. */
+const HOW = {
+  grid: 'board.arrange.how.grid',
+  tree: 'board.arrange.how.tree',
+  flow: 'board.arrange.how.flow',
+  cluster: 'board.arrange.how.cluster',
+} as const;
+
 /** The button, its undo, and the glide of the items arranged. */
 export class ArrangeBar {
   private readonly undo: HTMLButtonElement;
@@ -102,7 +110,11 @@ export class ArrangeBar {
   }
 
   /** Writes each item at its `to` as one change, then glides the items that arrived there; says it as `said`. */
-  private async put(glide: Glide[], said: string, how = ''): Promise<void> {
+  private async put(
+    glide: Glide[],
+    said: 'board.arrange.done' | 'board.arrange.done-as' | 'board.arrange.undone',
+    how: Fit | 'picked' = 'picked',
+  ): Promise<void> {
     this.stop();
     const back = said === 'board.arrange.undone' ? [] : glide.map((g) => ({ id: g.id, from: g.to, to: g.from }));
     // set before the write: the host may draw the board afresh at once, and the new one picks these up
@@ -115,7 +127,7 @@ export class ArrangeBar {
       });
     const at = new Map(this.h.board().items.map((i) => [i.id, i]));
     const arrived = glide.filter((g) => at.get(g.id)?.x === g.to[0] && at.get(g.id)?.y === g.to[1]);
-    if (arrived.length) this.h.say(word(said, { count: arrived.length, how: how && word(`board.arrange.how.${how}`) }));
+    if (arrived.length) this.h.say(word(said, { count: arrived.length, how: how === 'picked' ? '' : word(HOW[how]) }));
     this.glide(arrived);
     this.back = arrived.length ? back : [];
     this.undo.hidden = !this.back.length;

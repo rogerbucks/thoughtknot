@@ -68,7 +68,8 @@ export const BOARD_SLICE_SOURCE_WORDS = {
   'board.arrange.free': 'This board is not on a graph, so there is nothing to arrange it by.',
   'board.arrange.none': 'No item on this board has become a thing that can be moved.',
   'board.arrange.button': 'Arrange by graph',
-  'board.arrange.tip': 'Move the items that became things to where their links place them. Shift-click cards to arrange only those. Nothing else moves.',
+  'board.arrange.tip':
+    'Move the items that became things to where their links place them. Shift-click cards to arrange only those. Nothing else moves.',
   'board.arrange.undo': 'Undo arrange',
   'board.arrange.done': 'Arranged {count} items by the graph.',
   'board.arrange.done-as': 'Arranged {count} items as a {how}.',
