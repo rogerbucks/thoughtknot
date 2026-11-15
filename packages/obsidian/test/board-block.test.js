@@ -258,6 +258,36 @@ describe('a host that draws the board afresh as soon as the note is written', ()
     }
   });
 
+  test('the items chosen stay chosen on a board drawn afresh, and Esc on the new board lets them go', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      const b = el.querySelector('[data-item="b"]');
+      vp.dispatch('pointerdown', mouse(1, b, { clientX: 300, clientY: 300, shiftKey: true }));
+      assert.ok(el.querySelector('[data-item="b"]').classList.contains('is-chosen'));
+      press('Tab'); // a
+      press('ArrowDown', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 70/.test(noteNow()) && fresh);
+      await settled();
+      assert.ok(fresh.querySelector('[data-item="b"]').classList.contains('is-chosen'), 'b is still ringed');
+      assert.ok(!fresh.querySelector('[data-item="a"]').classList.contains('is-chosen'));
+      const now = fresh.querySelector('.thoughtknot-board .thoughtknot-viewport');
+      now.dispatch('keydown', { key: 'Escape', target: now });
+      assert.ok(!fresh.querySelector('[data-item="b"]').classList.contains('is-chosen'), 'Esc lets it go');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('ideas are caught one after another: the field opens again on the board drawn afresh, with the keyboard in it', async () => {
     const { env, el, vp, press, noteNow } = await board();
     try {

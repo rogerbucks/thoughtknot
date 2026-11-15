@@ -87,6 +87,7 @@ class BoardView {
     this.board = readBoard(source).board;
     this.seen = source;
     const was = keptOf(host.key);
+    this.sel.at(host.key);
     this.cursor = was?.cursor ?? NO_CURSOR;
     this.readOnly = !host.write && !host.together;
     const root = el.createDiv({ cls: ['thoughtknot', 'thoughtknot-board'] });

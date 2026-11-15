@@ -1,11 +1,21 @@
 // The items chosen on a board (editor spec §45, board_arranged_by_graph). Shift-click, Ctrl-click or Cmd-click adds an
 // item or takes it out, and Esc clears them. They are drawn ringed. A chosen item is only a mark on the screen.
 // Nothing is written to the note, and nothing moves, until the person asks for something to be done to them.
+// A host may draw a board afresh after each write. So the chosen items are kept by the host's key, and the new board
+// rings what the old one had.
+const chosen = new Map<string, Set<string>>();
+
 export class BoardSelection {
-  private readonly ids = new Set<string>();
+  private ids = new Set<string>();
 
   /** `changed` is told how many are chosen whenever that changes. */
   constructor(private readonly changed: (count: number) => void) {}
+
+  /** Takes up the items chosen on the board that `key` names, and shares what is chosen with a board drawn after. */
+  at(key: string): void {
+    this.ids = chosen.get(key) ?? this.ids;
+    chosen.set(key, this.ids);
+  }
 
   /** The chosen items, in the order chosen. */
   list(): string[] {
