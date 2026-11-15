@@ -475,6 +475,15 @@ describe('Dependabot', () => {
     assert.ok(updates().some((u) => u.ecosystem === 'uv'));
   });
 
+  test('the app’s Rust crates are watched too, with Tauri held at its major and the reason written down', () => {
+    if (!exists('packages/app/src-tauri/Cargo.toml')) return;
+    const cargo = updates().find((u) => u.ecosystem === 'cargo')?.chunk;
+    assert.ok(cargo, 'a cargo entry');
+    assert.match(cargo, /directory: \/packages\/app\/src-tauri\n/, 'it reads the app’s lock file');
+    assert.match(cargo, /dependency-name: 'tauri\*'\n\s*update-types: \['version-update:semver-major'\]/);
+    assert.match(cargo, /# Held back:/, 'the reason is written down');
+  });
+
   test('version updates come weekly, grouped, after a cooldown of at least seven days', () => {
     for (const { ecosystem, chunk } of updates()) {
       assert.match(chunk, /interval:\s*['"]?weekly/, `${ecosystem} weekly`);
