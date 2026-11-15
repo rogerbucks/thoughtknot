@@ -17,8 +17,8 @@ const sized = (svg: string, size: Pick<PngSize, 'width' | 'height'>) =>
   );
 
 /**
- * The PNG's bytes: the SVG drawn on a canvas of `size`; rejects, saying why, whatever stops it — never hangs. With
- * `paper` a JPEG is made instead, drawn on that colour, since a JPEG holds no clear pixels: a PDF holds a JPEG as it is.
+ * The PNG's bytes: the SVG drawn on a canvas of `size`; rejects, saying why, whatever stops it — never hangs.
+ * With `paper` a JPEG is made instead, drawn on that colour. A JPEG holds no clear pixels, and a PDF holds one as it is.
  */
 export function rasterise(svg: string, size: Pick<PngSize, 'width' | 'height'>, paper?: string): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
