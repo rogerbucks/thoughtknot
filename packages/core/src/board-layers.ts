@@ -140,7 +140,8 @@ export function layerEdit(
   if (change.kind === 'into') {
     if (change.layer !== null && !find(change.layer))
       return { refused: word('board.layers.gone', { id: change.layer }) };
-    const items = board.items.filter((i) => change.ids.includes(i.id) && !i.locked);
+    // a locked item, or one in a locked or hidden layer, stays where it is: a move must never unlock it
+    const items = board.items.filter((i) => change.ids.includes(i.id) && !lockedOn(board, i));
     if (!items.length) return { refused: word('board.edit.locked') };
     return { text: items.reduce((t, i) => rewritten(t, i.id, itemGql(inLayer(i, change.layer))), text) };
   }

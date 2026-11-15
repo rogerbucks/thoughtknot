@@ -134,6 +134,37 @@ describe('the named layers of a board', () => {
   });
 
   // proves: board_layers
+  test('refuse to move an item out of a locked or hidden layer, so a move never unlocks it', () => {
+    assert.match(boardEdit(TEXT, { kind: 'into', ids: ['map'], layer: 'notes' }).refused, /locked/i);
+    assert.match(boardEdit(TEXT, { kind: 'into', ids: ['map'], layer: null }).refused, /locked/i);
+    const hidden = edit(TEXT, { kind: 'layer-set', id: 'notes', hidden: true });
+    assert.match(boardEdit(hidden, { kind: 'into', ids: ['a'], layer: null }).refused, /locked/i);
+    // of a locked item and a free one, only the free one moves
+    const both = edit(TEXT, { kind: 'into', ids: ['map', 'b'], layer: 'notes' });
+    assert.match(both, /\(b:Sticky \{[^}]*in_layer: 'notes'/);
+    assert.match(both, /\(map:Shape \{[^}]*in_layer: 'back'/);
+  });
+
+  // proves: board_layers
+  test('step a layer up and down when two layers share an order or have none', () => {
+    const tied = `// graph: ideas · BOARD
+(one:Layer {name: 'One', order: 2}),
+(two:Layer {name: 'Two', order: 2}),
+(none:Layer {name: 'None'}),
+(a:Sticky {x: 0, y: 0, text: 'Go by train', in_layer: 'one'})`;
+    const names = (text) => layerRows(readBoard(text).board).map((r) => r.name);
+    assert.deepEqual(names(tied), ['Two', 'One', 'None', 'Items in no layer']);
+    const up = edit(tied, { kind: 'layer-step', id: 'one', by: 1 });
+    assert.deepEqual(names(up), ['One', 'Two', 'None', 'Items in no layer']);
+    const down = edit(up, { kind: 'layer-step', id: 'one', by: -1 });
+    assert.deepEqual(names(down), ['Two', 'One', 'None', 'Items in no layer']);
+    const last = edit(down, { kind: 'layer-step', id: 'none', by: 1 });
+    assert.deepEqual(names(last), ['Two', 'None', 'One', 'Items in no layer']);
+    const orders = readBoard(last).board.layers.map((l) => l.order);
+    assert.equal(new Set(orders).size, orders.length, 'no two layers share an order after a step');
+  });
+
+  // proves: board_layers
   test('take a layer out and leave its items on the board, loose', () => {
     const board = readBoard(edit(TEXT, { kind: 'layer-remove', id: 'notes' })).board;
     assert.deepEqual(
