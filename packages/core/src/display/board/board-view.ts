@@ -8,7 +8,7 @@
 // that draws the block afresh after a write gets the same view and focus back, kept by its `key`.
 import { word, Zoom, type Drawn, type Palette, type View } from '@thoughtknot/core';
 
-import { boardOf, readBoard, type Board, type BoardItem } from '../../board.ts';
+import { boardOf, type Board, type BoardItem } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
 import { groupNotes, isGroupKey } from './board-group.ts';
 import { boardKey, NO_CURSOR, type BoardCursor } from '../../board-keys.ts';
@@ -20,7 +20,8 @@ import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
 import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
-import { outlined } from './board-wheel.ts';
+import { outlined, outlineIn } from './board-wheel.ts';
+import { readShown, showLayers } from './board-layers.ts';
 import { bindNest, type Nested } from './board-nest.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
@@ -83,7 +84,7 @@ class BoardView {
     source: string,
     private readonly host: BoardHost,
   ) {
-    this.board = readBoard(source).board;
+    this.board = readShown(source);
     this.seen = source;
     const was = keptOf(host.key);
     this.cursor = was?.cursor ?? NO_CURSOR;
@@ -114,9 +115,8 @@ class BoardView {
     this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
     this.editor.hidden = true;
     this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
-    const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
-    outline.createEl('summary', { text: word('board.outline') });
-    this.list = outline.createEl('ul');
+    showLayers(root, this.arranging(), host.key, this.readOnly);
+    this.list = outlineIn(root);
     this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
@@ -232,7 +232,7 @@ class BoardView {
     const text = this.host.together?.text() ?? '';
     if (text !== this.seen && !this.drag.active) {
       this.seen = text;
-      this.board = readBoard(text).board;
+      this.board = readShown(text);
       this.draw();
       return true;
     }
@@ -250,7 +250,7 @@ class BoardView {
       const why = await t.change(change).catch((e: unknown) => word('board.write-failed', { why: String(e) }));
       if (why) return this.say(why);
       this.seen = t.text();
-      this.board = readBoard(this.seen).board;
+      this.board = readShown(this.seen);
       return this.draw();
     }
     const r = await this.host
@@ -258,7 +258,7 @@ class BoardView {
       .catch((e: unknown) => ({ refused: word('board.write-failed', { why: String(e) }) }));
     if (!r) return;
     if ('refused' in r) return this.say(r.refused);
-    this.board = readBoard(r.text).board;
+    this.board = readShown(r.text);
     this.draw();
   }
 

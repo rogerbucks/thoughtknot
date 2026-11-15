@@ -11,6 +11,7 @@ import { isolated } from './bidi.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { clashOf } from './board-clash.ts';
+import { layerOf, stackOf } from './board-layers.ts';
 import { glyphNamed } from './board-glyphs.ts';
 import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
@@ -242,16 +243,19 @@ export function boardFrame(board: Board): Box {
 
 /**
  * The board as one SVG picture in `palette`'s colours. With `view`, only the items that meet it are drawn, and only the
- * connectors with an end among them. Lower layers come first, then the order written.
+ * connectors with an end among them. A hidden layer's items are left out. Lower layers come first, named ones over
+ * the board's own, then the order written.
  */
 export function boardSvg(board: Board, palette: Palette, view?: Box): string {
   const boxes = new Map(board.items.map((i) => [i.id, itemBox(i)]));
+  const rank = (i: BoardItem) => stackOf(board, i);
   const shown = board.items
     .map((item, at) => ({ item, at }))
-    .filter(({ item }) => !view || meets(boxes.get(item.id) as Box, view))
-    .sort((a, b) => (a.item.layer ?? 0) - (b.item.layer ?? 0) || a.at - b.at)
+    .filter(({ item }) => !layerOf(board, item)?.hidden && (!view || meets(boxes.get(item.id) as Box, view)))
+    .sort((a, b) => rank(a.item) - rank(b.item) || (a.item.layer ?? 0) - (b.item.layer ?? 0) || a.at - b.at)
     .map(({ item }) => item);
   const near = new Set(shown.map((i) => i.id));
+  for (const i of board.items) if (!near.has(i.id) && layerOf(board, i)?.hidden) boxes.delete(i.id);
   const lines = board.connectors.flatMap((c) => {
     const a = boxes.get(c.from),
       b = boxes.get(c.to);

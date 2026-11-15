@@ -156,6 +156,42 @@ describe('a board inside a board opened in Obsidian', () => {
   });
 });
 
+describe('the layers of a board in Obsidian', () => {
+  // proves: board_layers
+  test('start folded, and a layer is made, given the item in focus and hidden, each a change to the note', async () => {
+    const env = await load({ files: { [MANY_PATH]: MANY } });
+    try {
+      env.state.active = MANY_PATH;
+      env.app.workspace.tell('file-open', env.app.workspace.getActiveFile());
+      await until(() => !!manyPane(env)?.querySelector('[data-item="a"]'), 8000);
+      const layers = () => manyPane(env).querySelector('.thoughtknot-board-layers');
+      const press = (label) =>
+        layers()
+          .querySelectorAll('button')
+          .find((b) => (b.getAttribute('aria-label') ?? b.textContent) === label)
+          .click();
+      const file = () => env.state.files.get(MANY_PATH);
+      assert.equal(layers().hasAttribute('open'), false, 'folded at first');
+      assert.equal(layers().querySelector('summary').textContent, 'Layers: 0');
+      press('New layer');
+      await until(() => file().includes("(layer_1:Layer {name: 'Layer 1', order: 1})"), 8000);
+      await until(() => layers().querySelector('summary').textContent === 'Layers: 1', 8000);
+      const vp = manyPane(env).querySelector('.thoughtknot-viewport');
+      vp.focus();
+      vp.dispatch('keydown', { key: 'Tab', target: vp });
+      press('Move the chosen items to Layer 1');
+      await until(() => file().includes("(a:Sticky {x: 10, y: 20, text: 'Go by train', sheet: 'layer_1'})"), 8000);
+      press('Hide the layer Layer 1');
+      await until(() => file().includes('order: 1, hidden: true})'), 8000);
+      await until(() => !manyPane(env).querySelector('[data-item="a"]'), 8000);
+      assert.match(layers().querySelector('[data-layer="layer_1"]').textContent, /1 items, hidden/);
+      assert.ok(file().includes("(b:Sticky {x: 10, y: 20, text: 'Book it'})"), 'the other board is untouched');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 const TEAM = [
   '# Team',
   '```gql',

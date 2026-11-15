@@ -8,6 +8,7 @@
 import { gqlSpans } from './blocks.ts';
 import { boardOf, itemGql, moveItem, readBoard, writeBoard } from './board.ts';
 import type { Board, BoardItem, BoardKind, Connector } from './board.ts';
+import { layersEdit, lockedIn, lockedSaid, type LayerAsk } from './board-layers.ts';
 import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
@@ -36,7 +37,9 @@ export type BoardChange =
   | { kind: 'remove'; id: string }
   | { kind: 'connect'; from: string; to: string; label?: string }
   | { kind: 'disconnect'; from: string; to: string }
-  | { kind: 'put'; item: BoardItem };
+  | { kind: 'put'; item: BoardItem }
+  /** A change to the board's named layers (board-layers.ts). */
+  | { kind: 'layers'; ask: LayerAsk };
 
 /** The smallest an item's side may be made, so it can still be seen and pointed at. */
 export const MIN_SIDE = 20;
@@ -54,7 +57,7 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
     // several items at once, each by its own text alone, as an arrangement puts them; a locked one stays
     const open = change.moves.filter((m) => {
       const item = find(m.id);
-      return item && (undoing || !item.locked);
+      return item && (undoing || !lockedIn(board, item));
     });
     if (!open.length) return { refused: word('board.edit.locked') };
     return { text: open.reduce((t, m) => moveItem(t, m.id, m.x, m.y), text) };
@@ -64,13 +67,17 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
     const item = find(set.id);
     if (!item) return { refused: word('board.edit.gone', { id: set.id }) };
     // text, votes and the lock itself may change on a locked item; nothing else may
-    if (item.locked && !['text', 'lock', 'vote', 'hide', 'comment'].includes(set.kind))
-      return { refused: word('board.edit.locked') };
+    if (lockedIn(board, item) && !['text', 'lock', 'vote', 'hide', 'comment'].includes(set.kind))
+      return { refused: lockedSaid(board, item) };
     if (set.kind === 'comment' && !commentedMore(item, set.do)) return { refused: word('board.edit.no-thread') };
     return { text: itemChanged(text, item, patchOf(set, item)) };
   }
   // a change to the board's shape writes it again whole: never over what the reader could not read
   if (problems.some((p) => p.severity === 'error')) return { refused: word('board.edit.problems') };
+  if (change.kind === 'layers') {
+    const done = layersEdit(board, change.ask);
+    return 'refused' in done ? done : { text: writeBoard(done) };
+  }
   if (change.kind === 'add') {
     if (find(change.item.id)) return { refused: word('board.edit.taken', { id: change.item.id }) };
     board.items.push(change.item);
@@ -82,13 +89,14 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
   } else if (change.kind === 'remove') {
     const item = find(change.id);
     if (!item) return { refused: word('board.edit.gone', { id: change.id }) };
-    if (item.locked && !undoing) return { refused: word('board.edit.locked') };
+    if (lockedIn(board, item) && !undoing) return { refused: lockedSaid(board, item) };
     board.items = board.items.filter((i) => i !== item);
     board.connectors = board.connectors.filter((c) => c.from !== item.id && c.to !== item.id);
   } else if (change.kind === 'put') {
     const at = board.items.findIndex((i) => i.id === change.item.id);
     if (at < 0) return { refused: word('board.edit.gone', { id: change.item.id }) };
-    if (board.items[at]?.locked && !undoing) return { refused: word('board.edit.locked') };
+    const was = board.items[at];
+    if (was && lockedIn(board, was) && !undoing) return { refused: lockedSaid(board, was) };
     board.items[at] = change.item;
   } else if (change.kind === 'disconnect') {
     const { from, to } = change;
@@ -173,7 +181,7 @@ function itemChanged(text: string, item: BoardItem, patch: Partial<BoardItem>): 
 
 /** A name for a new item of `kind` that the board does not use yet: sticky1, sticky2 and so on. */
 export function freeId(board: Board, kind: BoardKind): string {
-  const used = new Set(board.items.map((i) => i.id));
+  const used = new Set([...board.items, ...(board.unseen ?? []), ...(board.layers ?? [])].map((i) => i.id));
   const stem = kind.toLowerCase();
   let n = 1;
   while (used.has(`${stem}${n}`)) n++;

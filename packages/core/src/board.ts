@@ -41,6 +41,20 @@ export interface BoardItem {
   more: Record<string, Value>;
 }
 
+/**
+ * A named layer of a board (board_layers): a `Layer` thing of the block. An item is on it when its `sheet` names it. A
+ * higher `order` is drawn over a lower one, and over every item on no layer.
+ */
+export interface BoardLayer {
+  id: string;
+  name: string;
+  order: number;
+  hidden?: boolean;
+  locked?: boolean;
+  /** Any other property, kept as written. */
+  more: Record<string, Value>;
+}
+
 /** A connector between two items: a CONNECTS link, with its label if it has one. */
 export interface Connector {
   from: string;
@@ -55,6 +69,10 @@ export interface Board {
   on: string | null;
   items: BoardItem[];
   connectors: Connector[];
+  /** Its named layers, in the order written; left out when it has none. */
+  layers?: BoardLayer[];
+  /** The items on its hidden layers, when they were taken out of `items` to be shown (board-layers.ts). */
+  unseen?: BoardItem[];
 }
 
 // the properties every item may have, in the order they are written
@@ -62,6 +80,18 @@ const NUMBERS = ['x', 'y', 'w', 'h', 'layer'] as const;
 const TEXTS = ['text', 'style', 'graph', 'group'] as const;
 const OWN = new Set<string>([...NUMBERS, ...TEXTS, 'locked']);
 const KINDS = new Set<string>(BOARD_KINDS);
+const LAYER_OWN = new Set(['name', 'order', 'hidden', 'locked']);
+
+/** A layer read from its thing: its name is its id when none is written, its order 1. */
+function layerRead(id: string, props: Record<string, Value>): BoardLayer {
+  const layer: BoardLayer = { id, name: typeof props.name === 'string' ? props.name : id, order: 1, more: {} };
+  if (typeof props.order === 'number' && Number.isFinite(props.order)) layer.order = Math.round(props.order);
+  if (props.hidden === true) layer.hidden = true;
+  if (props.locked === true) layer.locked = true;
+  for (const [key, v] of Object.entries(props))
+    if (!LAYER_OWN.has(key) && !(key === 'id' && v === id)) layer.more[key] = v;
+  return layer;
+}
 
 /**
  * The board a block holds, with its problems. `things` are the names of the things in the board's graph. Each item's
@@ -114,6 +144,10 @@ export function readItems(
   const graph = gs.worldFromStore(read.store)[board.name];
   for (const [id, [labels, props]] of graph?.nodes ?? []) {
     const at = lineOf.get(id) ?? 1;
+    if (kinds === KINDS && labels.size === 1 && labels.has('Layer')) {
+      (board.layers ??= []).push(layerRead(id, props));
+      continue;
+    }
     const kind = [...labels].find((l) => kinds.has(l));
     if (!kind || labels.size !== 1) {
       const { code, message, fix } = unknown([...labels].join(':') || '(none)', id);
@@ -184,11 +218,24 @@ export function itemGql(item: BoardItem): string {
   return `(${item.id}:${item.kind} {${props.join(', ')}})`;
 }
 
-/** A board written as its block, in the one fixed form: the board line, each item on a line, then each connector. */
+/** One layer written as GQL: its name and order, then hidden and locked only when they are so. */
+function layerGql(layer: BoardLayer): string {
+  const props = [`name: ${quoted(layer.name)}`, `order: ${layer.order}`];
+  if (layer.hidden) props.push(`hidden: ${layer.hidden}`);
+  if (layer.locked) props.push(`locked: ${layer.locked}`);
+  for (const [key, v] of Object.entries(layer.more)) props.push(`${key}: ${valueGql(v)}`);
+  return `(${layer.id}:Layer {${props.join(', ')}})`;
+}
+
+/**
+ * A board written as its block, in the one fixed form: the board line, each layer and each item on a line, then each
+ * connector. Items of hidden layers that were set aside are written too.
+ */
 export function writeBoard(board: Board): string {
   const head = `// graph: ${board.name} · BOARD${board.on ? ` ON ${board.on}` : ''}`;
   const lines = [
-    ...board.items.map(itemGql),
+    ...(board.layers ?? []).map(layerGql),
+    ...[...board.items, ...(board.unseen ?? [])].map(itemGql),
     ...board.connectors.map(
       (c) => `(${c.from})-[:CONNECTS${c.label !== undefined ? ` {label: ${quoted(c.label)}}` : ''}]->(${c.to})`,
     ),

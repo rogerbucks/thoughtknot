@@ -759,7 +759,8 @@
       "board_main_screen",
       "board_many",
       "board_nested",
-      "board_proposed"
+      "board_proposed",
+      "board_layers"
     ]
   },
   "B2": {
