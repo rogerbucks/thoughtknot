@@ -84,6 +84,11 @@ describe('docx_read_blocks', () => {
     assert.match(got.refused, new RegExp(String(DOCX_LIMITS.text)));
   });
 
+  test('a long run of spaces inside a paragraph is read in step with its length', () => {
+    const got = docxBlocks(document([`a${' \n'.repeat(40_000)}b  `]));
+    assert.equal(got.blocks[0].text, `a${' \n'.repeat(40_000)}b`);
+  });
+
   test('a table keeps its shape: a short row stays short and a cell holds its paragraphs', () => {
     const got = docxBlocks(document([{ table: [['a'], ['b', 'c']] }]));
     assert.deepEqual(got.blocks, [{ kind: 'table', rows: [['a'], ['b', 'c']] }]);
