@@ -106,8 +106,11 @@ const FIXED = (() => {
   return { lit: huffman(l), dist: huffman(new Array<number>(30).fill(5)) };
 })();
 
-/** The raw deflate stream in `src` from `at`, inflated to exactly `size` bytes; anything else is damage. */
-function inflate(src: Uint8Array, at: number, size: number): Uint8Array {
+/**
+ * The raw deflate stream in `src` from `at`, inflated to exactly `size` bytes; anything else is damage. With `exact`
+ * false, `size` is only the most it may inflate to, and the bytes it did make are returned.
+ */
+function inflate(src: Uint8Array, at: number, size: number, exact = true): Uint8Array {
   const out = new Uint8Array(size);
   let [o, p, buf, have] = [0, at, 0, 0];
   const bits = (n: number): number => {
@@ -182,8 +185,18 @@ function inflate(src: Uint8Array, at: number, size: number): Uint8Array {
     else if (type === 2) dynamic();
     else throw new Damaged();
   }
-  if (o !== size) throw new Damaged();
-  return out;
+  if (exact && o !== size) throw new Damaged();
+  return exact ? out : out.subarray(0, o);
+}
+
+/**
+ * A zlib stream (a PDF's FlateDecode) of `packed` bytes at `at`, inflated to at most `limit` bytes. Deflate cannot
+ * grow a stream more than 1032 times, so the room made is no more than that. The size is not declared: past the
+ * room, or past `limit`, it is damage. The check sum after the stream is not read.
+ */
+export function inflateZlib(src: Uint8Array, at: number, packed: number, limit: number): Uint8Array {
+  if (packed < 3 || ((src[at] ?? 0) & 0x0f) !== 8 || ((src[at + 1] ?? 0) & 0x20) !== 0) throw new Damaged();
+  return inflate(src.subarray(0, at + packed), at + 2, Math.min(limit, packed * 1032 + 64), false);
 }
 
 /** The text of the part `name` of the zip, or null when there is none; a part over the limit is refused. */
