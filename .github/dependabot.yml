@@ -46,6 +46,23 @@ updates:
         applies-to: version-updates
         patterns: ['*']
 
+  # The desktop and phone app's Rust crates (the store and the key keeper share its lock file).
+  - package-ecosystem: cargo
+    directory: /packages/app/src-tauri
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    # Held back: Tauri 3 changes how the app, its build crate and its plug-ins fit together, so a new major of any of
+    # them comes in one change that moves them all. Minor and patch updates, and security fixes, still come through.
+    ignore:
+      - dependency-name: 'tauri*'
+        update-types: ['version-update:semver-major']
+    groups:
+      cargo-version-updates:
+        applies-to: version-updates
+        patterns: ['*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
