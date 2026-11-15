@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/docx-read.test.js",
+  "test": "docx_read_blocks > a long run of spaces inside a paragraph is read in step with its length",
+  "seen_failing_first": false,
+  "evidence": "It guards time, not a result. The old pattern gave the same text, but looked back over the run again and again: 500 such paragraphs in a 46 KB file held the reader for minutes. The fix trims the end without a pattern."
+}
