@@ -16,6 +16,8 @@ const CATALOGUE = Object.fromEntries(
 /** The strings kept in the rest of the core, by file, each with why. `*` keeps every string of the file. */
 export const CORE_KEPT = {
   ...CATALOGUE,
+  // the operators of a PDF file: its bytes, read by a PDF reader and never by a person (locale_never_changes_bytes)
+  'packages/core/src/board-pdf.ts': '*',
   // the test of each step of a bands rule, a lens query run by the engine and never said to a person (§56)
   'packages/core/src/rule-looks.ts': ['{} >= {} and {} < {}'],
   // the header each place's block is joined under, read by the join and never by a person (connectors.ts)
