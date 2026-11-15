@@ -5,59 +5,31 @@ import type { View } from '../../render/render-marks.ts';
 import { roomSizes } from '../../render/render-detail.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import { word } from '../../words.ts';
-import { button } from '../button.ts';
 import { StageCards, type CardWords } from './stage-cards.ts';
-import { cardsChosen, chooseCards, fitsOf, glide, placesOf, widthsOf } from './stage-cards-fit.ts';
+import { fitsOf, glide, placesOf, widthsOf } from './stage-cards-fit.ts';
 import { MoveUndo } from './move-undo.ts';
 import { groundShift } from '../../render/render-tilt.ts';
+import type { CardSave } from '../../layout-block.ts';
 import { CardChoice, fitOfStep, sharedStep, type CardStep } from '../../card-choice.ts';
 import { choiceBar } from './stage-cards-choice.ts';
 import { layCards, switchCards, withHands, type CardsHost } from './stage-cards-lay.ts';
 export { cardWordsOf } from './stage-cards-lay.ts';
-
-/**
- * The dock's Cards button in `root`, for `stage`, on graph `graph`: pressed, each item shows as a card with its whole
- * note. The choice is kept for the graph, so a card drawn again, as typing draws it, opens as it was left.
- */
-export function cardsControl(
-  root: HTMLElement,
-  stage: {
-    showCards: (on: boolean, atOnce?: boolean) => void;
-    cardsOn: { words?: CardWords; button?: HTMLElement; graph: string };
-  },
-  graph: string,
-  words?: CardWords,
-): { unload: () => void } | null {
-  const body = root.querySelector<HTMLElement>('.thoughtknot-view-dock .thoughtknot-dock-body');
-  if (!body) return null;
-  stage.cardsOn.words = words;
-  stage.cardsOn.graph = graph;
-  const b = button(body, word('view.cards'), 'square-stack', () => {
-    const on = !cardsChosen(graph);
-    chooseCards(graph, on);
-    b.setAttribute('aria-pressed', String(on));
-    stage.showCards(on);
-  });
-  stage.cardsOn.button = b; // the stage's unload takes it away
-  b.setAttribute('title', word('view.cards'));
-  b.setAttribute('aria-pressed', String(cardsChosen(graph)));
-  if (cardsChosen(graph)) stage.showCards(true, true);
-  return { unload: () => b.remove() };
-}
+export { cardsControl } from './stage-cards-dock.ts';
 
 /** A stage's cards while Cards is on, what the host gives them to show, and the glide between on and off. */
 export class CardsSwitch {
   cards: StageCards | null = null;
   /** What the host gives the cards to show: its own Markdown rendering, and linked notes. */
   words?: CardWords;
-  /** The dock's Cards button, which goes with the stage. */
+  /** The dock's Cards button, and the button of their arrangements, which go with the stage. */
   button?: HTMLElement;
+  sets?: HTMLElement;
   /** The graph the cards are of, whose cards keep the sizes their reader gave them. */
   graph = '';
   /** Brings a glide still under way to rest at once. */
-  private stop = (): void => {};
+  stop = (): void => {};
   /** The stage the cards were last turned on for, which a card sized anew is laid again on. */
-  private host: (CardsHost & { draw: () => void }) | null = null;
+  host: (CardsHost & { draw: () => void }) | null = null;
 
   /** Turns Cards on or off for stage `h`, as `switchCards` does, drawing each frame; gives the view to show now. */
   turn(h: Omit<CardsHost, 'words'> & { draw: () => void }, on: boolean, done: () => void, atOnce = false): View {
@@ -152,7 +124,7 @@ export class CardsSwitch {
   }
 
   /** The cards laid again from `spots`, at the spread they have: `keys` and every card put by hand stay, others glide. */
-  private relay(keys: readonly string[], spots: Map<string, Spot>): void {
+  relay(keys: readonly string[], spots: Map<string, Spot>): void {
     const [h, cards] = [this.host, this.cards];
     if (!h || !cards) return;
     const was = cards.laid,
@@ -169,24 +141,24 @@ export class CardsSwitch {
    * Saves card `key` as its reader sized and put it, in the layout's own places; one sized and put as laid is forgotten.
    * Where nothing is saved, as with a block another plugin draws, it is kept while the plugin runs.
    */
-  private save(key: string): void {
-    const [h, cards] = [this.host, this.cards];
+  save(key: string): void {
+    const save = this.host?.saves?.card;
+    if (save && this.cards?.laid.cards.some((c) => c.key === key)) void save(key, this.cardSave(key));
+  }
+
+  /** Card `key` as its reader sized and put it, in the layout's own places; null when it is as laid. */
+  cardSave(key: string, every = false): CardSave | null {
     const [f, p, w] = [fitsOf(this.graph).get(key), placesOf(this.graph).get(key), widthsOf(this.graph).get(key)];
-    const at = cards?.laid.cards.find((c) => c.key === key);
-    if (!h?.saves?.card || !cards || !at) return;
-    const { spread, cx, cy } = cards.laid;
-    const here = p ?? { x: cx + (at.x - cx) / spread, y: cy + (at.y - cy) / spread };
-    const c =
-      f || p || w
-        ? {
-            ...here,
-            ...(p && { placed: true }),
-            ...(f && { fit: f.fit }),
-            ...(f?.tall && { h: f.tall }),
-            ...(w && { w }),
-          }
-        : null;
-    void h.saves.card(key, c);
+    const at = this.cards?.laid.cards.find((c) => c.key === key);
+    if (!at || !(f || p || w || every)) return null;
+    const here = p ?? this.baseOf(at);
+    return {
+      ...here,
+      ...(p && { placed: true }),
+      ...(f && { fit: f.fit }),
+      ...(f?.tall && { h: f.tall }),
+      ...(w && { w }),
+    };
   }
 
   /**
@@ -307,7 +279,7 @@ export class CardsSwitch {
   }
 
   /** Offers the undo of a move, said as `said`; the undo shares the history of the dots' moves. */
-  private offer(said: string, undo: () => void, redo: () => void): void {
+  offer(said: string, undo: () => void, redo: () => void): void {
     const h = this.host;
     if (!h) return;
     this.undoes ??= new MoveUndo(h.viewport, this.graph);
@@ -315,7 +287,7 @@ export class CardsSwitch {
   }
 
   /** Marks each card put by hand with its pin. */
-  private markPins(): void {
+  markPins(): void {
     this.cards?.mark('is-pinned', new Set(placesOf(this.graph).keys()));
   }
 
@@ -375,6 +347,6 @@ export class CardsSwitch {
     this.stop();
     this.choose([]);
     this.cards?.remove();
-    this.button?.remove();
+    for (const b of [this.button, this.sets]) b?.remove();
   }
 }

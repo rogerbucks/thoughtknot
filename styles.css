@@ -2626,7 +2626,8 @@ pre.thoughtknot-code {
   outline-offset: 3px;
 }
 /* the bar over the cards chosen together: it sizes them all at once */
-.thoughtknot-stage-cards-chosen {
+.thoughtknot-stage-cards-chosen,
+.thoughtknot-stage-cards-sets {
   position: absolute;
   inset-block-end: var(--gn-space-3);
   inset-inline-start: 50%;
@@ -2643,6 +2644,17 @@ pre.thoughtknot-code {
 }
 .thoughtknot-stage-cards-chosen button[aria-pressed='true'] {
   color: var(--gn-accent);
+}
+/* the arrangements sit above the chosen bar, so both show at once */
+.thoughtknot-stage-cards-sets {
+  inset-block-end: calc(var(--gn-space-9) + var(--gn-space-3));
+}
+.thoughtknot-stage-cards-sets select {
+  max-inline-size: 12em;
+}
+.thoughtknot-stage-cards-name {
+  display: flex;
+  gap: var(--gn-space-half-2);
 }
 .thoughtknot-stage-card-head {
   display: flex;

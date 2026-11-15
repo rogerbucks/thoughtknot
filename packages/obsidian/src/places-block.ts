@@ -3,7 +3,8 @@
 // The graph block is never rewritten. When the graph changed since it was drawn, nothing is written, and a notice
 // says why. Each place offers its undo, which forgets a first place or puts back the one before.
 import { Notice } from 'obsidian';
-import { cardInNote, forgetInNote, placeInNote, savedCards, savedPlaces } from '@thoughtknot/core';
+import { arrangementInNote, cardInNote, forgetInNote, placeInNote, savedArrangements } from '@thoughtknot/core';
+import { savedCards, savedPlaces } from '@thoughtknot/core';
 import type { PlacesHost } from '@thoughtknot/core/display/graph-view/stage-places';
 import type ThoughtKnotPlugin from './main';
 import { changeVaultNote } from './storage/plugin-notes';
@@ -42,5 +43,8 @@ export function placesFor(
     // each card as its reader sized and put it, kept apart from its thing's place (render_cards, layout_block)
     cards,
     card: (key, c) => write((now) => cardInNote(now, graph, shown, key, c)),
+    // the arrangements of the cards saved by name, in the same block (render_cards)
+    arrangements: savedArrangements(note, graph),
+    arrange: (name, cards) => write((now) => arrangementInNote(now, graph, shown, name, cards)),
   };
 }

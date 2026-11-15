@@ -522,4 +522,9 @@ export const VALUES_LATE = [
   'cardInNote',
   'saveCard',
   'savedCards',
+  // the arrangements of the cards saved by name in the layout block (render_cards), 15 Nov 2026
+  'arrangementInNote',
+  'savedArrangements',
+  'saveArrangement',
+  'useArrangement',
 ];
