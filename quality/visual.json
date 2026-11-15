@@ -3,375 +3,375 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "6883d784adef282a5940a181572357d0b0581139a9ddff4b717fe32f44a4e2fc",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "d46c78b4504a6354cf2957a4031fb5c9e8bc85eaf3a5ea4b41d632381a8c4582",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "965c76b99e89a6fe8b6cfd629234ad4746950a472365db16752c372746d72ec1",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "3227757c5d1892c05108c6bc22deae3348d24ebd02bba23c03988654c14031d2",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "7264290e19fd90975905e7f11c6cef05076a5108074d301208c551664cbc4edb",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "b223ea8a72b7c7e86765c70c194f93d992ee0f3511153f54b84ffa022a69b6e1",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "1e6a2a7abda6213c96a36213a9e6b76333a234e7897691227837c3b3e17c406f",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "738721fea159fcad6e856f0ea089c02645510d1daf46737456434264e8752a41",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "d63db6f50d0e8ed8cee2a5f27edfff2065f2980973a52be1749c9fbd4fd18c9a",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "a7c5c51f1fb7113f8769f55231b94b96227e567ebb55a4aff2e7529423fb41a1",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "2b3e644df49434b0349c72b43cf4032b89bde617913af47194187469b4d85a32",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "18e8647ac19333a943c23018267a43318bf4daf85e4cff36e65d221def4880fa",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "7fc03d7974ce39199d47e48b8853b733a0b76a731709972f7d359cc61f182615",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "1895bfd84cf9d04bd98a605dd13fa0f6d49daaa786edf7c47fdf9f84413fa117",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "93d419284f842a587cceb67a98f5d6b0dc7de30fbe7330865e772bf9c9836125",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "a5b1f2380427608d408d3a36b374230a1863fbfccffbec9472832d1f760f0032",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "7df9fbe7b7ec75d5c528b5c85d045d457e64203abd58879368ada7bbf1edbe01",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "20877d49fc9e49912b3158ae8af5b89818556df7459388add4b48dad4a965e05",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "5ff132a26cecb57644f262cbdef401cf731e2cdd3f42f2c89aa694a7e27219a5",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "2edc059c81099733a3c14d68f1912d663cf3e01eda9c648874a933a6bafa98de",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "a8408f386f54179fb63e0eb7c77684f4ffc39509067d5f655258177b414a36ff",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "ea55a5b98a379c41cc80c11c2926662ccffa33eeb74e5a3244ec9005a4c3b5f3",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "65d766153f6fc9e9924e7ecfa539bfb13fd9999592de8bf997edc177976d9ff9",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "760d29bb9239d430ad7ad5b19aaff2a7169c2d6b1077f56b418561624de9245b",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "2d7392fd392930676c0513e08aff103993b2e9f165e075fdff118b1dfa4837a5",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "b645b6971e29471f567e2f6927b9763a98b64dbbb442a70d8d73c343e8f6b5ed",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "01f624dad9ec9e346436f553e3c938aecadb6e4e6a15b72c1f80d44f1e0ced17",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "c98ac8a73e866c50d4ee8a7f633eb3c6003abcb9b10144219984c591ef196be9",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "1dc871160486f4116732a5879f408105add799f08a6ef26dee08a771376b10e0",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "13232efb734ac40709f1e1dca9e8c4a96098012dd6958545a88fa28aa037e610",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "e68250bba3a97398678811eb48b7b5323c36fe5b9d582cd0bb9bf31e61fce9b6",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "804c666d9518869ba1c71523ea5017c819618ccb4ae1e9572c8768ad1ec2dcf4",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
-      "sha256": "31e926faa670b74687ce21cb0dd003581d5f3b8c49796e8c9c3cc73086243606",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "2f93ddf2852b08df254dc077b5de07415ab3e84a60c6bcb6e662be6e402fd72f",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.light.txt",
-      "sha256": "f92ed0a42a50727c73af9018fdcda91dff5a547dad7e046bcfa5095c475a7051",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "eba16d1e633984684ffa890cb82da9aabb6315692f35b5b84bc39842246cbe54",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "0d96d7f9b1059ba976ddc23082aa356850369713c07a07c5f922a94da644d760",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "505654d7d4954a2dfb2071badd945bffa4898658da05e39a99a6bd40f1c7bf03",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "c0751dc4472df964cccaa31caf9241eaa20a76392579627a131070150242fc5b",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "45821d49917cd45317793ac5578ce9b1418f8ddf84e745df2bfac1cf9b3f610e",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "dc178ddd6c0d926907efde8fd336c5605bee3c8786aefe3cb1cef4179fb57e72",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "ade3820e90e21e357e868596aed99865a939dc37f157cf88c72eed14ef2b744d",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "e3d133d4318019a7132472dc3d31855a02811f0e6de19a51a3d6befda610fd4e",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "ae0c4c03efb5b16c0c64c876c7192ec92a0533693549b170042a6b6427277f3f",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "39b07394b2ab3f1ca628c76c5d76c8d157419ea94e1882d6705e868e99cd78c6",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "1b220a5862ef621fa70640cf4102e99f32db517f469cbfdddb6e6bde2843cfcd",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "c1d9354f363791ff18bc74669c04855f6aa79dde494424daac5a0247bf9e6d80",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "672e7a072c9179e8b9828a841336d2f7d567b47ccfa3951409c05ada26985761",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "5d49137420cedd1e72aac0ee6f97137a26778b33c4004c3585bdb15f53c10dc4",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "67df372954a2e474cf40a04c5f370f863cdc3cecb33852b5a4af34aabab1da13",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "3b31dcbdaa9706bf73cbf76ec594807b195d4e4899f9294a925d0b49eb634c47",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "9fa37ac2b1c1a1170eaa3050dfce41b71ce0253666e5baee01420fb83149671b",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "a8408f386f54179fb63e0eb7c77684f4ffc39509067d5f655258177b414a36ff",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "ea55a5b98a379c41cc80c11c2926662ccffa33eeb74e5a3244ec9005a4c3b5f3",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "65d766153f6fc9e9924e7ecfa539bfb13fd9999592de8bf997edc177976d9ff9",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "760d29bb9239d430ad7ad5b19aaff2a7169c2d6b1077f56b418561624de9245b",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "84b209a2030d68bdf6f4f56e720fd15b4b7117851cbc5ccbfb6d89ebde311562",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "ca340e8bfacf5d4e6991aa4df863fbdb80f1a1b43e3db2f2c90e4dd6883fdd1d",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "881145024624ab9e93935a0d00549641d9c11401e030311a86fa7dcf8c457f09",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "e7ed29aa627f9abcdfbd06d356b265dfd20594580d377c0f759e6ef804b47cb2",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "027f3f113d475d269b3419736477762d051561e175c487e980e5add8a3077584",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "bef301be175d841dd222100125e47a8b35ae33ad53758e3f887e4b26e53855c5",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "fc3c0ca2007c64e9f1169d0e4c520a9fcd48a3e3f2b1800327205937da516588",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "fd903ea7b914e72d0ca54fa2fe53fcd5f1e958ddb733f66bed48dba2340469e7",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "778d12d22cbe8f1206b71fb5bf62f969e1625f838eae9d41094692405b391755",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "15ac936a9c4bf79e634392a58f62b97916fb55b0d7b45e1bde72a2cdc34664d6",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "96683b8d87d6f3882b8d9459284335bae44a5ea010f70ec0642e8d035edbe5db",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "6a9b8e8ff443ee81de788d0938869ffa9e01571ec27056602ec4f6f8a1018880",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "ae98e9382e073c3dc04aad76eca358b47af31d6f1a2344d6b319a5b38fb90bcc",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "6f714d99cbe73e6a2c1e5b9ae0a2dae1e91c0afa5a15f7a170409c1de3f4a7f7",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "4c0c6a238530ce7cc411a9e5eab333dfcee26fbb5cf0a74fdf16ce2cc8057dc7",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "ff923ff15b9b158269b13d6a4d64c2fa13cf2af3ff7bfdb52e8ab5e0c02eb181",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "e9a3d7a47ec3b05312972d064cad0fe48007899c843f674c635fa069561d1c31",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "b5c24e6a6001d5cd64c0dd075a2a2ee383ce67d6f248e2d30f41b194a5dccda9",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "a5fb2b80263d3b10b1d4fbb2b4db714fcb01b40dba9322c94c894498e6634bc6",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "f3b6abe8f100075b207db11b4f912aad2e9846c8324a8f027f37d49141dbe1d8",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "5d49137420cedd1e72aac0ee6f97137a26778b33c4004c3585bdb15f53c10dc4",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "67df372954a2e474cf40a04c5f370f863cdc3cecb33852b5a4af34aabab1da13",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "3b31dcbdaa9706bf73cbf76ec594807b195d4e4899f9294a925d0b49eb634c47",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "9fa37ac2b1c1a1170eaa3050dfce41b71ce0253666e5baee01420fb83149671b",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "1d5b158dd8667e6e8cd14fbfaf85440e9814a7a3d1b5bd37751d490cb76cdc5e",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "c1913bfe28d8d6643a1342160d33b2d935e7c4d0b8254d316ec99d7c81355bc5",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "ccefc88d6755e288a1af05caa5c8f960781db69c919a00559a97fb2e949678a6",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "77283570725ad852ad64e83598875e6ac2af2d872a2a85a84aa8c7fa6cc4b958",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "1c70cef95c2c3377b1d04ec0b9b04bbd38f40049e44080c5fa23aff9703c8f72",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "e1f3c4582f524a74e5ce8982ef2d227277b3d242e5dbf76620033af109a9e9bc",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "fc5a12c802236fe1b4d394d6b359870cb7cc4474464a8fe54a8e9f72cacd3c61",
-      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
-      "day": "2026-11-11"
+      "sha256": "e30d642da85395e870fab1243168f12694f7454161471a5e09f1e348dfc06c09",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "088e6a132fb158f9e8b7784eea48274f3af7e4b2d9d83e50129ae60d82dee827",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "48af1da3f352bb79715e34585aa4e6210aab40ed72624fd4a74f272b132ebf96",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "037a1c865355a5ab4eb32e946ababa6bc71c6002f89ba20be3582517190fcb6c",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "b867efebee93be26ca45f947b50fa0aee75a4f3c38739d92a97d62772236644f",
+      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "day": "2026-11-15"
     }
   ]
 }

@@ -27,6 +27,7 @@ import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver, type Viewer } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
 import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts';
+import { listProblems } from './board-problems.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -113,6 +114,7 @@ class BoardView {
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
     this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
     this.editor.hidden = true;
+    listProblems(root, source);
     this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
     const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
     outline.createEl('summary', { text: word('board.outline') });
@@ -123,8 +125,7 @@ class BoardView {
     host.together?.watch(() => this.othersChanged());
     this.draw();
     if (was) this.zoom.restore(...placeFrom(was, this.frame.x, this.frame.y));
-    born(host.key, this.vp, this, this.said);
-    if (was?.focused) this.vp.focus({ preventScroll: true });
+    born(host.key, this.vp, this, this.said, !!was?.focused);
     this.bind();
     this.rail.held((id) => openEditor(this.fields(), id)); // a sticky just made, its board drawn afresh
   }
