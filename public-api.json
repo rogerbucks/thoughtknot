@@ -5434,6 +5434,9 @@
         "Start": [
           "type = { moving: true; } | { moving: false; playable: boolean; why: string; plain?: true; }"
         ],
+        "starterBoard": [
+          "value: (note: string, isBoard: (text: string) => boolean) => { name: string; text: string; } | null"
+        ],
         "starterOf": [
           "value: (id: string) => ViewPreset"
         ],
@@ -6388,6 +6391,9 @@
         ],
         "withStandardSchemas": [
           "value: (vault: readonly string[]) => string[]"
+        ],
+        "withStarter": [
+          "value: (note: string, text: string) => string"
         ],
         "withSuggestion": [
           "value: (note: string, s: TypeSuggestion) => string"
