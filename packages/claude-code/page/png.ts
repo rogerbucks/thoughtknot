@@ -20,7 +20,12 @@ const sized = (svg: string, size: PngSize) =>
   );
 
 /** The PNG's bytes: the SVG drawn on a canvas of `size`; rejects, saying why, whatever stops it, and never hangs. */
-export function rasterise(win: Window & typeof globalThis, svg: string, size: PngSize): Promise<Uint8Array> {
+export function rasterise(
+  win: Window & typeof globalThis,
+  svg: string,
+  size: PngSize,
+  paper?: string,
+): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const url = win.URL.createObjectURL(new win.Blob([sized(svg, size)], { type: 'image/svg+xml' }));
     const img = new win.Image();
@@ -32,13 +37,22 @@ export function rasterise(win: Window & typeof globalThis, svg: string, size: Pn
         canvas.height = size.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error(tooLarge());
+        // with a paper colour a JPEG is made, drawn on it: a JPEG holds no clear pixels, and a PDF holds one as it is
+        if (paper) {
+          ctx.fillStyle = paper;
+          ctx.fillRect(0, 0, size.width, size.height);
+        }
         ctx.drawImage(img, 0, 0, size.width, size.height);
-        canvas.toBlob((blob) => {
-          // let go at once, so page after page of a large image holds one canvas at a time
-          canvas.width = canvas.height = 0;
-          if (!blob) return reject(new Error(tooLarge()));
-          blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
-        }, 'image/png');
+        canvas.toBlob(
+          (blob) => {
+            // let go at once, so page after page of a large image holds one canvas at a time
+            canvas.width = canvas.height = 0;
+            if (!blob) return reject(new Error(tooLarge()));
+            blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
+          },
+          paper ? 'image/jpeg' : 'image/png',
+          0.92,
+        );
       } catch (e) {
         reject(e instanceof Error ? e : new Error(word('exporting.png-failed')));
       }
