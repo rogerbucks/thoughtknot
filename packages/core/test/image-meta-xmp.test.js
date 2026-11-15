@@ -15,6 +15,11 @@ describe('an XMP packet says what its image is', () => {
   });
 
   // proves: image_meta_first
+  test('tags inside a title are left out, and no stray angle bracket remains', () => {
+    assert.equal(readXmp('<dc:title><b>Big</b> <<script>x</dc:title>').title, 'Big x');
+  });
+
+  // proves: image_meta_first
   test('a date is cut to its date and time with no zone, and a bad one is none', () => {
     assert.equal(xmpDate('2024-05-01T06:10:00+10:00'), '2024-05-01T06:10:00');
     assert.equal(xmpDate('2024-05-01'), '2024-05-01');

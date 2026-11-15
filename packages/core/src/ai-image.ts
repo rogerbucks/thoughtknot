@@ -133,7 +133,8 @@ const list = (v: unknown, most: number, each: number): string[] =>
 export function readDescription(content: string, known: readonly string[]): PictureDescription | { unread: string } {
   let body: unknown;
   try {
-    body = JSON.parse(content.trim().replace(/^```(?:json)?\s*|\s*```$/g, ''));
+    // a model may fence its answer: only what lies between the first brace and the last is read
+    body = JSON.parse(content.slice(content.indexOf('{'), content.lastIndexOf('}') + 1));
   } catch {
     return { unread: word('ai.image.not-json') };
   }

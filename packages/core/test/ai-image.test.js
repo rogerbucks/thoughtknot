@@ -83,6 +83,11 @@ describe('what a model says of a picture is held to rules and kept as findings',
   });
 
   // proves: image_describe_proposal
+  test('an answer a model put in a code fence is still read', () => {
+    assert.equal(readDescription(`\`\`\`json\n${answer()}\n\`\`\``, []).title, 'A red bike');
+  });
+
+  // proves: image_describe_proposal
   test('an answer with no title, no certainty, no reason or not JSON is refused', () => {
     assert.ok('unread' in readDescription(answer({ title: '' }), []));
     assert.ok('unread' in readDescription(answer({ certainty: 'sure' }), []));

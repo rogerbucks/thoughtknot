@@ -28,6 +28,18 @@ export function unescapedXml(s: string): string {
   );
 }
 
+/** Text with every tag left out, one pass over its characters; a stray `<` or `>` is left out too, so no tag can remain. */
+function withoutTags(s: string): string {
+  let out = '',
+    inTag = false;
+  for (const c of s) {
+    if (c === '<') inTag = true;
+    else if (c === '>') inTag = false;
+    else if (!inTag) out += c;
+  }
+  return out;
+}
+
 /** The text of every `<rdf:li>` inside the first `<name>` element, in order; the whole element's text when it has none. */
 function listIn(xml: string, name: string): string[] {
   const open = xml.indexOf(`<${name}`);
@@ -44,7 +56,7 @@ function listIn(xml: string, name: string): string[] {
     // a language alternative: the default (x-default) is the one asked for, else the first
     out.push(`${/xml:lang="x-default"/.test(body.slice(at, from)) ? '\u0001' : ''}${body.slice(from + 1, to)}`);
   }
-  if (out.length === 0) return [body.replace(/<[^>]*>/g, '')];
+  if (out.length === 0) return [withoutTags(body)];
   return out;
 }
 
