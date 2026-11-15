@@ -27,7 +27,7 @@ import {
 import type { DbRow, SqliteEntry, SqliteTable, WordKey } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
-import { changeVaultNote } from '../storage/plugin-notes';
+import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
 /** The command's id and name. */
 export const IMPORT_COMMAND = {
@@ -261,7 +261,10 @@ class ImportDialog extends Modal {
     const db = this.files[i];
     if (db && boardFormatOf(db.path)) {
       // a whiteboard file is read once here, so one that cannot be read is said now; nothing is written
-      const text = await this.app.vault.cachedRead(db);
+      // a drawing kept in a note is read as any note is; any other whiteboard file is not a note, so its bytes are read
+      const text = /\.md$/i.test(db.path)
+        ? ((await noteText(this.app, db.path)) ?? '')
+        : new TextDecoder().decode(await this.app.vault.readBinary(db));
       this.graph = db.basename
         .replace(/\.excalidraw$/i, '')
         .replace(/\W+/g, '_')
