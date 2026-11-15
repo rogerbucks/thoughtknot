@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pdf-objects.test.js",
+  "test": "pdf_objects_values > refuses nesting too deep, an unterminated string and a dictionary key that is no name",
+  "seen_failing_first": false,
+  "evidence": "The module pdf-objects.ts came in an earlier commit of this PR; this test was added after it to meet the module-test rule (CODE-7)."
+}
