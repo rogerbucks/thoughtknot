@@ -64,7 +64,11 @@ export class SlideList {
     const last = rows.filter((r) => r.n !== null).length;
     for (const r of rows) this.row(list, r, last);
     // the keyboard stays on the button it was on, though the list was drawn again
-    if (held) this.panel.querySelector<HTMLElement>(`[data-slide-do="${held}"]`)?.focus();
+    if (!held) return;
+    const at = this.panel.querySelector<HTMLButtonElement>(`[data-slide-do="${held}"]`);
+    // a button that is gone or can no longer be pressed hands the keyboard to its row's name
+    const name = `[data-slide-do="go:${held.slice(held.indexOf(':') + 1)}"]`;
+    (at && !at.disabled ? at : this.panel.querySelector<HTMLElement>(name))?.focus();
   }
 
   private open(open: boolean): void {

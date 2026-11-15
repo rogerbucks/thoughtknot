@@ -110,6 +110,30 @@ describe('the Slides list', () => {
   });
 
   // proves: board_slides
+  test('keeps the keyboard in the list when the pressed button can no longer be pressed', async () => {
+    const { window, fold, panel, does, settle } = list(TEXT.replace('// graph: talk', '// graph: holds'));
+    fold.click();
+    does('later:plan').focus();
+    does('later:plan').click();
+    await settle();
+    assert.ok(does('later:plan').disabled, 'the slide is now the last');
+    assert.ok(panel.contains(window.document.activeElement), 'the keyboard is still in the list');
+    assert.equal(window.document.activeElement, does('go:plan'));
+    does('skip:intro').focus();
+    does('skip:intro').click();
+    await settle();
+    assert.equal(window.document.activeElement, does('go:intro'), 'a button that is gone hands on to its row');
+  });
+
+  // proves: board_slides
+  test('stays open when the same board is drawn again, and another board starts folded', () => {
+    const text = TEXT.replace('// graph: talk', '// graph: again');
+    list(text).fold.click();
+    assert.equal(list(text).fold.getAttribute('aria-expanded'), 'true');
+    assert.equal(list(TEXT.replace('// graph: talk', '// graph: other')).fold.getAttribute('aria-expanded'), 'false');
+  });
+
+  // proves: board_slides
   test('says how to make a slide when the board has no frame', () => {
     const { fold, panel } = list(`// graph: bare · BOARD\n(a:Sticky {x: 40, y: 40, text: 'Go by train'})`);
     fold.click();
