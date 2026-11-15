@@ -12,6 +12,7 @@ import type { Value } from '@thoughtknot/graph-spec';
 import { gqlBlock } from './export-data-gql.ts';
 import { oneLine } from './export-data-model.ts';
 import type { DataLink, DataThing } from './export-data-model.ts';
+import { isDocumentPlace } from './document-text.ts';
 import { saidDate } from './export-frame.ts';
 import type { SqliteTable } from './sqlite-read.ts';
 import { word } from './words.ts';
@@ -124,6 +125,18 @@ export function importedBlock(
   // the exported comment gives way to one saying it is a copy from the database file, linked to nothing
   written[1] = `// Imported from ${oneLine(info.file)} on ${saidDate(info.date)}: ${count(data.length, 'thing')} and ${count(joined.length, 'link')}, a copy that is not kept in step.`;
   return { block: `\`\`\`gql\n${written.join('\n')}\`\`\`` };
+}
+
+/**
+ * The block that draws a document from its file: fenced as a note holds it, naming the graph and the file after FROM. It
+ * is a live link, unlike a database import: the document is read again whenever the note is drawn. It is refused for a
+ * graph name that is not a name, or a file that is not a Word document or a PDF, or whose place a line cannot hold.
+ */
+export function documentBlock(graph: string, file: string): DbImported {
+  if (!NAME.test(graph)) return { refused: word('import.not-graph-name', { graph }) };
+  if (!isDocumentPlace(file) || /[\n\r·]/.test(file))
+    return { refused: word('import.document.not-document', { file }) };
+  return { block: `\`\`\`gql\n// graph: ${graph} · FROM ${file}\n\`\`\`` };
 }
 
 /** Note `note` with `block` added at its end, after a blank line. */

@@ -8,8 +8,11 @@ import type { TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
 import {
   columnsOf,
+  documentBlock,
+  documentText,
   importedBlock,
   isDbFile,
+  isDocumentPlace,
   pickedLinks,
   pickedThings,
   sqliteEntries,
@@ -36,7 +39,7 @@ export const IMPORT_COMMAND = {
 export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
   const files = plugin.app.vault
     .getFiles()
-    .filter((f) => isDbFile(f.path) || isWorkbook(f.path))
+    .filter((f) => isDbFile(f.path) || isWorkbook(f.path) || isDocumentPlace(f.path))
     .sort((a, b) => a.path.localeCompare(b.path));
   if (!files.length) {
     new Notice(word('db.none'));
@@ -64,6 +67,8 @@ class ImportDialog extends Modal {
   /** A workbook's sheets, read once when it is chosen: the dialog then offers their columns as a database's. */
   private sheets = new Map<string, SqliteTable>();
   private bytes: Uint8Array | null = null;
+  /** The file chosen is a Word document or a PDF: the dialog then only names the graph, and adds a linked block. */
+  private doc = false;
   private refused = '';
   private things = '';
   private id = '';
@@ -150,6 +155,7 @@ class ImportDialog extends Modal {
           this.graph = v.trim();
         }),
       );
+    if (this.doc) return this.drawDocument();
     const tables = this.entries.filter((e) => !e.unread).map((e) => e.name);
     this.pick('import.things', 'import.things.sentence', tables, this.things, (v) => {
       [this.things, this.id, this.kind] = [v, this.columns(v)[0] ?? '', ''];
@@ -197,14 +203,54 @@ class ImportDialog extends Modal {
       .addButton((b) => b.setButtonText(word('import.cancel')).onClick(() => this.close()));
   }
 
+  /** What a document offers: a name for its graph, and one button that adds the linked block to the note. */
+  private drawDocument(): void {
+    const el = this.contentEl;
+    el.createEl('p', { text: word('import.document.copy') });
+    new Setting(el)
+      .addButton((b) =>
+        b
+          .setButtonText(word('import.document.run'))
+          .setCta()
+          .onClick(() => void this.addDocument()),
+      )
+      .addButton((b) => b.setButtonText(word('import.cancel')).onClick(() => this.close()));
+  }
+
+  /** Writes the block that draws the document chosen into the note; or says why nothing was written. */
+  private async addDocument(): Promise<void> {
+    const file = this.files[this.chosen];
+    if (!file || !this.doc || this.running) return;
+    this.running = true;
+    try {
+      const made = documentBlock(this.graph, file.path);
+      if ('refused' in made) return void new Notice(word('import.failed', { file: file.basename, why: made.refused }));
+      await changeVaultNote(this.app, this.file.path, (now) => withImport(now, made.block));
+      new Notice(word('import.document.done', { graph: this.graph, file: file.path, note: this.file.basename }));
+      this.close();
+    } finally {
+      this.running = false;
+    }
+  }
+
   /** Reads the file chosen, once, to list its tables; nothing is written. */
   private async choose(i: number): Promise<void> {
     this.chosen = i;
     this.bytes = null;
     this.entries = [];
     this.refused = '';
+    this.doc = false;
     const db = this.files[i];
-    if (db) {
+    if (db && isDocumentPlace(db.path)) {
+      // a document is read once here, so a file that cannot be read is said now; the block that draws it reads it again
+      const bytes = new Uint8Array(await this.app.vault.readBinary(db));
+      const read = documentText(bytes, db.path);
+      if ('refused' in read) this.refused = read.refused;
+      else {
+        [this.bytes, this.doc] = [bytes, true];
+        this.graph = db.basename.replace(/\W+/g, '_').replace(/^(\d)/, '_$1');
+      }
+    } else if (db) {
       const bytes = new Uint8Array(await this.app.vault.readBinary(db));
       this.sheets = new Map();
       const listed = isWorkbook(db.path) ? this.readSheets(bytes) : sqliteEntries(bytes);
