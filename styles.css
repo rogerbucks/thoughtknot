@@ -154,8 +154,9 @@
   .thoughtknot-stage-card.is-chosen {
     outline-color: Highlight;
   }
-  /* the bar over the chosen cards keeps its edge */
-  .thoughtknot-stage-cards-chosen {
+  /* the bars over the cards keep their edge */
+  .thoughtknot-stage-cards-chosen,
+  .thoughtknot-stage-cards-sets {
     border: 1px solid CanvasText;
   }
   .thoughtknot-svg {
