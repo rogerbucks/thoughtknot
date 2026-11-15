@@ -1,6 +1,6 @@
 // The library's public interface is declared and checked, so a break cannot ship without a new major version
 // (spec §41, lib_public_api):
-// - public-api.json matches what the library's entry points export.
+// - public-api.json is not committed (it conflicted in every pull request), so the code is the declaration.
 // - Taking away an export, or changing one of its lines, is a break. Adding one is not.
 // - A break since the last release fails unless the package raises its major version. Before 1.0.0 that is the
 //   leftmost part that is not 0, so 0.7.1 to 0.8.0 is a major step.
@@ -8,6 +8,7 @@
 // Proved on the real repository, on small libraries written for the purpose and on small repositories with tags.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -17,13 +18,14 @@ import {
   breakingChanges,
   declarationAt,
   declarationText,
+  interfaceAt,
   lastRelease,
   raisesMajor,
   readInterface,
   releaseCheck,
   unallowedBreaks,
 } from '../scripts/public-api.mjs';
-import { read, readJSON } from './repository/repo.js';
+import { ROOT, read, readJSON } from './repository/repo.js';
 import { repository } from './repository/scratch-repository.js';
 
 const CORE = '@thoughtknot/core';
@@ -58,16 +60,18 @@ const surfaceOf = (core) => {
 };
 
 describe('the declared interface', () => {
-  test('public-api.json matches what the entry points export', () => {
+  test('public-api.json is not committed, so pull requests cannot conflict on it', () => {
+    assert.match(read('.gitignore'), /^\/?public-api\.json$/m);
     assert.equal(
-      read(DECLARATION),
-      declarationText(readInterface()),
-      'run node scripts/public-api.mjs --update and commit the file',
+      execFileSync('git', ['ls-files', DECLARATION], { cwd: ROOT, encoding: 'utf8' }),
+      '',
+      'none is tracked',
     );
+    assert.match(declarationText(readInterface()), /"@thoughtknot\/core"/);
   });
 
   test('it names every package of the library at its own version', () => {
-    const declared = readJSON(DECLARATION);
+    const declared = readInterface();
     assert.deepEqual(Object.keys(declared).sort(), [CORE, '@thoughtknot/graph-spec']);
     assert.equal(declared[CORE].version, readJSON('packages/core/package.json').version);
     assert.ok(Object.keys(declared[CORE].entries['.']).includes('readNote'), 'the core reads a note');
@@ -78,7 +82,7 @@ describe('the declared interface', () => {
   test('every name the graph-spec library exports is declared, and every name declared is exported', async () => {
     const { createRequire } = await import('node:module');
     const exported = Object.keys(createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js'));
-    const declared = readJSON(DECLARATION)['@thoughtknot/graph-spec'].entries['.']['export ='].map((line) =>
+    const declared = readInterface()['@thoughtknot/graph-spec'].entries['.']['export ='].map((line) =>
       line.slice(0, line.indexOf(':')),
     );
     assert.deepEqual([...declared].sort(), [...exported].sort());
@@ -88,7 +92,7 @@ describe('the declared interface', () => {
   test('the host interface is declared, and its version moves with it', async () => {
     const { HOST_CONTRACT_VERSION, HOST_CONTRACT_VERSIONS } =
       await import('../packages/core/src/display/host-contract.ts');
-    const entries = readJSON(DECLARATION)[CORE].entries;
+    const entries = readInterface()[CORE].entries;
     assert.ok(entries['./display/host']?.DisplayHost?.length, 'DisplayHost is declared, member by member');
     assert.ok(entries['./display/host-contract']?.HOST_CONTRACT_VERSION, 'and the contract with its version');
     const digest = createHash('sha256').update(JSON.stringify(entries['./display/host'])).digest('hex').slice(0, 16);
@@ -188,6 +192,27 @@ describe('a break needs a new major version', () => {
     try {
       repo.git('tag', '0.7.0');
       assert.equal(declarationAt('0.7.0', repo.dir), null);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('a release without the file is read from its code, so its interface is still compared', () => {
+    const files = {
+      'packages/core/package.json': '{"version":"0.7.0"}',
+      'packages/core/src/index.ts': 'export function draw(text: string): string { return text; }\n',
+      'packages/core/src/display/host.ts': 'export interface DisplayHost { notice(message: string): void }\n',
+      'packages/core/src/display/host-contract.ts': 'export const HOST_CONTRACT_VERSION = 1;\n',
+      'packages/graph-spec/package.json': '{"version":"0.7.0"}',
+      'packages/graph-spec/src/graph-spec.d.ts': 'export declare function check(text: string): string[];\n',
+      'packages/graph-spec/src/graph-layout-types.d.ts':
+        'declare const L: { wrap(t: string): string[] };\nexport = L;\n',
+    };
+    const repo = repository([files]);
+    try {
+      repo.git('tag', '0.7.0');
+      const before = interfaceAt('0.7.0', repo.dir);
+      assert.deepEqual(before[CORE].entries['.'].draw, ['value: (text: string) => string']);
     } finally {
       repo.done();
     }

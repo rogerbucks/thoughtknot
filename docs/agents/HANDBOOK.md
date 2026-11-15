@@ -38,7 +38,7 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
   unasked and give a way back. The rules are principle 8 in `requirements/ethos.gql`, shown on the wiki's Ethos page.
 - **Sign off as Roger, never as an AI:** CONTRIBUTING.md, "Signing off your work", gives the exact line. CI checks it.
 - **Rewrite what CI checks.** A test: `node scripts/tests-first.mjs --update`, or `node scripts/tests-first.mjs --excuse`
-  for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
+  for one that passed first. A doc: `node scripts/plain-docs.mjs`.
 - **More of the same.** A dependency: `node scripts/notices.mjs`. A slice done: `node scripts/readme-status.mjs --write`.
   A fixed sleep removed: `node scripts/fixed-sleeps.mjs --tighten`.
 - **Merging.** Mark it ready. Once its full CI run is green, turn on auto-merge, as a merge commit. No "all good" needed.
@@ -71,7 +71,7 @@ of tokens for nothing. Change them only by running the command that makes them.
 - `packages/claude-code/mod/hooks/graph.js` and `packages/claude-code/mod/bin/` — the built mod; `npm run build`.
 - `package-lock.json`, `python/graph_spec/uv.lock`, `packages/app/src-tauri/Cargo.lock` — lock files.
 - `test/tests-first/` — the record of tests seen failing first, a file per commit; `node scripts/tests-first.mjs --update` writes it.
-- `THIRD_PARTY_NOTICES.md` — made by `node scripts/notices.mjs`; `public-api.json` — by `node scripts/public-api.mjs --update`.
+- `THIRD_PARTY_NOTICES.md` — made by `node scripts/notices.mjs`. `public-api.json` is no longer committed: the code is the declaration (a local copy: `node scripts/public-api.mjs --update`).
 - `licences/texts/` — the licence texts those notices quote.
 - `test-vault/.obsidian/` — the test vault's settings and plugin copies.
 

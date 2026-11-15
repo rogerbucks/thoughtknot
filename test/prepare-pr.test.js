@@ -12,7 +12,6 @@ describe('prepare-pr', () => {
     assert.deepEqual(failed, []);
     assert.deepEqual(ran, [
       'plain-docs.mjs --update',
-      'public-api.mjs --update',
       'notices.mjs',
       'tests-first.mjs --update',
     ]);
@@ -22,9 +21,9 @@ describe('prepare-pr', () => {
     const ran = [];
     const failed = prepare({
       check: true,
-      run: (...argv) => (ran.push(argv.join(' ')), argv[0] === 'notices.mjs' || argv[0] === 'public-api.mjs' ? 1 : 0),
+      run: (...argv) => (ran.push(argv.join(' ')), argv[0] === 'notices.mjs' || argv[0] === 'plain-docs.mjs' ? 1 : 0),
     });
-    assert.deepEqual(failed, ['public-api', 'notices']);
+    assert.deepEqual(failed, ['plain-docs', 'notices']);
     assert.equal(ran.length, RECORDS.length);
     assert.ok(ran.includes('notices.mjs --check'));
   });
