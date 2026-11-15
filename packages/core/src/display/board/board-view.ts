@@ -3,9 +3,9 @@
 // A mouse or pen drags an item to move it. The keyboard does everything else (board-keys.ts), and each step is said in
 // a live region. The outline under it lists the whole board as text.
 //
-// Every edit goes to the host as a change to the board block, and the board is drawn again from what was written. The
-// view stays where it was, and so does every item not changed: nothing jumps (nodes stay put, never disorient). A host
-// that draws the block afresh after a write gets the same view and focus back, kept by its `key`.
+// Every edit goes to the host as a change to the board block, and the board is drawn again from what was written, the
+// view and every item not changed staying put (nodes stay put, never disorient). A host that draws the block afresh
+// after a write gets the same view and focus back, kept by its `key`.
 import { word, Zoom, type Drawn, type Palette, type View } from '@thoughtknot/core';
 
 import { boardOf, readBoard, type Board, type BoardItem } from '../../board.ts';
@@ -25,6 +25,7 @@ import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver, type Viewer } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
+import { BoardInk } from './board-ink.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -62,19 +63,16 @@ class BoardView {
   private readonly said: HTMLElement;
   private readonly editor: HTMLElement;
   private readonly list: HTMLElement;
-  /** The others at a shared board, and the clashes to settle. */
   private readonly people: BoardPeople | null;
   private readonly bar: ArrangeBar | null = null;
   private readonly rail: ToolRail;
   private readonly sel = new BoardSelection((n) => this.bar?.chosen(n));
-  /** The text of the shared board as last read, to tell when someone else has changed it. */
-  private seen = '';
+  private seen = ''; // the shared board's text as last read, to tell when someone else changed it
   private frame: Box;
   private readonly space: BoardSpace;
   private readonly zoom: Zoom;
   private svg: SVGSVGElement | null = null;
-  /** An item a mouse or pen is dragging, by its body or its handle. */
-  private readonly drag = new BoardDrag();
+  private readonly drag = new BoardDrag(); // an item a mouse or pen is dragging, by its body or handle
   /** A press on an item that does not drag it: if it lifts where it came down, it is a tap, which chooses the item. */
   private tap: { pointer: number; id: string; from: Point } | null = null;
 
@@ -120,6 +118,7 @@ class BoardView {
     this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
+    new BoardInk(this.vp, host.palette, this.rail, this.space, this.zoom, this.arranging(), this.readOnly);
     host.together?.watch(() => this.othersChanged());
     this.draw();
     if (was) this.zoom.restore(was.place.scale, was.place.x, was.place.y);

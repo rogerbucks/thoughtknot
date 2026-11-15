@@ -2961,6 +2961,23 @@ button.thoughtknot-stage-card-pin {
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
+/* While a pen, highlighter or eraser is in use a drag draws: no scroll or pan by touch, and a cross to aim with. */
+.thoughtknot-board .thoughtknot-viewport.is-inking {
+  touch-action: none;
+  cursor: crosshair;
+}
+.thoughtknot-board .thoughtknot-ink-preview {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.thoughtknot-board [data-item].is-erased {
+  opacity: 0.25; /* a stroke the eraser has crossed, until it lifts */
+}
+.thoughtknot-board .thoughtknot-viewport.is-inking [data-item] {
+  cursor: crosshair;
+}
 .thoughtknot-board .thoughtknot-board-view-picture {
   pointer-events: none;
 }

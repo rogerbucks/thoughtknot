@@ -12,6 +12,7 @@ import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { clashOf } from './board-clash.ts';
 import { glyphNamed } from './board-glyphs.ts';
+import { inkSvg } from './board-ink.ts';
 import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
 import { STYLE } from './layout.ts';
@@ -179,13 +180,15 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const hue = own ?? HUES[item.kind];
   const fill = item.kind === 'Frame' || !hue ? 'none' : palette.fill(hue);
   const stroke = hue ? palette.blend(hue, STYLE.line_mix) : palette.edge;
+  const ink = item.kind === 'Ink' ? inkSvg(item, hue ? palette.blend(hue, STYLE.line_mix) : palette.text) : null;
   const dash = item.kind === 'Frame' || item.kind === 'Ink' ? ' stroke-dasharray="6 4"' : '';
   const corner =
     item.kind === 'Card' || item.kind === 'Frame' || item.kind === 'View' ? 8 : item.kind === 'Shape' ? box.h / 2 : 2;
   const shape =
-    item.kind === 'Text'
+    ink ??
+    (item.kind === 'Text'
       ? ''
-      : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`;
+      : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`);
   const quiet = item.kind === 'Frame' || item.kind === 'View';
   const size = quiet ? STYLE.kind_font_size : STYLE.font_size;
   const pad = 8;
