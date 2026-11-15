@@ -1,5 +1,5 @@
-<svg viewBox="0 0 481 229" width="641.33" height="305.33" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
-  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+<svg viewBox="0 0 481 229" width="641.33" height="305.33" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:block;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)" paint="display:inline">
     <g id="p2">
       <path d="M445.43,32.48C445.43,32.48 349.58,32.48 349.58,32.48 343.58,32.48 337.58,38.48 337.58,44.48 337.58,44.48 337.58,76.88 337.58,76.88 337.58,82.88 343.58,88.88 349.58,88.88 349.58,88.88 445.43,88.88 445.43,88.88 451.43,88.88 457.43,82.88 457.43,76.88 457.43,76.88 457.43,44.48 457.43,44.48 457.43,38.48 451.43,32.48 445.43,32.48" paint="fill:rgba(233, 151, 63, 0.16);stroke:rgb(229, 168, 102)">
       <text x="371.12" y="53.28" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> QUESTION
@@ -11,7 +11,7 @@
     <g id="p4">
       <path d="M295.58,-19.2C295.58,-19.2 295.58,-19.2 295.58,-19.2 316.58,-19.2 316.58,60.68 337.58,60.68 337.58,60.68 337.58,60.68 337.58,60.68" paint="stroke:rgb(117, 222, 220);stroke-width:2px">
       <polygon points="330.58,63.13 337.58,60.68 330.58,58.23 330.58,63.13" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2.2px">
-      <text x="301.75" y="45.92" text-anchor="middle" paint="fill:rgb(151, 221, 220);stroke:rgb(30, 30, 30);stroke-width:5.6px"> answers
+      <text x="301.75" y="45.92" text-anchor="middle" paint="fill:rgb(150, 221, 219);stroke:rgb(30, 30, 30);stroke-width:5.6px"> answers
     <g id="p5">
       <path d="M265.16,22.5C265.16,22.5 215.86,22.5 215.86,22.5 209.86,22.5 203.86,28.5 203.86,34.5 203.86,34.5 203.86,66.9 203.86,66.9 203.86,72.9 209.86,78.9 215.86,78.9 215.86,78.9 265.16,78.9 265.16,78.9 271.16,78.9 277.16,72.9 277.16,66.9 277.16,66.9 277.16,34.5 277.16,34.5 277.16,28.5 271.16,22.5 265.16,22.5" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208)">
       <text x="221.1" y="43.3" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> OPTION
@@ -24,9 +24,9 @@
       <text x="55.06" y="8.35" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> REASON
       <text x="28.28" y="28.65" text-anchor="start" paint="fill:rgb(218, 218, 218);stroke:rgb(30, 30, 30);stroke-width:5.6px"> Easy on the eyes
     <g id="p8">
-      <path d="M143.45,15.75C143.45,15.75 143.45,15.75 143.45,15.75 164.45,15.75 164.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2" paint="stroke:rgb(106, 210, 137);stroke-width:2px">
-      <polygon points="178.45,-16.75 185.45,-19.2 178.45,-21.65 178.45,-16.75" paint="fill:rgb(106, 210, 137);stroke:rgb(106, 210, 137);stroke-width:2.2px">
-      <text x="153.66" y="-15.25" text-anchor="middle" paint="fill:rgb(143, 213, 164);stroke:rgb(30, 30, 30);stroke-width:5.6px"> favours
+      <path d="M143.45,15.75C143.45,15.75 143.45,15.75 143.45,15.75 164.45,15.75 164.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2" paint="stroke:rgb(105, 210, 137);stroke-width:2px">
+      <polygon points="178.45,-16.75 185.45,-19.2 178.45,-21.65 178.45,-16.75" paint="fill:rgb(105, 210, 137);stroke:rgb(105, 210, 137);stroke-width:2.2px">
+      <text x="153.66" y="-15.25" text-anchor="middle" paint="fill:rgb(143, 212, 164);stroke:rgb(30, 30, 30);stroke-width:5.6px"> favours
     <g id="p9">
       <path d="M143.45,15.75C143.45,15.75 143.45,15.75 143.45,15.75 164.45,15.75 164.45,50.7 185.45,50.7 191.16,50.7 191.16,50.7 196.86,50.7" paint="stroke:rgb(243, 107, 112);stroke-width:2px">
       <polygon points="196.86,53.15 203.86,50.7 196.86,48.25 196.86,53.15" paint="fill:rgb(243, 107, 112);stroke:rgb(243, 107, 112);stroke-width:2.2px">
