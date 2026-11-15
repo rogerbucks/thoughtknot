@@ -40,9 +40,13 @@ export function placeFrom(was: Kept, x: number, y: number): [number, number, num
   return [scale, was.place.x + (x - was.origin[0]) * scale, was.place.y + (y - was.origin[1]) * scale];
 }
 
-/** A board just drawn stands for its key from now on. What was said a moment ago is put in its `said` line again. */
-export function born(key: string, vp: HTMLElement, view: unknown, said: HTMLElement): void {
+/**
+ * A board just drawn stands for its key from now on. What was said a moment ago is put in its `said` line again, and
+ * the keyboard is put back on it when `focused` says the board before it had it.
+ */
+export function born(key: string, vp: HTMLElement, view: unknown, said: HTMLElement, focused: boolean): void {
   live.set(key, { vp, view });
+  if (focused) vp.focus({ preventScroll: true });
   const last = kept.get(key)?.said;
   if (last && Date.now() - last.at < SAID_MS) queueMicrotask(() => said.setText(last.words));
 }
