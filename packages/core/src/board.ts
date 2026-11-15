@@ -59,6 +59,8 @@ export interface BoardLayer {
   order: number;
   hidden?: boolean;
   locked?: boolean;
+  /** Shown over every view of the board's graph too, as drawings are (board_layers_over). */
+  over?: boolean;
   /** Any other property, kept as written, in the order written. */
   more: Record<string, Value>;
 }
@@ -184,7 +186,8 @@ function layerRead(id: string, props: Record<string, Value>): BoardLayer {
   if (typeof props.order === 'number' && Number.isFinite(props.order)) layer.order = Math.round(props.order);
   if (props.hidden === true) layer.hidden = true;
   if (props.locked === true) layer.locked = true;
-  const own = new Set(['name', 'order', 'hidden', 'locked']);
+  if (props.over === true) layer.over = true;
+  const own = new Set(['name', 'order', 'hidden', 'locked', 'over']);
   for (const [key, v] of Object.entries(props)) if (!own.has(key) && !(key === 'id' && v === id)) layer.more[key] = v;
   return layer;
 }
@@ -194,6 +197,7 @@ export function layerGql(layer: BoardLayer): string {
   const props = [`name: ${quoted(layer.name)}`, `order: ${layer.order}`];
   if (layer.hidden) props.push(`hidden: ${layer.hidden}`);
   if (layer.locked) props.push(`locked: ${layer.locked}`);
+  if (layer.over) props.push(`over: ${layer.over}`);
   for (const [key, v] of Object.entries(layer.more)) props.push(`${key}: ${valueGql(v)}`);
   return `(${layer.id}:Layer {${props.join(', ')}})`;
 }

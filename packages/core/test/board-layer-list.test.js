@@ -18,7 +18,7 @@ const TEXT = `// graph: ideas · BOARD
 let keys = 0;
 
 /** A list in a page with the DOM helpers Obsidian adds, over a board kept as text and written by its changes. */
-function list(key = `board ${(keys += 1)}`) {
+function list(key = `board ${(keys += 1)}`, text = TEXT) {
   const { window } = new JSDOM('<body><div id="root"><div class="vp"></div></div></body>');
   window.Element.prototype.createEl = function (tag, o = {}) {
     const el = this.ownerDocument.createElement(tag);
@@ -39,7 +39,7 @@ function list(key = `board ${(keys += 1)}`) {
   };
   const root = window.document.getElementById('root');
   const vp = root.querySelector('.vp');
-  const state = { text: TEXT, said: [], chosen: [], focus: null, changes: [] };
+  const state = { text, said: [], chosen: [], focus: null, changes: [] };
   const l = new LayerList(root, vp, key, {
     board: () => readBoard(state.text).board,
     say: (w) => state.said.push(w),
@@ -193,5 +193,19 @@ describe('the Layers list', () => {
     const again = list('kept board');
     assert.ok(!again.panel.hidden);
     assert.equal(again.does('pick:notes').getAttribute('aria-pressed'), 'true');
+  });
+
+  // proves: board_layers_over
+  test('shows a layer over the views of the graph from its row, on a board that is on a graph', async () => {
+    const { fold, does, state } = list(undefined, TEXT.replace('· BOARD', '· BOARD ON trip'));
+    fold.click();
+    assert.equal(does('over:notes').getAttribute('aria-pressed'), 'false');
+    does('over:notes').click();
+    await Promise.resolve();
+    assert.ok(state.text.includes("(notes:Layer {name: 'Notes', order: 1, over: true})"));
+    assert.equal(does('over:notes').getAttribute('aria-pressed'), 'true');
+    const free = list();
+    free.fold.click();
+    assert.equal(free.does('over:notes'), null, 'a board on no graph has no views to show it over');
   });
 });

@@ -25,7 +25,7 @@ export interface LayerBoard {
 
 /** What the buttons under the list do, and what each row's buttons do, by their words. */
 type Act = 'board.layers.add' | 'board.layers.move' | 'board.layers.front' | 'board.layers.back';
-type Does = 'reveal' | 'conceal' | 'lock' | 'up' | 'down' | 'rename' | 'remove';
+type Does = 'reveal' | 'conceal' | 'lock' | 'over' | 'up' | 'down' | 'rename' | 'remove';
 
 /** What each board's list was left as, by its host's key, for when it is drawn again. */
 const kept = new Map<string, { open: boolean; into: string | null }>();
@@ -143,6 +143,8 @@ export class LayerList {
       set({ kind: 'layer-set', id, hidden: !r.hidden }),
     );
     tool('lock', 'lock', r.locked, () => set({ kind: 'layer-set', id, locked: !r.locked }));
+    // a board on a graph can show a layer over that graph's views too (board_layers_over)
+    if (this.h.board().on) tool('over', 'network', r.over, () => set({ kind: 'layer-set', id, over: !r.over }));
     tool('up', 'chevron-up', null, () => set({ kind: 'layer-step', id, by: 1 }), at === 0);
     tool('down', 'chevron-down', null, () => set({ kind: 'layer-step', id, by: -1 }), at === rows.length - 1);
     tool('rename', 'pencil', null, () => this.rename(li, name, r));

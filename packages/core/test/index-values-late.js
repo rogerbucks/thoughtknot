@@ -523,6 +523,8 @@ export const VALUES_LATE = [
   // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
   'starterBoard',
   'withStarter',
+  // the board layers shown over a graph's views (ES§70, board_layers_over), 15 Nov 2026
+  'layersOver',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
   'cardInNote',
   'saveCard',

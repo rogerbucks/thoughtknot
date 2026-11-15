@@ -16,7 +16,7 @@ export const IN_LAYER = 'in_layer';
 /** One edit to a board's layers. */
 export type LayerChange =
   | { kind: 'layer-add'; name: string }
-  | { kind: 'layer-set'; id: string; name?: string; hidden?: boolean; locked?: boolean }
+  | { kind: 'layer-set'; id: string; name?: string; hidden?: boolean; locked?: boolean; over?: boolean }
   /** One step up (1) or down (-1) among the layers and the loose items. */
   | { kind: 'layer-step'; id: string; by: 1 | -1 }
   | { kind: 'layer-remove'; id: string }
@@ -68,6 +68,8 @@ export interface LayerRow {
   name: string;
   hidden: boolean;
   locked: boolean;
+  /** Whether it is shown over the views of the board's graph too. */
+  over: boolean;
   /** How many items it holds. */
   count: number;
 }
@@ -84,6 +86,7 @@ export function layerRows(board: Board): LayerRow[] {
     name: l.name,
     hidden: !!l.hidden,
     locked: !!l.locked,
+    over: !!l.over,
     count: count.get(l.id) ?? 0,
   });
   const layers = stacked(board);
@@ -92,6 +95,7 @@ export function layerRows(board: Board): LayerRow[] {
     name: word('board.layers.loose'),
     hidden: false,
     locked: false,
+    over: false,
     count: count.get(null) ?? 0,
   };
   return [...layers.filter((l) => l.order > 0).map(row), loose, ...layers.filter((l) => l.order <= 0).map(row)];
@@ -151,6 +155,7 @@ export function layerEdit(
     const next: BoardLayer = { id: layer.id, name, order: layer.order, more: layer.more };
     if (change.hidden ?? layer.hidden) next.hidden = true;
     if (change.locked ?? layer.locked) next.locked = true;
+    if (change.over ?? layer.over) next.over = true;
     return { text: rewritten(text, layer.id, layerGql(next)) };
   }
   if (broken) return { refused: word('board.edit.problems') };

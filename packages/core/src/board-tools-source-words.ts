@@ -46,6 +46,7 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.layers.reveal': 'Show the layer {name}',
   'board.layers.conceal': 'Hide the layer {name}',
   'board.layers.lock': 'Lock the layer {name}',
+  'board.layers.over': 'Show the layer {name} over the views of the graph too',
   'board.layers.up': 'Move the layer {name} up',
   'board.layers.down': 'Move the layer {name} down',
   'board.layers.rename': 'Rename the layer {name}',
