@@ -125,9 +125,9 @@ function inLayer(item: BoardItem, layer: string | null): BoardItem {
 }
 
 /**
- * The block with a layer change made, or why it was refused. `board` is the block as read, and `broken` says the
- * block holds a problem: then nothing that writes the whole board again is done, so nothing is lost. Showing,
- * hiding, locking, naming and moving items between layers change only the lines they are about.
+ * The block with a layer change made, or why it was refused. `board` is the block as read. `broken` says the block
+ * holds a problem. Then nothing that writes the whole board again is done, so nothing is lost. Showing, hiding,
+ * locking, naming and moving items between layers change only the lines they are about.
  */
 export function layerEdit(
   text: string,
