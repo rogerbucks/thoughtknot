@@ -252,8 +252,8 @@ export function readObjects(bytes: Uint8Array, total = PDF_LIMITS.total): PdfFil
     const [count, first] = [numOf(f, v.get('N')), numOf(f, v.get('First'))];
     if (count > PDF_LIMITS.objects) throw new TooBig();
     const head = body.slice(0, first).split(/\s+/).filter(Boolean).map(Number);
-    // each object starts after the one before it ends, as the format says: so the body is read once, however many
-    // numbers the head gives to one place
+    // Each object starts after the one before it ends, as the format says. So the body is read once, however many
+    // numbers the head gives to one place.
     let end = 0;
     for (let k = 0; k < count; k++) {
       const [id, off] = [head[2 * k], head[2 * k + 1]];
