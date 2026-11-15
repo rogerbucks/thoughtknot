@@ -4,14 +4,12 @@
 //   written to the note until the person changes it, so opening a note never changes it.
 // - Until the person first chooses, one line says what changed, with a way back: the graph drawn first, as before.
 //   The choice is kept for this person in this browser only.
-import { gqlBlocks, readNote, word } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
+
+export { starterBoard, withStarter } from '@thoughtknot/core';
 
 /** Where the choice of what comes first is kept for this person, in this browser. */
 const FIRST_KEY = 'thoughtknot-board-first';
-/** The size of each view on a starter board, and the gap between two, in board units. */
-const W = 480,
-  H = 360,
-  GAP = 40;
 
 /** What a page keeps for its person: their window's storage, which may refuse, as in a private window. */
 type Kept = Pick<Storage, 'getItem' | 'setItem'> | null;
@@ -50,26 +48,6 @@ export function firstTimeLine(kept: Kept): boolean {
   } catch {
     return false;
   }
-}
-
-/**
- * The starter board of a note with graphs and no board: its name and block text, one View item for each graph, side by
- * side. Null for a note that has a board, or no graph.
- */
-export function starterBoard(note: string, isBoard: (text: string) => boolean): { name: string; text: string } | null {
-  const blocks = gqlBlocks(note).map((b) => b.text);
-  if (blocks.some(isBoard)) return null;
-  const graphs = [...readNote(blocks).graphs.keys()];
-  const first = graphs[0];
-  if (first === undefined) return null;
-  const name = `${first}_board`;
-  const items = graphs.map((g, n) => `(view${n + 1}:View {x: ${n * (W + GAP)}, y: 0, w: ${W}, h: ${H}, of: '${g}'})`);
-  return { name, text: [`// graph: ${name} · BOARD ON ${first}`, items.join(',\n')].join('\n') };
-}
-
-/** The note with the starter board's block written at its end, so a change can be made to it. */
-export function withStarter(note: string, text: string): string {
-  return `${note.replace(/\s*$/, '')}\n\n\`\`\`gql\n${text}\n\`\`\`\n`;
 }
 
 /** The line about the change, with its way back: a button that puts the graph first again. */
