@@ -24,7 +24,7 @@ export interface Source {
    * table of a SQLite database, `shop.sqlite#orders`, or a sheet of an Excel workbook, `book.xlsx#Sheet1`, read by its
    * mapping too (database-connector.ts, workbook-connector.ts).
    */
-  kind: 'file' | 'note' | 'plugin' | 'table' | 'text' | 'database' | 'workbook';
+  kind: 'file' | 'note' | 'plugin' | 'table' | 'text' | 'document' | 'database' | 'workbook';
   /** A plug-in source's word, before the colon; only for `kind: 'plugin'`. */
   scheme?: string;
   /**
@@ -155,9 +155,11 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
           ? 'table'
           : /\.txt$/i.test(last)
             ? 'text'
-            : /\.md$/i.test(last) || !last.includes('.')
-              ? 'note'
-              : null;
+            : /\.(docx|pdf)$/i.test(last)
+              ? 'document'
+              : /\.md$/i.test(last) || !last.includes('.')
+                ? 'note'
+                : null;
   if (!kind) return fault(word('reading.source.neither', { target }));
   if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
