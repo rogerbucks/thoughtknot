@@ -99,14 +99,14 @@
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "7fc03d7974ce39199d47e48b8853b733a0b76a731709972f7d359cc61f182615",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "ba3da818b961ee283ce54da6c09f327df850645b795554e3a85e12f39afd27e8",
+      "reason": "A board opens with its text at 11 px on its first frame (review ruling D1), so the starter board is drawn larger",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "93d419284f842a587cceb67a98f5d6b0dc7de30fbe7330865e772bf9c9836125",
-      "reason": "The board is the main screen (board_main_screen): each page now opens on its starter board, a view of each graph, above the graph as before",
+      "sha256": "328b6889f796e80d65ae22f21c985bbc6020bb36a81c8ca36ace39dc4926020d",
+      "reason": "A board opens with its text at 11 px on its first frame (review ruling D1), so the starter board is drawn larger",
       "day": "2026-11-15"
     },
     {
