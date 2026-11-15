@@ -1,5 +1,5 @@
-// The objects of a PDF read in plain JavaScript (ES§63 connector_files_to_gql, ES§67 format_untrusted_files): values,
-// references, strings, scanned objects, and streams. The files are made by pdf-fixture.js.
+// The objects of a PDF read in plain JavaScript (ES§63 connector_files_to_gql, ES§67 format_untrusted_files).
+// They are values, references, strings, scanned objects and streams. The files are made by pdf-fixture.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseValue, readObjects, resolve, streamText, latin1 } from '../src/pdf-objects.ts';
