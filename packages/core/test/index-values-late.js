@@ -523,6 +523,8 @@ export const VALUES_LATE = [
   // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
   'starterBoard',
   'withStarter',
+  // a board asked of an AI in plain words (ES§45, board_proposed), 15 Nov 2026
+  'boardMakeAsk',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
   'cardInNote',
   'saveCard',

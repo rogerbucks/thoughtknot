@@ -6,13 +6,8 @@ import { test } from 'node:test';
 import { readBoard } from '../src/board.ts';
 import { boardNames } from '../src/board-list.ts';
 import { itemBox } from '../src/board-svg.ts';
-import {
-  boardDraftIn,
-  boardFromGraph,
-  boardMakeAsk,
-  boardMakeInstructions,
-  withBoardKept,
-} from '../src/view-types/board-propose.ts';
+import { boardDraftIn, boardMakeAsk, boardMakeInstructions } from '../src/ai-board.ts';
+import { boardFromGraph, withBoardKept } from '../src/view-types/board-propose.ts';
 
 const NOTE = [
   '# Team',

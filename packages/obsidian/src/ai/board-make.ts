@@ -1,10 +1,9 @@
-// Asking an AI for a board, from the board pane (spec §45, board_proposed). The person's words go through the send
-// dialog, as every send does (§19). The model is named and the exact request is shown. Only a Send pressed on exactly
+// Asking an AI for a board, from the board pane (spec ES§45, board_proposed). The person's words go through the send
+// dialog, as every send does (ES§19). The model is named and the exact request is shown. Only a Send pressed on exactly
 // that sends it, once, and records it. What comes back is a proposed board: it is shown, and written only when kept.
 import { Notice } from 'obsidian';
-import { aiReady, gqlBlocks, readNote, word } from '@thoughtknot/core';
+import { aiReady, boardMakeAsk, gqlBlocks, readNote, word } from '@thoughtknot/core';
 import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
-import { boardMakeAsk } from '@thoughtknot/core/display/board/board-draft';
 import type ThoughtKnotPlugin from '../main';
 import { levelFor } from './ai';
 import { SendDialog } from './send-dialog';

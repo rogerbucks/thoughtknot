@@ -5,11 +5,11 @@
 import { word, type Palette } from '@thoughtknot/core';
 
 import type { BoardDraft } from '../../ai-request.ts';
-import { boardFromGraph, boardMakeAsk, withBoardKept } from '../../view-types/board-propose.ts';
+import { boardFromGraph, withBoardKept } from '../../view-types/board-propose.ts';
 import type { Viewer } from './board-view-items.ts';
 import { showBoard } from './board-view.ts';
 
-export { boardFromGraph, boardMakeAsk, withBoardKept };
+export { boardFromGraph, withBoardKept };
 export type { BoardDraft };
 
 /** The board proposed for each note, by the host's key. */
