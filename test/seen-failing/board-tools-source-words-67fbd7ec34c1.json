@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-tools-source-words.test.js",
+  "test": "the words of a board’s tools, layers and slides > the words that act on a slide name it by its title, and a row gives its place",
+  "seen_failing_first": false,
+  "evidence": "The catalogue passed 100 lines, so it needs a test named after it; the words were already there."
+}

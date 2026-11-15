@@ -21,6 +21,8 @@ import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
 import type { PaneHost } from '@thoughtknot/core/display/editor/pane-drawing';
 import type { LayoutRunner } from '@thoughtknot/core';
 import type { PageNote } from './page-note.ts';
+import { pageSketching } from './page-sketching.ts';
+import { DARK } from './graph-section.ts';
 import type { PictureStates } from '../src/api-types.ts';
 import type { PictureStatus } from '@thoughtknot/core/display/graph-view/view-options';
 import { word } from '@thoughtknot/core';
@@ -73,6 +75,8 @@ export function paneHost(
     ...(pictures && { picture: (graph: string) => pagePicture(pictures, graph) }),
     ...(note && {
       noteText: () => note.text,
+      // the note's drawings and the board layers over the graph, as in Obsidian (ES§70, board_layers_over)
+      sketching: (graph: string) => pageSketching(note, graph, !!globalThis.matchMedia?.(DARK).matches),
       // in the desktop app, a huge block's rows go to its file on disk (scale_parts_on_disk); else the pane keeps them
       ...(onDisk && { store: () => onDisk(note.path) }),
       saveFilter: (graph, keep) => {

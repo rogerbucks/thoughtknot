@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-layers.test.js",
+  "test": "the named layers of a board > step a layer up and down when two layers share an order or have none",
+  "seen_failing_first": false,
+  "evidence": "A review of a like change asked whether tied orders work; they did, and this test now proves it."
+}

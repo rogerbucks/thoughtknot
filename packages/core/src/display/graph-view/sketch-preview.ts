@@ -5,6 +5,14 @@ import type { MarkPoint } from '../../plugin-diagrams.ts';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
+/** The part of the layer that draws the drawing `id`. */
+export const partOf = (root: Element, id: string): Element | null =>
+  Array.from(root.querySelectorAll('[data-sketch]')).find((g) => g.getAttribute('data-sketch') === id) ?? null;
+
+/** The svg's own child that `selector` matches: the layer and the preview sit at its root, never inside the drawing. */
+export const ownChild = (svg: SVGSVGElement, selector: string): Element | null =>
+  Array.from(svg.children).find((c) => c.matches(selector)) ?? null;
+
 /** How a drawing under way is shown: as drawn, as its box, or end to end. */
 export type PreviewShape = 'pen' | 'box' | 'line';
 
