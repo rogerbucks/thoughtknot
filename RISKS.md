@@ -632,7 +632,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 ### API-15 The sync package is a wire contract that no break check covers
 
-**Who found it:** API design expert. **Where:** `scripts/public-api.mjs`, `public-api.json`, `packages/sync/src/index.ts`.
+**Who found it:** API design expert. **Where:** `scripts/public-api.mjs`, `packages/sync/src/index.ts`.
 
 **Risk:** LIBRARY in scripts/public-api.mjs holds only core and graph-spec. The sync package now has a stored shape (Kept), an invitation shape (Invitation) and a session format. All three outlive one run, and the apps keep them on a person's device. A change to any of them passes CI with no major version and no note in the release. Host contract version 3 for DisplayHost is held now. Sync is the next gap of the same kind (API-3).
 
