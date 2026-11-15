@@ -12,7 +12,7 @@ export { keptOf, keptWords, linkEdit, snapshotEdit, snapshotPlace } from './data
 export type { KeptEdit, KeptSet } from './data-set-kept.ts';
 export { pickedLinks, pickedThings } from './db-import.ts';
 export { databasePlace, workbookPlace } from './sources.ts';
-export { DOCUMENT_LIMITS, isDocumentPlace } from './document-text.ts';
+export { DOCUMENT_LIMITS, documentText, isDocumentPlace } from './document-text.ts';
 export { workbookSheets, workbookTable, WORKBOOK_LIMITS } from './xlsx-read.ts';
 export type { WorkbookRefusal } from './xlsx-read.ts';
 export { columnsOf, sqliteEntries, sqliteTable, SQLITE_LIMITS } from './sqlite-read.ts';
