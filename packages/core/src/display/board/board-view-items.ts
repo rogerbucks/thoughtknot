@@ -6,6 +6,7 @@ import type { Drawn } from '@thoughtknot/core';
 
 import type { Board } from '../../board.ts';
 import { itemBox } from '../../board-svg.ts';
+import { viewSpace } from '../../board-views.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 import { drawHandle } from './board-drag.ts';
 
@@ -19,7 +20,7 @@ const last = new Map<string, string>();
 function nest(g: Element, board: Board, id: string, svg: string): void {
   const item = board.items.find((i) => i.id === id);
   if (!item) return;
-  const box = itemBox(item);
+  const box = viewSpace(item);
   const pic = parsedSvg({ svg } as Drawn);
   pic.addClass('thoughtknot-board-view-picture');
   pic.setAttribute('x', String(box.x));

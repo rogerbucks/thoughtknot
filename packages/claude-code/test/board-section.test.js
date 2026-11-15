@@ -181,7 +181,7 @@ describe('a board on the browser editor’s page', () => {
       const vp = () => page.doc.querySelector('.gn-boards .thoughtknot-board .thoughtknot-viewport');
       const picture = () => vp()?.querySelector('[data-item="v"] .thoughtknot-board-view-picture');
       await until(() => picture(), 8000);
-      assert.equal(picture().getAttribute('width'), '400');
+      assert.equal(picture().getAttribute('width'), '388', 'inside its frame');
       assert.match(picture().textContent, /paris/);
       // keys move the view: the board is drawn again, and the view's picture with it, never empty
       vp().focus();
@@ -192,7 +192,7 @@ describe('a board on the browser editor’s page', () => {
       key('Tab');
       key('ArrowDown', { shiftKey: true });
       await until(() => page.file().includes('(v:View {x: 0, y: 50, w: 400, h: 300})'), 8000);
-      await until(() => picture()?.getAttribute('y') === '50', 8000);
+      await until(() => picture()?.getAttribute('y') === '72', 8000);
       assert.ok(page.file().includes("(a:Sticky {x: 500, y: 0, text: 'Go by train'})"), 'the sticky stays put');
     } finally {
       await page.stop();

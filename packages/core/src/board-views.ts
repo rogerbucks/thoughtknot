@@ -5,7 +5,7 @@
 // Host-free and pure: the host gives the note, and nests the picture in the item.
 import { gqlBlocks } from './blocks.ts';
 import type { Board, BoardItem } from './board.ts';
-import { itemBox } from './board-svg.ts';
+import { itemBox, type Box } from './board-svg.ts';
 import { readNote } from './drawing.ts';
 import { diagramDrawing } from './plugin-diagrams.ts';
 import { shapeOf } from './types-shape.ts';
@@ -22,6 +22,16 @@ export function viewTypeOf(item: BoardItem): ViewType {
 export function viewGraphOf(board: Board, item: BoardItem): string | null {
   const of = item.more.of;
   return typeof of === 'string' && of ? of : board.on;
+}
+
+/** Room left in a view's frame for its name above the picture, and round it, in board units. */
+const TOP = 22,
+  PAD = 6;
+
+/** Where a view's picture goes: inside its frame, below its name. */
+export function viewSpace(item: BoardItem): Box {
+  const box = itemBox(item);
+  return { x: box.x + PAD, y: box.y + TOP, w: Math.max(1, box.w - 2 * PAD), h: Math.max(1, box.h - TOP - PAD) };
 }
 
 // the core's view types, found by their own name alone: nothing a plug-in adds is drawn on a board yet
@@ -52,7 +62,7 @@ export async function drawBoardView(
   const reading = readNote(gqlBlocks(note).map((b) => b.text));
   const drawn = reading.graphs.get(of);
   if (!drawn || !drawn.boxes.length) return { refused: word('board.view.empty', { graph: of }) };
-  const box = itemBox(item);
+  const box = viewSpace(item);
   const r = await drawing.drawDiagram(viewTypeOf(item), shapeOf(drawn, reading.world[of]), {
     width: box.w,
     height: box.h,
