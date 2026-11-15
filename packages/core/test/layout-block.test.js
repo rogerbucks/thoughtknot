@@ -123,9 +123,70 @@ test('a card has a line of its own, kept apart from its thing place, saved, read
   // saved again, only its own line changes; forgotten, it goes
   text = saveCard(text, 'trip', 'ann', { x: 5, y: 6 });
   assert.deepEqual(readLayout(text).layout.cards.get('ann'), { x: 5, y: 6 });
+  // a card made wider keeps its width, in whole pixels
+  text = saveCard(text, 'trip', 'ann', { x: 5, y: 6, w: 360.4 });
+  assert.match(text, /\(ann_card:Card \{x: 5, y: 6, w: 360, graph: 'ann'\}\)/);
+  assert.deepEqual(readLayout(text).layout.cards.get('ann'), { x: 5, y: 6, w: 360 });
   text = saveCard(text, 'trip', 'ann', null);
   assert.equal(readLayout(text).layout.cards, undefined);
   // a card for a thing that is gone is a problem, as a place is
   const gone = readLayout(saveCard(BLOCK, 'trip', 'zed', { x: 1, y: 1 }), new Set(['ann', 'bob']));
   assert.ok(gone.problems.some((p) => p.code === 'GN910' && p.message.includes('zed')));
+});
+
+// proves: layout_block
+test('an arrangement of the cards is saved by name beside the cards in use, put in use, and forgotten', async () => {
+  const { saveArrangement, saveCard, useArrangement } = await import('../src/layout-block.ts');
+  const things = new Set(['ann', 'bob']);
+  // no block yet: one is made, holding only the arrangement
+  const tidy = new Map([
+    ['ann', { x: 10.4, y: 20, placed: true, fit: 'title' }],
+    ['bob', { x: 50, y: 60, w: 300 }],
+  ]);
+  let text = saveArrangement(null, 'trip', 'Tidy desk', tidy);
+  assert.match(
+    text,
+    /\(ann_card_tidy_desk:Card \{x: 10, y: 20, graph: 'ann', locked: true, fit: 'title', set: 'Tidy desk'\}\)/,
+  );
+  let read = readLayout(text, things);
+  assert.deepEqual(read.problems, []);
+  assert.equal(read.layout.cards, undefined, 'none is in use yet');
+  assert.deepEqual(read.layout.arrangements.get('Tidy desk').get('bob'), { x: 50, y: 60, w: 300 });
+  // beside a place and a card in use, each keeps its own line; saved again by its name, it is replaced
+  text = saveCard(saveArrangement(BLOCK, 'trip', 'Tidy desk', tidy), 'trip', 'bob', { x: 1, y: 2, fit: 'full' });
+  text = saveArrangement(text, 'trip', 'Tidy desk', new Map([['ann', { x: 5, y: 5 }]]));
+  read = readLayout(text, things);
+  assert.deepEqual(read.problems, []);
+  assert.ok(text.startsWith(BLOCK.trimEnd()), 'every other line stays as it was');
+  assert.deepEqual([...read.layout.arrangements.get('Tidy desk')], [['ann', { x: 5, y: 5 }]]);
+  assert.deepEqual(read.layout.cards.get('bob'), { x: 1, y: 2, fit: 'full' });
+  // a second arrangement whose name makes the same line names gets lines of its own
+  text = saveArrangement(text, 'trip', 'tidy-desk', new Map([['ann', { x: 7, y: 7 }]]));
+  read = readLayout(text, things);
+  assert.deepEqual(read.problems, []);
+  assert.deepEqual([...read.layout.arrangements.keys()], ['Tidy desk', 'tidy-desk']);
+  // put in use: the cards in use are as it saved them, and a card it does not hold goes back to the layout
+  const used = readLayout(useArrangement(text, 'trip', 'Tidy desk'), things).layout;
+  assert.deepEqual([...used.cards], [['ann', { x: 5, y: 5 }]]);
+  assert.equal(used.arrangements.size, 2, 'the arrangements stay saved');
+  assert.equal(useArrangement(text, 'trip', 'nobody'), text);
+  // forgotten, its lines go and nothing else
+  const gone = saveArrangement(text, 'trip', 'tidy-desk', null);
+  assert.deepEqual([...readLayout(gone, things).layout.arrangements.keys()], ['Tidy desk']);
+  assert.deepEqual(readLayout(gone, things).problems, []);
+});
+
+// proves: layout_block
+test('a note keeps its arrangements in its layout block, and puts one in use in one write', async () => {
+  const { arrangementInNote, savedArrangements, savedCards } = await import('../src/layout-places.ts');
+  const graph = "// graph: trip\n(ann:Person {name: 'Ann'})";
+  const note = `# Trip\n\n\`\`\`gql\n${graph}\n\`\`\`\n`;
+  const saved = arrangementInNote(note, 'trip', graph, 'Calm', new Map([['ann', { x: 3, y: 4, fit: 'full' }]]));
+  assert.deepEqual(savedArrangements(saved.text, 'trip').get('Calm').get('ann'), { x: 3, y: 4, fit: 'full' });
+  assert.equal(savedCards(saved.text, 'trip').size, 0);
+  const used = arrangementInNote(saved.text, 'trip', graph, 'Calm', 'use');
+  assert.deepEqual(savedCards(used.text, 'trip').get('ann'), { x: 3, y: 4, fit: 'full' });
+  assert.ok(used.text.includes(graph), 'the graph block stays as it was');
+  assert.ok('refused' in arrangementInNote(saved.text, 'trip', 'something else', 'Calm', 'use'), 'the graph changed');
+  assert.equal(arrangementInNote(note, 'trip', graph, 'Calm', 'use').text, note, 'nothing saved: nothing written');
 });

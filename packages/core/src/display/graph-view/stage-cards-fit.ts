@@ -5,6 +5,9 @@
 import { cardSizeOf, type CardBox, type CardFit, type CardText } from '../../render/render-cards.ts';
 import { MORPH_MS, morphed } from '../../render/render-morph.ts';
 import type { Spot } from '../../render/render-rooms.ts';
+import type { View } from '../../render/render-marks.ts';
+import { onScreen } from '../../render/render-tilt.ts';
+import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { setIcon } from '../host.ts';
 
@@ -28,14 +31,29 @@ export function placesOf(graph: string): Map<string, { x: number; y: number }> {
   return m;
 }
 
-/** The texts `texts`, each sized as `fits` says. */
+/** How wide the reader made each card of each graph, by thing, in pixels; a card not named is as wide as a card is. */
+const widened = new Map<string, Map<string, number>>();
+
+/** How wide the reader made the cards of `graph`. */
+export function widthsOf(graph: string): Map<string, number> {
+  let m = widened.get(graph);
+  if (!m) widened.set(graph, (m = new Map<string, number>()));
+  return m;
+}
+
+/** The texts `texts`, each sized as `fits` says, and as wide as `widths` says. */
 export function withFits(
   texts: Map<string, CardText>,
   fits: ReadonlyMap<string, { fit: CardFit; tall?: number }>,
+  widths: ReadonlyMap<string, number> = new Map(),
 ): Map<string, CardText> {
   for (const [k, f] of fits) {
     const t = texts.get(k);
     if (t) texts.set(k, { ...t, ...f });
+  }
+  for (const [k, wide] of widths) {
+    const t = texts.get(k);
+    if (t) texts.set(k, { ...t, wide });
   }
   return texts;
 }
@@ -135,4 +153,25 @@ export function glide(
   };
   frame(step);
   return stop;
+}
+
+/** Where `p` lies on the screen under `view`, at depth `depth`: tilt and globe too. */
+const seen = (p: [number, number], view: View, depth = 0) => onScreen({ x: p[0], y: p[1], r: 1 }, view, depth);
+/** How many pieces each leg of an arrow is cut into on the globe, so it bends with the ball. */
+const GLOBE_PIECES = 8;
+
+/** An arrow's way on the screen under `view`, at `depth`; none if any of it is round the back of the globe. */
+export function wayOnScreen(way: readonly [number, number][], view: View, depth = 0): [number, number][] | null {
+  const pieces = isGlobe(view) ? GLOBE_PIECES : 1;
+  const out: [number, number][] = [];
+  for (let i = 0; i < way.length; i++) {
+    const [p, q] = [way[i] as [number, number], way[i + 1]];
+    for (let j = 0; j < (q ? pieces : 1); j++) {
+      const t = j / pieces;
+      const s = seen(q ? [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t] : p, view, depth);
+      if (s.behind) return null;
+      out.push([s.x, s.y]);
+    }
+  }
+  return out;
 }

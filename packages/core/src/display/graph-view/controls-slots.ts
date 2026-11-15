@@ -43,6 +43,7 @@ export const ON_DEMAND: Readonly<Record<string, string>> = {
   'thoughtknot-stage-card': 'a thing’s card in the card view, on the drawing at the thing’s place',
   'thoughtknot-stage-cards-chosen':
     'the bar over cards chosen together, only while some are, closed by its ✕ or a click',
+  'thoughtknot-stage-cards-sets': 'the arrangements of the cards, opened and closed by their dock button',
   'thoughtknot-suggestions': 'suggestions under the words being typed',
   'thoughtknot-massive-list': 'search results under the search box',
   'thoughtknot-edit-card': 'the editor of one thing, at that thing',
