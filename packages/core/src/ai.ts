@@ -19,7 +19,7 @@ import { aiWaits } from './settings-time-box.ts';
 import { askedText, changesIn } from './ai-request.ts';
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
-import type { AnswerShape } from './ai-request.ts';
+import type { AnswerShape, BoardDraft } from './ai-request.ts';
 import { coreAiProvider } from './core-ai.ts';
 import { keyHeader } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
@@ -152,6 +152,8 @@ export type SendResult =
   | { record: SendRecord; asks: string }
   /** A rule described (rule-describe.ts): it fills a form and is never applied by the send. */
   | { record: SendRecord; rule: RuleWrite }
+  /** A board proposed (board-propose.ts): it is shown, and written only when the person keeps it. */
+  | { record: SendRecord; board: BoardDraft }
   | { record: SendRecord; failed: string }
   | { refused: string };
 
@@ -336,6 +338,7 @@ export async function sendPrepared(
     'content' in read ? (p.answers ? p.answers.read(read.content, p.sent ?? []) : changesIn(read.content)) : read;
   if ('asks' in changes) return { record: { ...record, outcome: 'answered' }, asks: changes.asks };
   if ('rule' in changes) return { record: { ...record, outcome: 'answered' }, rule: changes.rule };
+  if ('board' in changes) return { record: { ...record, outcome: 'answered' }, board: changes.board };
   if (!Array.isArray(changes)) return cannot(changes.unread);
   const tooBig = p.edit && editTooBig(changes, p.edit, p.model.name);
   if (tooBig) return failed(tooBig);

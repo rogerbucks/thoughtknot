@@ -8,6 +8,13 @@ import { ItemView, TFile } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import { arrangerOf, gqlBlocks, PALETTES, starterBoard, viewerOf, withStarter, word } from '@thoughtknot/core';
 import {
+  boardFromGraph,
+  draftFor,
+  proposeBoard,
+  showBoardDraft,
+  withBoardKept,
+} from '@thoughtknot/core/display/board/board-draft';
+import {
   boardInFront,
   boardListChanged,
   boardNames,
@@ -20,6 +27,7 @@ import {
 } from '@thoughtknot/core/display/board/board-list';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
 import type ThoughtKnotPlugin from './main';
+import { boardAskFor } from './ai/board-make';
 import type { HostCommand } from './host-commands';
 import { changeVaultNote, noteText } from './storage/plugin-notes';
 
@@ -91,6 +99,25 @@ export class BoardPane extends ItemView {
     await Promise.resolve();
   }
 
+  /** The board proposed for the note, shown in place of its board in front; kept, it is written to the note. */
+  private proposed(root: HTMLElement, draft: NonNullable<ReturnType<typeof draftFor>>, path: string): void {
+    const app = this.app;
+    showBoardDraft(root, draft, {
+      key: path,
+      palette: PALETTES.obsidian,
+      views: viewerOf(async () => (await noteText(app, path)) ?? '', PALETTES.obsidian),
+      keep: async (d) => {
+        await changeVaultNote(app, path, (now) => {
+          const kept = withBoardKept(now, d);
+          putInFront(path, kept.name);
+          return kept.note;
+        });
+        return null;
+      },
+      done: () => void this.draw(),
+    });
+  }
+
   /** The note's board drawn afresh, with the line about the change until the person first chose. */
   async draw(): Promise<void> {
     const path = this.path;
@@ -117,11 +144,23 @@ export class BoardPane extends ItemView {
     const app = this.app;
     // the note as a change is made to: with its starter board written first, when that is the board shown
     const base = (now: string) => (board.starter && !boardNames(now).length ? withStarter(now, board.text) : now);
+    const on = boardOf(board.text)?.on ?? null;
     showBoardList(root, {
       key: path,
       names,
       current: board.name,
       open: () => void this.draw(),
+      propose: () => {
+        const d = on ? boardFromGraph(note, on) : { refused: word('board.view.no-graph') };
+        if ('refused' in d) return d.refused;
+        proposeBoard(path, d);
+        void this.draw();
+        return null;
+      },
+      askAi: boardAskFor(this.plugin, path, on, (d) => {
+        proposeBoard(path, d);
+        void this.draw();
+      }),
       change: async (ask) => {
         let refused: string | null = word('blocks.note-gone');
         await changeVaultNote(app, path, (now) => {
@@ -134,6 +173,9 @@ export class BoardPane extends ItemView {
         return refused;
       },
     });
+    // a board proposed is shown in place of the board in front, until it is kept or dropped (board_proposed)
+    const draft = draftFor(path);
+    if (draft) return this.proposed(root, draft, path);
     const holder = root.createDiv();
     glideIn(holder, path);
     showBoard(holder, board.text, {

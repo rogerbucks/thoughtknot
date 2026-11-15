@@ -21,6 +21,10 @@ export interface BoardListHost {
   open: (name: string) => void;
   /** Does `ask` to the board in front, and answers why not when refused. Left out, the list only switches. */
   change?: (ask: BoardListAsk) => Promise<string | null>;
+  /** Proposes a board from the graph, shown before it is kept; answers why not when there is none to propose. */
+  propose?: () => string | null;
+  /** Asks the person's AI for a board in their own words; left out where AI is off or the host has none. */
+  askAi?: (words: string) => void;
 }
 
 /** The board in front of each note, and whether its list was left open, by the host's key. */
@@ -141,6 +145,15 @@ export function showBoardList(el: HTMLElement, host: BoardListHost): HTMLElement
   });
   wordButton(acts, word('board.list.nest'), () => ask({ kind: 'nest' }));
   wordButton(acts, word('board.list.copy'), () => ask({ kind: 'copy' }));
+  const propose = host.propose;
+  if (propose) wordButton(acts, word('board.list.propose'), () => (said.textContent = propose() ?? ''));
+  const askAi = host.askAi;
+  if (askAi) {
+    const asking = list.createDiv({ cls: 'thoughtknot-board-list-ask' });
+    const words = asking.createEl('input', { attr: { type: 'text', 'aria-label': word('board.list.ask') } });
+    words.setAttribute('placeholder', word('board.list.ask'));
+    wordButton(asking, word('board.list.ask-send'), () => askAi(words.value));
+  }
   const sure = list.createDiv({ cls: 'thoughtknot-board-list-sure' });
   sure.hidden = true;
   sure.createSpan({ text: `${word('board.list.remove-sure', { name: current })} ` });

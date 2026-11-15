@@ -155,3 +155,92 @@ describe('a board inside a board opened in Obsidian', () => {
     }
   });
 });
+
+const TEAM = [
+  '# Team',
+  '```gql',
+  '// graph: team',
+  "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (ann)-[:KNOWS]->(bob)",
+  '```',
+  '',
+].join('\n');
+
+describe('a board proposed in Obsidian', () => {
+  // proves: board_proposed
+  test('from the graph is shown first, and written to the note only when kept', async () => {
+    const env = await load({ files: { [MANY_PATH]: TEAM } });
+    try {
+      env.state.active = MANY_PATH;
+      env.app.workspace.tell('file-open', env.app.workspace.getActiveFile());
+      await until(() => !!manyPane(env)?.querySelector('[data-item="view1"]'), 8000);
+      const press = (words) =>
+        manyPane(env)
+          .querySelectorAll('button')
+          .find((b) => b.textContent === words)
+          .click();
+      press('Propose a board from the graph');
+      await until(() => !!manyPane(env).querySelector('.thoughtknot-board-draft [data-item="note1"]'), 8000);
+      assert.equal(env.state.files.get(MANY_PATH), TEAM, 'a proposal writes nothing');
+      assert.equal(
+        manyPane(env).querySelector('.thoughtknot-board-list-ask'),
+        null,
+        'no box to ask an AI while AI is off',
+      );
+      press('Keep this board');
+      await until(() => env.state.files.get(MANY_PATH).includes('graph: team_views · BOARD ON team'), 8000);
+      await until(() => !manyPane(env).querySelector('.thoughtknot-board-draft'), 8000);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+const LOCAL = {
+  name: 'Local',
+  purpose: 'Proposing changes',
+  ceiling: 'Internal',
+  endpoint: 'http://localhost:11434/v1/chat/completions',
+  model: 'llama3',
+};
+const AI_ON = { data: { settings: { aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL] } } };
+const PUBLIC_TEAM = `---\nclassification: Public\n---\n${TEAM}`;
+const answered = (body) => async () => ({
+  status: 200,
+  text: JSON.stringify({ choices: [{ message: { content: JSON.stringify(body) } }] }),
+});
+
+describe('a board asked of an AI in Obsidian', () => {
+  // proves: board_proposed
+  test('goes through the send dialog, is shown as a proposal that cites what was read, and writes nothing', async () => {
+    const env = await load({ files: { [MANY_PATH]: PUBLIC_TEAM }, ...AI_ON });
+    try {
+      env.state.active = MANY_PATH;
+      env.app.workspace.tell('file-open', env.app.workspace.getActiveFile());
+      await until(() => !!manyPane(env)?.querySelector('.thoughtknot-board-list-ask'), 8000);
+      const ask = manyPane(env).querySelector('.thoughtknot-board-list-ask');
+      ask.querySelector('input').value = 'who knows whom?';
+      ask.querySelector('button').click();
+      await until(() => !!env.state.modals.at(-1), 8000);
+      const m = env.state.modals.at(-1);
+      const button = (label) =>
+        m.contentEl.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
+      button('Show what will be sent').click();
+      await until(() => m.contentEl.querySelector('.thoughtknot-ai-body'));
+      assert.match(m.contentEl.querySelector('.thoughtknot-ai-body').textContent, /Question: who knows whom\?/);
+      assert.deepEqual(env.state.requests, [], 'nothing is sent until Send is pressed');
+      env.state.reply = answered({
+        board: { name: 'knows', items: [{ view: 'matrix', reason: 'each pair', read: ['ann', 'bob'] }] },
+      });
+      button('Send').click();
+      await until(() => !!manyPane(env).querySelector('.thoughtknot-board-draft [data-item="view1"]'), 8000);
+      assert.equal(env.state.requests.length, 1, 'one send');
+      assert.match(
+        manyPane(env).querySelector('.thoughtknot-board-draft-cited li').textContent,
+        /view1: Read ann, bob: each pair/,
+      );
+      assert.equal(env.state.files.get(MANY_PATH), PUBLIC_TEAM, 'the answer writes nothing');
+    } finally {
+      env.uninstall();
+    }
+  });
+});

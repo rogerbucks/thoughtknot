@@ -22,7 +22,7 @@ function nameOf(text: string): string {
 }
 
 /** A name no block of the note has yet: `base`, else `base_2`, `base_3` and so on. */
-function freeName(note: string, base: string): string {
+export function freeBoardName(note: string, base: string): string {
   const taken = new Set(gqlBlocks(note).map((b) => nameOf(b.text)));
   let name = base;
   for (let n = 2; taken.has(name); n++) name = `${base}_${n}`;
@@ -40,7 +40,7 @@ function withBlock(note: string, text: string): string {
 
 /** The note with a new, empty board at its end, on the graph `on` or free. */
 export function boardAdded(note: string, on: string | null): { note: string; name: string } {
-  const name = freeName(note, word('board.list.new-name'));
+  const name = freeBoardName(note, word('board.list.new-name'));
   return { note: withBlock(note, head(name, on)), name };
 }
 
@@ -52,7 +52,7 @@ export function boardRenamed(note: string, from: string, to: string): BoardListC
   const name = to.trim();
   if (name === from) return { note, name };
   if (boardOf(head(name, was.on))?.name !== name) return { refused: word('board.list.bad-name', { name }) };
-  if (freeName(note, name) !== name) return { refused: word('board.list.taken', { name }) };
+  if (freeBoardName(note, name) !== name) return { refused: word('board.list.taken', { name }) };
   const lines = span.text.split('\n');
   return { note: replaceSpan(note, span, [head(name, was.on), ...lines.slice(1)].join('\n')).note, name };
 }
@@ -62,7 +62,7 @@ export function boardCopied(note: string, name: string): BoardListChange {
   const span = gqlSpans(note).find((s) => boardOf(s.text)?.name === name);
   const was = span && boardOf(span.text);
   if (!span || !was) return { refused: word('board.edit.board-gone', { name }) };
-  const copy = freeName(note, `${name}_copy`);
+  const copy = freeBoardName(note, `${name}_copy`);
   return { note: withBlock(note, [head(copy, was.on), ...span.text.split('\n').slice(1)].join('\n')), name: copy };
 }
 

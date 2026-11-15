@@ -5530,3 +5530,24 @@ img.thoughtknot-picture-hidden,
   min-height: 24px;
   min-width: 24px;
 }
+/* A board proposed, shown before it is kept: marked off from the note's own boards (board_proposed). */
+.thoughtknot-board-draft {
+  border: 1px dashed var(--gn-text-muted);
+  border-radius: var(--gn-space-1);
+  padding: var(--gn-space-2);
+}
+.thoughtknot-board-draft button,
+.thoughtknot-board-draft-cited > summary {
+  min-height: 24px;
+  min-width: 24px;
+}
+.thoughtknot-board-draft-cited {
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-board-list-ask {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  margin-top: var(--gn-space-1);
+}

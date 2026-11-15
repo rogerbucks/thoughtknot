@@ -42,11 +42,22 @@ export interface AnswerShape {
   instructions: string;
   /** Text sent with the graph, such as prose to make a graph of (text-to-graph.ts): in a fence of its own, as data. */
   text?: string;
-  /** The changes the answer makes, or the one rule it describes (rule-describe.ts), or why it is neither. */
+  /** The changes the answer makes, the one rule it describes, or the board it proposes; or why it is none. */
   read(
     content: string,
     sent: readonly string[],
-  ): ChangeInput[] | { unread: string } | { asks: string } | { rule: RuleWrite };
+  ): ChangeInput[] | { unread: string } | { asks: string } | { rule: RuleWrite } | { board: BoardDraft };
+}
+
+/**
+ * A whole board proposed (board-propose.ts). It holds its name, the graph it is on and its block as it would be
+ * written, with what each item came from. It is shown to the person, and written only when they keep it.
+ */
+export interface BoardDraft {
+  name: string;
+  on: string;
+  text: string;
+  cites: { id: string; said: string }[];
 }
 
 /** A fence of backticks longer than any run of them in `text`, so no text of the note can close it (AI-3). */

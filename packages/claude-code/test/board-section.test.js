@@ -537,3 +537,57 @@ describe('a board inside a board on the browser editor’s page', () => {
     }
   });
 });
+
+const TEAM = [
+  '# Team',
+  '```gql',
+  '// graph: team',
+  "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (acme:Company {name: 'Acme'}),",
+  '(ann)-[:KNOWS]->(bob), (ann)-[:WORKS_AT]->(acme)',
+  '```',
+  '',
+  '```gql',
+  '// graph: ideas · BOARD ON team',
+  "(a:Sticky {x: 0, y: 0, text: 'Ann'})",
+  '```',
+  '',
+].join('\n');
+
+describe('a board proposed on the browser editor’s page', () => {
+  // proves: board_proposed
+  test('is shown with what each item came from, written only when kept, and dropped without a trace', async () => {
+    const page = await livePage(TEAM);
+    try {
+      const boards = () => page.doc.querySelector('.gn-boards');
+      const draft = () => boards()?.querySelector('.thoughtknot-board-draft');
+      const press = (words) =>
+        Array.from(boards().querySelectorAll('button'))
+          .find((b) => b.textContent === words)
+          .click();
+      await until(() => boards()?.querySelector('.thoughtknot-board [data-item="a"]'), 8000);
+      press('Propose a board from the graph');
+      await until(() => draft()?.querySelector('[data-item="view1"]'), 8000);
+      assert.match(draft().querySelector('p').textContent, /team_views\. Nothing is written until you keep it/);
+      assert.equal(draft().querySelectorAll('.thoughtknot-board-draft-cited li').length, 4);
+      assert.match(draft().querySelector('.thoughtknot-board-draft-cited li').textContent, /note1: The graph team/);
+      assert.equal(page.file(), TEAM, 'a proposal writes nothing');
+      assert.equal(draft().querySelector('.thoughtknot-board-tools [data-tool="sticky"]'), null, 'it is read only');
+
+      press('Not this one');
+      await until(() => !draft() && boards().querySelector('.thoughtknot-board [data-item="a"]'), 8000);
+      assert.equal(page.file(), TEAM, 'dropped, nothing was written');
+
+      press('Propose a board from the graph');
+      await until(() => draft(), 8000);
+      press('Keep this board');
+      await until(() => /graph: team_views · BOARD ON team/.test(page.file()), 8000);
+      assert.ok(page.file().startsWith(TEAM.trimEnd()), 'the note as it was comes first');
+      await until(
+        () => !draft() && boards().querySelector('summary').textContent === 'Boards: team_views, 2 of 2',
+        8000,
+      );
+    } finally {
+      await page.stop();
+    }
+  });
+});

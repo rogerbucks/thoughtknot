@@ -358,7 +358,7 @@ export class SendDialog extends Modal {
       this.drawShown();
       return;
     }
-    if ('rule' in result) return this.rule?.fill(result.rule, p.model.name, () => this.close()); // only fills a form
+    if (!('proposal' in result)) return this.rule?.fill(result, p.model.name, () => this.close()); // only shown
     const { proposal } = result,
       n = proposal.changes.length;
     if (levelsAsked(this.suggest)) return saveLevels(this, [this.file, this.note, this.graph], proposal, p.model);
