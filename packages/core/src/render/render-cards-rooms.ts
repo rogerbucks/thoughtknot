@@ -107,12 +107,7 @@ function partRounds(p: Body[], pinned?: ReadonlySet<string>): void {
  * cards moved apart only. The same scene and places always give the same result. The cards `pinned`, and every room
  * that holds one, stay put: the things round them make room.
  */
-export function keepInRooms(
-  scene: Scene,
-  spots: Map<string, Spot>,
-  boxes: Box[],
-  pinned?: ReadonlySet<string>,
-): void {
+export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[], pinned?: ReadonlySet<string>): void {
   const card = new Map(boxes.map((b) => [b.key, b]));
   const rooms = [...scene.nodes.values()].filter((n) => n.children.length && spots.has(n.key));
   if (!rooms.length) return partCards(boxes, pinned);

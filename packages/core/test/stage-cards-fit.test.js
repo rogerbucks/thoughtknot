@@ -170,7 +170,7 @@ test('a card dragged by its head stays where it is put, the cards it lands on mo
     assert.ok(Math.abs(again.x - target.x) < 1e-6 && Math.abs(again.y - target.y) < 1e-6, 'kept for the graph');
     // undone, it goes back where the layout had it
     assert.ok(new MoveUndo(viewport, 'drag-plan').undo());
-    await new Promise((r) => setTimeout(r, 0)); // the undo's toast says so before the page goes
+    for (let i = 0; i < 3; i++) await Promise.resolve(); // the undo's toast says so before the page goes
     const back = boxesOf(stage).get('W0');
     assert.ok(Math.abs(back.x - from.x) < 1e-6 && Math.abs(back.y - from.y) < 1e-6, 'back where it was');
     stage.unload();
