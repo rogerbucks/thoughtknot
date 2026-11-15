@@ -12,6 +12,7 @@ import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { clashOf } from './board-clash.ts';
 import { glyphNamed } from './board-glyphs.ts';
+import { DASHES, TEXT_SCALE, formatOf } from './board-format.ts';
 import { inkSvg } from './board-ink.ts';
 import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
@@ -180,8 +181,13 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const hue = own ?? HUES[item.kind];
   const fill = item.kind === 'Frame' || !hue ? 'none' : palette.fill(hue);
   const stroke = hue ? palette.blend(hue, STYLE.line_mix) : palette.edge;
-  const ink = item.kind === 'Ink' ? inkSvg(item, hue ? palette.blend(hue, STYLE.line_mix) : palette.text) : null;
-  const dash = item.kind === 'Frame' || item.kind === 'Ink' ? ' stroke-dasharray="6 4"' : '';
+  const look = formatOf(item);
+  // its own line where it has one; else a frame, and a stroke with no points, are dashed
+  const dashes = look.line ? DASHES[look.line] : item.kind === 'Frame' || item.kind === 'Ink' ? DASHES.dashed : '';
+  const inkLine = look.line ? DASHES[look.line] : '';
+  const ink =
+    item.kind === 'Ink' ? inkSvg(item, hue ? palette.blend(hue, STYLE.line_mix) : palette.text, inkLine) : null;
+  const dash = dashes ? ` stroke-dasharray="${dashes}"` : '';
   const corner =
     item.kind === 'Card' || item.kind === 'Frame' || item.kind === 'View' ? 8 : item.kind === 'Shape' ? box.h / 2 : 2;
   const shape =
@@ -190,7 +196,7 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
       ? ''
       : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`);
   const quiet = item.kind === 'Frame' || item.kind === 'View';
-  const size = quiet ? STYLE.kind_font_size : STYLE.font_size;
+  const size = (quiet ? STYLE.kind_font_size : STYLE.font_size) * TEXT_SCALE[look.size];
   const pad = 8;
   const rows =
     item.kind === 'Card'
@@ -211,7 +217,7 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
     ? `<text x="${num(box.x + box.w / 2)}" y="${num(box.y + box.h / 2)}" font-size="${num(Math.min(box.w, box.h) * 0.7)}" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${glyph.char}</text>`
     : '';
   const words = text
-    ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${quiet ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
+    ? `<text font-family="${STYLE.font}" font-size="${num(size)}"${look.bold ? ' font-weight="bold"' : ''} fill="${quiet ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
     : '';
   const open = openThreads(item);
   const talk = open

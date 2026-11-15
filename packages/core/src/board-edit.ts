@@ -12,6 +12,7 @@ import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
 import { commentedMore } from './board-comments.ts';
+import { formatPatch, type Format } from './board-format.ts';
 import type { CommentOp } from './board-comments.ts';
 import { hiddenMore } from './board-session.ts';
 import { votedMore } from './board-vote.ts';
@@ -26,6 +27,8 @@ export type BoardChange =
   | { kind: 'layer'; id: string; layer: number }
   | { kind: 'lock'; id: string; locked: boolean }
   | { kind: 'style'; id: string; style: string | null }
+  /** The look of several items changed at once, as the format bar changes it: one change, one undo. */
+  | { kind: 'formats'; ids: string[]; set: Partial<Format> }
   | { kind: 'group'; id: string; group: string | null }
   | { kind: 'vote'; id: string; person: string; reaction: string | null }
   | { kind: 'hide'; id: string; person: string; hidden: boolean }
@@ -58,6 +61,12 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
     });
     if (!open.length) return { refused: word('board.edit.locked') };
     return { text: open.reduce((t, m) => moveItem(t, m.id, m.x, m.y), text) };
+  }
+  if (change.kind === 'formats') {
+    // each item by its own text alone; a locked one keeps its look
+    const open = change.ids.map(find).filter((i): i is BoardItem => !!i && (undoing || !i.locked));
+    if (!open.length) return { refused: word('board.edit.locked') };
+    return { text: open.reduce((t, item) => itemChanged(t, item, formatPatch(item, change.set)), text) };
   }
   if (isItemSet(change)) {
     const set = change;

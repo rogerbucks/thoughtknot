@@ -127,6 +127,37 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_format
+  test('formats the items chosen from the Format bar: one press colours both, and the bar stays as it was', async () => {
+    const page = await livePage(NOTE);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="a"]'), 8000);
+      const format = () => board().querySelector('.thoughtknot-board-format');
+      const look = (name) => format().querySelector(`[data-look="${name}"]`);
+      assert.ok(format().querySelector('.thoughtknot-board-format-looks').hidden, 'the looks start folded');
+      for (const id of ['a', 'b'])
+        vp()
+          .querySelector(`[data-item="${id}"]`)
+          .dispatchEvent(
+            new page.window.PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, shiftKey: true }),
+          );
+      format().querySelector('button').click();
+      assert.ok(!format().querySelector('.thoughtknot-board-format-looks').hidden);
+      look('colour-pink').click();
+      await until(() => (page.file().match(/style: 'pink'/g) ?? []).length === 2, 8000);
+      assert.match(page.file(), /\(a:Sticky \{x: 10, y: 20, text: 'Go by train', style: 'pink'\}\)/, 'nothing moved');
+      // the page draws the board afresh from the note: both are still chosen, and the bar still open on them
+      await until(() => look('colour-pink')?.getAttribute('aria-pressed') === 'true', 8000);
+      assert.equal(vp().querySelectorAll('[data-item].is-chosen').length, 2);
+      look('bold').click();
+      await until(() => (page.file().match(/bold: true/g) ?? []).length === 2, 8000);
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_ink
   test('draws a stroke with the Pen as one Ink item, keeps drawing until Escape, and the Eraser rubs it out', async () => {
     const page = await livePage(NOTE);

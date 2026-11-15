@@ -26,6 +26,7 @@ import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
 import { BoardInk } from './board-ink.ts';
+import { FormatBar } from './board-format-bar.ts';
 import { bindDrop } from './board-images.ts';
 import type { BoardHost } from './board-host.ts';
 
@@ -53,6 +54,7 @@ class BoardView {
   private readonly people: BoardPeople | null;
   private readonly bar: ArrangeBar | null = null;
   private readonly rail: ToolRail;
+  private readonly format: FormatBar | null = null;
   private readonly sel = new BoardSelection((n) => this.bar?.chosen(n));
   private seen = ''; // the shared board's text as last read, to tell when someone else changed it
   private frame: Box;
@@ -95,6 +97,8 @@ class BoardView {
     this.rail = new ToolRail(root, this.vp, host.key, (w) => this.say(w), this.readOnly);
     if (host.arrange && !this.readOnly)
       this.bar = new ArrangeBar(root, this.vp, host.arrange, this.arranging(), host.key);
+    if (!this.readOnly)
+      this.format = new FormatBar(root, this.vp, host.key, host.palette, this.arranging(), (ids) => this.sel.set(ids));
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
     this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
     this.editor.hidden = true;
@@ -151,6 +155,7 @@ class BoardView {
     this.sel.paint(next, this.board.items);
     paintOver(next, this.board, this.cursor.focus, this.readOnly, this.host);
     this.apply(this.zoom.view());
+    this.format?.show(this.cursor.focus);
     this.people?.paint(next);
     this.people?.refresh();
     this.people?.tell(undefined, this.cursor.focus, true);

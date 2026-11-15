@@ -758,7 +758,8 @@
       "board_view_items",
       "board_main_screen",
       "board_ink",
-      "board_images"
+      "board_images",
+      "board_format"
     ]
   },
   "B2": {

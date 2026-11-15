@@ -85,8 +85,8 @@ export function inkItem(id: string, pen: Pen, path: readonly Pair[]): BoardItem 
 /** A number as SVG writes it, to two places. */
 const num = (v: number) => String(Math.round(v * 100) / 100);
 
-/** The stroke drawn as one smooth path in `colour`, or null for an Ink item with no points to draw. */
-export function inkSvg(item: BoardItem, colour: string): string | null {
+/** The stroke drawn as one smooth path in `colour`, dashed when `dashes` are given; null for an Ink item with no points. */
+export function inkSvg(item: BoardItem, colour: string, dashes = ''): string | null {
   const pts = inkPoints(item).map(([x, y]): Pair => [item.x + x, item.y + y]);
   const [a, ...rest] = pts;
   if (!a) return null;
@@ -102,7 +102,8 @@ export function inkSvg(item: BoardItem, colour: string): string | null {
     });
   const pen = penOf(item);
   const see = pen === 'highlighter' ? ` stroke-opacity="${HIGHLIGHT_OPACITY}"` : '';
-  return `<path d="${d}" fill="none" stroke="${colour}" stroke-width="${PEN_WIDTH[pen]}"${see} stroke-linecap="round" stroke-linejoin="round" pointer-events="stroke"/>`;
+  const dash = dashes ? ` stroke-dasharray="${dashes}"` : '';
+  return `<path d="${d}" fill="none" stroke="${colour}" stroke-width="${PEN_WIDTH[pen]}"${see}${dash} stroke-linecap="round" stroke-linejoin="round" pointer-events="stroke"/>`;
 }
 
 /** Whether a spot `at` on the board lies within `reach` of the stroke of an Ink item (its width counts too). */
