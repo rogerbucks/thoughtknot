@@ -275,8 +275,7 @@ class BoardView {
     vp.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
     vp.addEventListener('pointerdown', (e: PointerEvent) => this.down(e));
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
-    vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
-    vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
+    for (const type of ['pointerup', 'pointercancel']) vp.addEventListener(type, (e) => this.lift(e as PointerEvent));
     new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
 
