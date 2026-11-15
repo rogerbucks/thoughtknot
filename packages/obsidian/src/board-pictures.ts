@@ -1,9 +1,10 @@
 // The pictures of a whiteboard in Obsidian (editor spec ES§45, board_images). A picture dropped or pasted on a board
 // is kept where Obsidian keeps the note's attachments, under a free name, so nothing is ever overwritten. It is shown
 // from the vault alone, found as Obsidian finds a link from that note. An address outside the vault is never loaded.
+// The file is written by the vault's own writer (export/vault-write.ts), so this keeps no writer of its own.
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
-import { word } from '@thoughtknot/core';
+import { word, type WriteOps } from '@thoughtknot/core';
 import type { Pictures } from '@thoughtknot/core/display/board/board-images';
 
 /** The ending each kind of picture is kept with, for a pasted one that has no name of its own. */
@@ -25,22 +26,25 @@ export function safeName(name: string, type: string): string {
   return /\.[a-z0-9]+$/i.test(last) ? last : `${last}.${ending}`;
 }
 
-/** The pictures of the boards in the note at `notePath`: kept among its attachments, shown from the vault. */
+/**
+ * The pictures of the boards in the note at `notePath`: kept among its attachments, shown from the vault. `write`
+ * writes a file into the vault; without it the board may only be looked at, and no picture is kept.
+ */
 export function boardPictures(
   { vault, metadataCache, fileManager }: Pick<App, 'vault' | 'metadataCache' | 'fileManager'>,
   notePath: string,
-  writable: boolean,
+  write?: WriteOps['write'],
 ): Pictures {
   return {
     url: (src) => {
       const file = metadataCache.getFirstLinkpathDest(src, notePath);
       return Promise.resolve(file instanceof TFile ? vault.getResourcePath(file) : null);
     },
-    keep: writable
+    keep: write
       ? async (file) => {
           try {
             const path = await fileManager.getAvailablePathForAttachment(safeName(file.name, file.type), notePath);
-            await vault.createBinary(path, await file.arrayBuffer());
+            await write(path, new Uint8Array(await file.arrayBuffer()));
             return { src: path };
           } catch (e) {
             return { refused: word('board.image.keep-failed', { why: e instanceof Error ? e.message : String(e) }) };
