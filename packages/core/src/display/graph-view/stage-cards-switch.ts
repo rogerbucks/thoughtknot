@@ -4,7 +4,14 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading } from '../../note-reading.ts';
 import { noteOf } from '../../links.ts';
 import type { LinkHost } from '../link-host.ts';
-import { CARD_ON_CHOICE, cardsInPlace, cardsLaid } from '../../render/render-cards.ts';
+import {
+  CARD_ON_CHOICE,
+  cardSizeOf,
+  cardsInPlace,
+  cardsLaid,
+  type CardFit,
+  type CardsLaid,
+} from '../../render/render-cards.ts';
 import type { View } from '../../render/render-marks.ts';
 import { MORPH_MS, morphed } from '../../render/render-morph.ts';
 import { roomSizes } from '../../render/render-detail.ts';
@@ -13,6 +20,7 @@ import type { Scene } from '../../render/render-scene.ts';
 import { word } from '../../words.ts';
 import { button } from '../button.ts';
 import { StageCards, cardTexts, cardsChosen, chooseCards, type CardWords } from './stage-cards.ts';
+import { fitsOf, glide, withFits } from './stage-cards-fit.ts';
 
 /** What switching Cards needs of the stage: its card, scene, places and room sizes (both changed in place), and view. */
 export interface CardsHost {
@@ -27,6 +35,20 @@ export interface CardsHost {
   words?: CardWords;
   /** What the drawing is drawn as: a type whose places mean something opens only the chosen card. */
   kind?: string;
+  /** How each card was sized by its reader; and told when the reader sizes one. */
+  fits?: ReadonlyMap<string, { fit: CardFit; tall?: number }>;
+  onFit?: (key: string, fit: CardFit | undefined, tall?: number) => void;
+}
+
+/**
+ * The cards of `h` laid at `spots`, each sized as its reader chose. As a card is resized, the cards keep the spread
+ * they have (`keep`) and that card stays put (`pinned`).
+ */
+function layCards(h: CardsHost, spots: ReadonlyMap<string, Spot>, keep?: number, pinned?: string): CardsLaid {
+  const texts = withFits(cardTexts(h.drawing, h.g, h.words), h.fits ?? new Map());
+  return h.kind && CARD_ON_CHOICE.has(h.kind)
+    ? cardsInPlace(h.scene, spots, texts) // where a place means something, nothing spreads
+    : cardsLaid(h.scene, spots, texts, h.drawing.links, 1, keep, pinned);
 }
 
 /** `spots` spread by `f` from (`cx`, `cy`), each in place: what was drawn under a view, spread so. */
@@ -48,14 +70,7 @@ export function switchCards(
   done: () => void,
   atOnce = false,
 ): { cards: StageCards | null; view: View; stop: () => void } {
-  const texts = on ? cardTexts(h.drawing, h.g, h.words) : null;
-  // where a place means something, nothing spreads: only the chosen thing's card opens, where it is
-  const inPlace = !!h.kind && CARD_ON_CHOICE.has(h.kind);
-  const laid = texts
-    ? inPlace
-      ? cardsInPlace(h.scene, h.spots, texts)
-      : cardsLaid(h.scene, h.spots, texts, h.drawing.links)
-    : was?.laid;
+  const laid = on ? layCards(h, h.spots) : was?.laid;
   if (!laid || (on ? false : !was)) return { cards: was, view: h.view, stop: () => {} };
   const base = on ? new Map(h.spots) : (was as StageCards).base;
   const to = on ? laid.spots : base;
@@ -65,7 +80,7 @@ export function switchCards(
   const view = { ...v, x: laid.cx + (v.x - laid.cx) * f, y: laid.cy + (v.y - laid.cy) * f, scale: v.scale / f };
   h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, to as Map<string, Spot>));
   was?.remove();
-  const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots, h.words) : null;
+  const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots, h.words, h.onFit) : null;
   const frame = typeof requestAnimationFrame === 'undefined' || atOnce ? null : requestAnimationFrame;
   let over = false;
   // stopped, the places go straight to where they glide: a switch after, or an unload, starts from rest
@@ -96,13 +111,17 @@ export function switchCards(
  */
 export function cardsControl(
   root: HTMLElement,
-  stage: { showCards: (on: boolean, atOnce?: boolean) => void; cardsOn: { words?: CardWords; button?: HTMLElement } },
+  stage: {
+    showCards: (on: boolean, atOnce?: boolean) => void;
+    cardsOn: { words?: CardWords; button?: HTMLElement; graph: string };
+  },
   graph: string,
   words?: CardWords,
 ): { unload: () => void } | null {
   const body = root.querySelector<HTMLElement>('.thoughtknot-view-dock .thoughtknot-dock-body');
   if (!body) return null;
   stage.cardsOn.words = words;
+  stage.cardsOn.graph = graph;
   const b = button(body, word('view.cards'), 'square-stack', () => {
     const on = !cardsChosen(graph);
     chooseCards(graph, on);
@@ -139,16 +158,46 @@ export class CardsSwitch {
   words?: CardWords;
   /** The dock's Cards button, which goes with the stage. */
   button?: HTMLElement;
+  /** The graph the cards are of, whose cards keep the sizes their reader gave them. */
+  graph = '';
   /** Brings a glide still under way to rest at once. */
   private stop = (): void => {};
+  /** The stage the cards were last turned on for, which a card sized anew is laid again on. */
+  private host: (CardsHost & { draw: () => void }) | null = null;
 
   /** Turns Cards on or off for stage `h`, as `switchCards` does, drawing each frame; gives the view to show now. */
   turn(h: Omit<CardsHost, 'words'> & { draw: () => void }, on: boolean, done: () => void, atOnce = false): View {
     if (on === !!this.cards) return h.view;
     this.stop(); // a press mid-glide starts from where that glide was going
-    const next = switchCards({ ...h, words: this.words }, this.cards, on, h.draw, done, atOnce);
+    const fits = fitsOf(this.graph);
+    this.host = { ...h, words: this.words, fits, onFit: (k, f, tall) => this.fit(k, f, tall) };
+    const next = switchCards(this.host, this.cards, on, h.draw, done, atOnce);
     [this.cards, this.stop] = [next.cards, next.stop];
     return next.view;
+  }
+
+  /**
+   * Sizes card `key` as `fit`, all it holds `tall` pixels high where it was seen so. The card sized keeps its place,
+   * and the cards it would cover glide aside; nothing else moves (Roger, 15 Nov 2026).
+   */
+  fit(key: string, fit: CardFit | undefined, tall?: number): void {
+    const [h, cards] = [this.host, this.cards];
+    if (!h || !cards) return;
+    this.stop();
+    const fits = fitsOf(this.graph);
+    if (fit) fits.set(key, { fit, ...(tall ? { tall } : {}) });
+    else fits.delete(key);
+    // laid from where the cards are now: the card keeps its top edge, and only cards it now covers move aside
+    const was = cards.laid,
+      spots = new Map(was.spots),
+      at = was.cards.find((c) => c.key === key),
+      s = spots.get(key);
+    if (at && s && !was.only) spots.set(key, { ...s, y: s.y + (cardSizeOf({ ...at.text, fit, tall }).h - at.h) / 2 });
+    const laid = { ...layCards(h, spots, 1, key), spread: was.spread, cx: was.cx, cy: was.cy };
+    cards.refit(laid);
+    cards.settled = false; // the arrows wait for the cards to come to rest
+    h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, laid.spots));
+    this.stop = glide(h.spots, laid.spots, h.draw, () => ((cards.settled = true), h.draw()));
   }
 
   /** Stops a glide under way and takes the cards away, as the stage goes. */

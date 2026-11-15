@@ -130,6 +130,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'view.cards': 'Cards: show each thing with its whole note',
   'view.cards.more': { one: 'Show all: {count} more line', other: 'Show all: {count} more lines' },
   'view.cards.less': 'Show less',
+  'view.cards.title': 'Name only',
+  'view.cards.whole': 'Show the card',
   'space.turn-right': 'Turn right',
   'space.tilt-up': 'Tilt up',
   'space.tilt-down': 'Tilt down',

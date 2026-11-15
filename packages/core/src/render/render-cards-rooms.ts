@@ -34,9 +34,9 @@ const roundsFor = (n: number) => Math.max(1, Math.min(ROUNDS, Math.floor(WORK / 
 /**
  * Moves the cards `p` apart, in place, so that none covers another. Any two still covering one another are pushed
  * apart the shorter way, each half the overlap. Two in one place part down, the first above. The same cards always end
- * in the same places, whatever order they come in.
+ * in the same places, whatever order they come in. A card `pinned` stays put: the one covering it moves the whole way.
  */
-export function partCards(p: Box[]): void {
+export function partCards(p: Box[], pinned?: string): void {
   p.sort(byKey);
   for (let round = 0, n = roundsFor(p.length); round < n; round++) {
     let moved = false;
@@ -48,17 +48,22 @@ export function partCards(p: Box[]): void {
           oy = (a.h + b.h) / 2 + ROOM_GAP - Math.abs(a.y - b.y);
         if (ox <= 0 || oy <= 0) continue;
         moved = true;
+        const [wa, wb] = shares(a.key, b.key, pinned);
         if (oy <= ox) {
           const s = (a.y <= b.y ? -1 : 1) * (oy / 2 + 0.01);
-          [a.y, b.y] = [a.y + s, b.y - s];
+          [a.y, b.y] = [a.y + s * wa, b.y - s * wb];
         } else {
           const s = (a.x <= b.x ? -1 : 1) * (ox / 2 + 0.01);
-          [a.x, b.x] = [a.x + s, b.x - s];
+          [a.x, b.x] = [a.x + s * wa, b.x - s * wb];
         }
       }
     if (!moved) break;
   }
 }
+
+/** How much of half the overlap each of two things moves: one `pinned` stays, and the other moves it all. */
+const shares = (a: string, b: string, pinned?: string): [number, number] =>
+  a === pinned ? [0, 2] : b === pinned ? [2, 0] : [1, 1];
 
 /** A thing in a room, to be moved apart from the rest: a round room, or a card taken as the round that holds it. */
 interface Body {
@@ -71,7 +76,7 @@ interface Body {
 }
 
 /** Moves the rounds `p` apart, each half the overlap, along the line between their middles; one place parts down. */
-function partRounds(p: Body[]): void {
+function partRounds(p: Body[], pinned?: string): void {
   p.sort(byKey);
   for (let round = 0, n = roundsFor(p.length); round < n; round++) {
     let moved = false;
@@ -85,9 +90,10 @@ function partRounds(p: Body[]): void {
         if (over <= 0) continue;
         moved = true;
         const [ux, uy] = d ? [dx / d, dy / d] : [0, 1];
-        const s = over / 2 + 0.01;
-        a.move(-ux * s, -uy * s);
-        b.move(ux * s, uy * s);
+        const s = over / 2 + 0.01,
+          [wa, wb] = shares(a.key, b.key, pinned);
+        a.move(-ux * s * wa, -uy * s * wa);
+        b.move(ux * s * wb, uy * s * wb);
       }
     if (!moved) break;
   }
@@ -96,12 +102,13 @@ function partRounds(p: Body[]): void {
 /**
  * Keeps each of the cards `boxes` inside its group's rooms in `scene`, and no room over another. It moves the cards and
  * the rooms' places in `spots`, in place, and grows each room round what it holds. A drawing with no groups has its
- * cards moved apart only. The same scene and places always give the same result.
+ * cards moved apart only. The same scene and places always give the same result. The card `pinned`, and every room
+ * that holds it, stays put: the things round it make room.
  */
-export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[]): void {
+export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[], pinned?: string): void {
   const card = new Map(boxes.map((b) => [b.key, b]));
   const rooms = [...scene.nodes.values()].filter((n) => n.children.length && spots.has(n.key));
-  if (!rooms.length) return partCards(boxes);
+  if (!rooms.length) return partCards(boxes, pinned);
   /** Moves room `key`, every room inside it, and every card it holds. */
   const moveRoom = (key: string, dx: number, dy: number): void => {
     const s = spots.get(key);
@@ -116,8 +123,10 @@ export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[]
   const part = (keys: readonly string[]): void => {
     const cards = keys.flatMap((k) => (card.has(k) ? [card.get(k) as Box] : []));
     const inner = keys.filter((k) => !card.has(k) && spots.has(k));
+    // the thing here that holds the card pinned, if any, stays put
+    const pin = pinned && keys.find((k) => k === pinned || scene.nodes.get(k)?.items.includes(pinned));
     // a room of cards only parts them as cards, close; mixed with rooms, each card is the round that holds it
-    if (!inner.length) return partCards(cards);
+    if (!inner.length) return partCards(cards, pin || undefined);
     const bodies: Body[] = [
       ...cards.map((b): Body => {
         const body: Body = {
@@ -144,7 +153,7 @@ export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[]
         return body;
       }),
     ];
-    partRounds(bodies);
+    partRounds(bodies, pin || undefined);
   };
   // the innermost rooms first, so each room grows round rooms already final
   rooms.sort((a, b) => b.depth - a.depth || byKey(a, b));

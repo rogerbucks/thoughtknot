@@ -1,0 +1,99 @@
+// Each card sized by its reader (ES§73, render_cards). Roger, 15 Nov 2026: "expand card out or shrink them (based on
+// content) on a per card basis". A card shows its name only, its first lines, or all it holds. The card the reader
+// sized stays where it is, at its top edge, and the cards it would cover glide aside to make room. The size each card
+// was given is kept for the graph while the plugin runs. It is view data, never written into the note (R16).
+import { cardSizeOf, type CardBox, type CardFit, type CardText } from '../../render/render-cards.ts';
+import { MORPH_MS, morphed } from '../../render/render-morph.ts';
+import type { Spot } from '../../render/render-rooms.ts';
+import { word } from '../../words.ts';
+import { setIcon } from '../host.ts';
+
+/** How each card was sized, by graph and then by thing; a card not named shows its first lines. */
+const sized = new Map<string, Map<string, { fit: CardFit; tall?: number }>>();
+
+/** How the cards of `graph` were sized. */
+export function fitsOf(graph: string): Map<string, { fit: CardFit; tall?: number }> {
+  let m = sized.get(graph);
+  if (!m) sized.set(graph, (m = new Map<string, { fit: CardFit; tall?: number }>()));
+  return m;
+}
+
+/** The texts `texts`, each sized as `fits` says. */
+export function withFits(
+  texts: Map<string, CardText>,
+  fits: ReadonlyMap<string, { fit: CardFit; tall?: number }>,
+): Map<string, CardText> {
+  for (const [k, f] of fits) {
+    const t = texts.get(k);
+    if (t) texts.set(k, { ...t, ...f });
+  }
+  return texts;
+}
+
+/** The card's own button in its head `head`, to show its name only or the whole card again; `press` is told. */
+export function nameOnly(head: HTMLElement, press: () => void): void {
+  const b = head.createEl('button', { cls: 'thoughtknot-stage-card-fit', attr: { type: 'button', tabindex: '-1' } });
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    press();
+  });
+}
+
+/** Card `el` marked as `card` is sized: its name only, its first lines or all of it, and its buttons say so. */
+export function markFit(
+  el: HTMLElement,
+  card: CardBox & { more: number; text: CardText },
+  body: HTMLElement | undefined,
+  own: boolean,
+): void {
+  const fit = card.text.fit;
+  el.setCssProps({ '--thoughtknot-card-w': `${card.w}px`, '--thoughtknot-card-h': `${card.h}px` });
+  el.toggleClass('is-title', fit === 'title');
+  el.toggleClass('is-full', fit === 'full');
+  body?.toggleClass('is-cut', !!card.more);
+  const more = el.querySelector<HTMLElement>('button.thoughtknot-stage-card-more');
+  if (more && own) {
+    more.setAttribute('aria-expanded', String(fit === 'full'));
+    const left = cardSizeOf({ ...card.text, fit: undefined }).more;
+    more.setText(fit === 'full' ? word('view.cards.less') : word('view.cards.more', { count: left }));
+  }
+  const b = el.querySelector<HTMLElement>('button.thoughtknot-stage-card-fit');
+  if (!b) return;
+  const label = word(fit === 'title' ? 'view.cards.whole' : 'view.cards.title');
+  b.setAttribute('aria-label', label);
+  b.setAttribute('title', label);
+  b.setAttribute('aria-expanded', String(fit !== 'title'));
+  setIcon(b, fit === 'title' ? 'chevron-down' : 'chevron-up');
+}
+
+/**
+ * Glides the places `spots` to `to`, drawing each frame with `draw`, and tells `done` once they are at rest. Gives
+ * what brings the glide to rest at once. With no frames to draw by, they go there at once.
+ */
+export function glide(
+  spots: Map<string, Spot>,
+  to: ReadonlyMap<string, Spot>,
+  draw: () => void,
+  done: () => void,
+): () => void {
+  const from = new Map([...spots].map(([k, s]) => [k, { x: s.x, y: s.y }]));
+  let over = false;
+  const stop = (): void => {
+    if (over) return;
+    over = true;
+    for (const [k, s] of to) spots.set(k, s);
+  };
+  const frame = typeof requestAnimationFrame === 'undefined' ? null : requestAnimationFrame;
+  if (!frame) return (stop(), done(), stop);
+  const start = performance.now();
+  const step = (now: number): void => {
+    if (over) return;
+    const t = (now - start) / MORPH_MS;
+    if (t >= 1) return (stop(), done());
+    for (const [k, s] of morphed(from, to, t)) spots.set(k, s);
+    draw();
+    frame(step);
+  };
+  frame(step);
+  return stop;
+}

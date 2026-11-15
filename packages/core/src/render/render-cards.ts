@@ -33,6 +33,9 @@ export const CARD_GAP = 28;
 /** How far a layout's places may be spread out at most; past it, cards are moved apart one by one. */
 const SPREAD_MOST = 8;
 
+/** How a card's reader chose to size it: its name only, or all it holds. None, it shows up to CARD_MOST_LINES lines. */
+export type CardFit = 'title' | 'full';
+
 /** What a card shows: its thing's key, name and kind, its own note, the body of the note it stands for, its properties. */
 export interface CardText {
   key: string;
@@ -45,6 +48,10 @@ export interface CardText {
   /** The linked note's length is not known until it is read: its card is as tall as a card may be. */
   linkedTall?: boolean;
   props?: readonly (readonly [string, string])[];
+  /** How its reader sized it, card by card (Roger, 15 Nov 2026). */
+  fit?: CardFit;
+  /** How tall it was seen to be with all it holds, in pixels, once drawn: a note read later is measured so. */
+  tall?: number;
 }
 
 /** How a card is drawn: its size, the lines of text it shows, and how many more wait behind "Show all". */
@@ -86,16 +93,19 @@ export function linesOf(markdown: string): number {
 
 /** The size of the card for `c`: its whole text up to CARD_MOST_LINES lines, and how many lines are left over. */
 export function cardSizeOf(c: CardText): CardSize {
+  if (c.fit === 'title') return { w: CARD_W, h: CARD_HEAD, shown: 0, more: 0 };
   const text = [c.note, c.linked].filter((t): t is string => !!t && !!t.trim());
-  const all = c.linkedTall
-    ? Math.max(CARD_MOST_LINES, linesOf(c.note ?? ''))
-    : text.reduce((n, t) => n + linesOf(t), 0);
-  const shown = Math.min(all, CARD_MOST_LINES);
+  const full = c.fit === 'full';
+  // a linked note's length is not known until it is read: a card waiting for it is as tall as a cut card, or twice
+  const waits = Math.max((full ? 2 : 1) * CARD_MOST_LINES, linesOf(c.note ?? ''));
+  const all = c.linkedTall ? waits : text.reduce((n, t) => n + linesOf(t), 0);
+  const shown = full ? all : Math.min(all, CARD_MOST_LINES);
   // a note read later may be longer than the card: Show all is offered for it
-  const more = c.linkedTall ? Math.max(1, all - shown) : all - shown;
+  const more = full ? 0 : c.linkedTall ? Math.max(1, all - shown) : all - shown;
   const props = Math.min(c.props?.length ?? 0, CARD_PROPS);
   const body = shown + props + (more ? 1 : 0);
-  return { w: CARD_W, h: CARD_HEAD + (body ? 2 * CARD_PAD + body * CARD_LINE : 0), shown, more };
+  const h = CARD_HEAD + (body ? 2 * CARD_PAD + body * CARD_LINE : 0);
+  return { w: CARD_W, h: full && c.tall ? Math.max(CARD_HEAD, c.tall) : h, shown, more };
 }
 
 const byKey = (a: CardBox, b: CardBox) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
@@ -232,7 +242,8 @@ const depthsOf = (scene: Scene, items: readonly string[]): Map<string, number> =
 /**
  * The layout `spots` of `scene` drawn as the cards of `texts`, with arrows for `links`. Every place, groups too, is
  * spread from the layout's middle as far as the cards need. Then cards still covering one another are pushed apart,
- * each inside its group, and the groups grow round their cards. An item with no text gets a card of its name.
+ * each inside its group, and the groups grow round their cards. An item with no text gets a card of its name. `keep`
+ * is the spread to lay at, and the card `pinned` stays put: as a card resized, only the cards round it move.
  */
 export function cardsLaid(
   scene: Scene,
@@ -240,6 +251,8 @@ export function cardsLaid(
   texts: ReadonlyMap<string, CardText>,
   links: readonly { from: string; to: string }[],
   axis: 0 | 1 = 1,
+  keep?: number,
+  pinned?: string,
 ): CardsLaid {
   const items = itemsOf(scene).filter((k) => spots.has(k));
   const text = (k: string): CardText => texts.get(k) ?? { key: k, name: scene.nodes.get(k)?.name ?? k };
@@ -249,12 +262,13 @@ export function cardsLaid(
       z = sized.get(k) as CardSize;
     return { key: k, x: s.x, y: s.y, w: z.w, h: z.h };
   });
-  const { spread, cx, cy } = spreadOf(boxes);
+  const { cx, cy, ...first } = spreadOf(boxes);
+  const spread = keep ?? first.spread;
   const out = new Map<string, Spot>();
   for (const [k, s] of spots) out.set(k, { x: cx + (s.x - cx) * spread, y: cy + (s.y - cy) * spread, r: s.r * spread });
   const placed = boxes.map((b) => ({ ...b, x: cx + (b.x - cx) * spread, y: cy + (b.y - cy) * spread }));
   // each card stays inside its groups' clouds, and the clouds keep apart (render-cards-rooms.ts)
-  keepInRooms(scene, out, placed);
+  keepInRooms(scene, out, placed, pinned);
   // an item's spot reaches round its whole card, so a fit shows every card whole
   for (const b of placed) out.set(b.key, { x: b.x, y: b.y, r: Math.max(b.w, b.h) / 2 });
   const cards = placed.map((b) => ({ ...(sized.get(b.key) as CardSize), ...b, text: text(b.key) }));
