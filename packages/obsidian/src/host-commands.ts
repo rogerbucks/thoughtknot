@@ -9,6 +9,7 @@ import { AI_COMMAND, CLEAR_SENDS_COMMAND, askAi, clearAiSends, textGraphCommand 
 import { IMPORT_COMMAND, importFromDatabase } from './databases/import';
 import { RECOVER_COMMAND, recoverDrafts } from './drafts';
 import { boardCommand } from './board-pane';
+import { boardExportCommands } from './export/board-export';
 import { exampleCommand, tourCommand } from './first-run';
 import { shortcutCommands } from './shortcuts';
 import { keepPictures, pictureCommands } from './pictures/pictures';
@@ -34,6 +35,7 @@ export function hostCommands(plugin: ThoughtKnotPlugin): HostCommand[] {
     { id: IMPORT_COMMAND.id, title: IMPORT_COMMAND.name, run: () => importFromDatabase(plugin) },
     ...pictureCommands(plugin),
     boardCommand(plugin),
+    ...boardExportCommands(plugin),
   ];
 }
 
