@@ -275,6 +275,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/detail-ladder.test.js` — the View menu's ladder of detail, Overview, Groups and All, in the
   built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
 
+## The Obsidian plugin: Import
+
+- `packages/obsidian/test/database-document.test.js` — Import also offers the vault's .docx and .pdf files. Each is added as a linked block, read again when the note is drawn (connector_text_proposed).
+
 ## The Obsidian plugin: what the View menu offers
 
 - `packages/obsidian/test/view-controls-apply.test.js` — the View menu greys what the drawing shown does not read. In

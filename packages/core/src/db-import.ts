@@ -129,8 +129,8 @@ export function importedBlock(
 
 /**
  * The block that draws a document from its file: fenced as a note holds it, naming the graph and the file after FROM. It
- * is a live link, unlike a database import: the document is read again whenever the note is drawn. It is refused for a
- * graph name that is not a name, or a file that is not a Word document or a PDF, or whose place a line cannot hold.
+ * is a live link, unlike a database import: the document is read again whenever the note is drawn. Refused: a graph name
+ * that is no name. Refused too: a file that is no Word document or PDF, or one whose place a line cannot hold.
  */
 export function documentBlock(graph: string, file: string): DbImported {
   if (!NAME.test(graph)) return { refused: word('import.not-graph-name', { graph }) };
