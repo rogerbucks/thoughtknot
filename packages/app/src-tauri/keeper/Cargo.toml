@@ -11,5 +11,5 @@ links = "tauri-plugin-keeper"
 tauri-plugin = { version = "=2.7.2", features = ["build"] }
 
 [dependencies]
-tauri = { version = "=2.12.1", features = [] }
+tauri = { version = "=2.12.5", features = [] }
 serde = { version = "1", features = ["derive"] }
