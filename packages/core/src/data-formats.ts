@@ -49,11 +49,16 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
   {
     name: 'Word',
     extensions: ['docx'],
-    reader: 'library',
-    ...roles(planned, planned, planned, { built: 'compose-out.ts' }),
+    reader: 'text',
+    ...roles({ built: 'document-connector.ts' }, planned, planned, { built: 'compose-out.ts' }),
   },
   { name: 'PowerPoint', extensions: ['pptx'], reader: 'library', ...roles(planned, planned, null, planned) },
-  { name: 'PDF', extensions: ['pdf'], reader: 'library', ...roles(planned, planned, planned, null) },
+  {
+    name: 'PDF',
+    extensions: ['pdf'],
+    reader: 'text',
+    ...roles({ built: 'document-connector.ts' }, planned, planned, null),
+  },
   {
     name: 'Images',
     extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'],

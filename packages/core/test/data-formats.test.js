@@ -31,8 +31,14 @@ describe('format_catalogue', () => {
   });
 
   test('a format needing a reader library says so, and a file is found by its extension', () => {
-    for (const name of ['Excel', 'Word', 'PowerPoint', 'PDF'])
+    for (const name of ['Excel', 'PowerPoint'])
       assert.equal(FORMAT_CATALOGUE.find((f) => f.name === name).reader, 'library', name);
+    // Word and PDF are read by code ThoughtKnot ships (document-text.ts), as a text file is
+    for (const name of ['Word', 'PDF']) {
+      const f = FORMAT_CATALOGUE.find((x) => x.name === name);
+      assert.equal(f.reader, 'text', name);
+      assert.deepEqual(f.source, { built: 'document-connector.ts' }, name);
+    }
     assert.equal(formatOf('Data/Sales.CSV').name, 'CSV');
     assert.equal(formatOf('notes.txt'), undefined);
   });

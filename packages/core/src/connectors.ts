@@ -24,6 +24,7 @@ import type { Fetched, Source, SourceRead, SourceRefusal } from './sources.ts';
 import { tableConnector } from './csv-connector.ts';
 import { textConnector } from './text-connector.ts';
 import { databaseConnector } from './database-connector.ts';
+import { documentConnector } from './document-connector.ts';
 import { workbookConnector } from './workbook-connector.ts';
 import { word } from './words.ts';
 
@@ -109,6 +110,7 @@ export const CONNECTORS: readonly Connector[] = [
   gqlConnector,
   tableConnector,
   textConnector,
+  documentConnector,
   databaseConnector,
   workbookConnector,
 ];
