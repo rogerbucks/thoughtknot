@@ -2889,6 +2889,38 @@ button.thoughtknot-stage-card-fit svg {
   gap: 0.5em;
   margin-bottom: 0.4em;
 }
+/* The tool rail and the Arrange bar share one row above the board. */
+.thoughtknot-board-tools {
+  display: inline-flex;
+  gap: var(--gn-space-1);
+  margin-bottom: var(--gn-space-1);
+  margin-inline-end: var(--gn-space-2);
+  vertical-align: top;
+}
+.thoughtknot-board-tools + .thoughtknot-board-bar {
+  display: inline-flex;
+  vertical-align: top;
+}
+.thoughtknot-board-tools button[aria-pressed='true'] {
+  outline: 2px solid var(--gn-text-normal);
+  outline-offset: -2px;
+}
+.thoughtknot-board-tools-fold[aria-expanded='true'] {
+  border-inline-end: 1px solid var(--gn-text-muted);
+}
+/* The handle that sizes the item in focus, and the guides a moved item snaps to. */
+.thoughtknot-board .thoughtknot-board-handle {
+  fill: var(--gn-bg);
+  stroke: var(--gn-text-normal);
+  stroke-width: 2;
+  cursor: nwse-resize;
+}
+.thoughtknot-board .thoughtknot-board-guide {
+  stroke: var(--gn-accent);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
 .thoughtknot-board-help,
 .thoughtknot-board-said {
   margin: var(--gn-space-1) 0;
