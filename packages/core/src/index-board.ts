@@ -13,7 +13,7 @@ export type { Here, Together } from './board-together.ts';
 export type { Peer } from './board-presence.ts';
 export { boardFileBlock, boardFilesOf, boardFormatOf } from './board-exchange.ts';
 export type { BoardBlock, BoardFile, BoardFormat } from './board-exchange.ts';
-export { BOARD_PICTURE_FORMATS, boardPicturesOf, pictureSize } from './board-pictures.ts';
+export { BOARD_PICTURE_FORMATS, boardPicturesOf, pictureSize, slidePicturesOf } from './board-pictures.ts';
 export type { BoardPicture, BoardPictureFormat } from './board-pictures.ts';
 export { picturesPdf } from './board-pdf.ts';
 export type { PdfPage } from './board-pdf.ts';

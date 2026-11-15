@@ -1,9 +1,11 @@
 // The boards of a note as pictures (editor spec ES§45, board_exchange). Each board is drawn whole as an SVG, in fixed
 // colours, so it looks the same wherever it is opened. The host writes the SVG as it is, or draws it as a PNG or
 // as a page of a PDF (board-pdf.ts). Host-free: the note is never written.
+// The slides of a board (board_slides) are drawn the same way, each one the part of the board its frame holds.
 import { gqlSpans } from './blocks.ts';
 import { boardOf, readBoard } from './board.ts';
-import { boardFrame, boardSvg } from './board-svg.ts';
+import { slidesOf } from './board-slides.ts';
+import { boardFrame, boardSvg, itemBox } from './board-svg.ts';
 import { PALETTES } from './palette.ts';
 
 /** The picture formats a board is exported as. */
@@ -26,6 +28,22 @@ export function boardPicturesOf(note: string, theme: 'light' | 'dark'): BoardPic
     const { board } = readBoard(span.text);
     const frame = boardFrame(board);
     return [{ name: board.name, svg: boardSvg(board, PALETTES[theme]), width: frame.w, height: frame.h }];
+  });
+}
+
+/**
+ * Each slide of each board of the note, in the order the show plays them, in the fixed colours of `theme`. A slide
+ * is the part of the board its frame holds, and its name is the board's name and its number in the show.
+ */
+export function slidePicturesOf(note: string, theme: 'light' | 'dark'): BoardPicture[] {
+  return gqlSpans(note).flatMap((span) => {
+    if (!boardOf(span.text)) return [];
+    const { board } = readBoard(span.text);
+    return slidesOf(board).map((frame, i) => {
+      const box = itemBox(frame);
+      const svg = boardSvg(board, PALETTES[theme], box);
+      return { name: `${board.name} ${i + 1}`, svg, width: box.w, height: box.h };
+    });
   });
 }
 

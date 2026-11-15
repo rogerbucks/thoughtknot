@@ -5,6 +5,7 @@
 // - What the format cannot hold is left out, and the notice says so in a sentence.
 // - As pictures: an SVG or a PNG for each board, in the colours of the theme in use.
 // - As a PDF: one file with a page for each board, in light colours as paper is. The core's own writer makes it.
+// - Slides as a PDF (board_slides): one file with a page for each slide, in the order the show plays them.
 import { MarkdownView, Notice } from 'obsidian';
 import {
   BOARD_PICTURE_FORMATS,
@@ -13,9 +14,10 @@ import {
   boardPicturesOf,
   pictureSize,
   picturesPdf,
+  slidePicturesOf,
   word,
 } from '@thoughtknot/core';
-import type { BoardFormat, BoardPictureFormat, PdfPage, PluginCommand } from '@thoughtknot/core';
+import type { BoardFormat, BoardPicture, BoardPictureFormat, PdfPage, PluginCommand } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteText } from '../storage/plugin-notes';
 import { PNG_PIXEL_LIMIT, rasterise } from './png';
@@ -36,14 +38,25 @@ async function exportBoards(plugin: ThoughtKnotPlugin, format: BoardFormat): Pro
   }
 }
 
-/** Writes the boards of the note in front as pictures of `format` beside the note; or says why nothing was written. */
-async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFormat): Promise<void> {
+/** A picture as a page of a PDF: drawn on the light page, since a JPEG holds no clear pixels. */
+async function pdfPage(p: BoardPicture): Promise<PdfPage> {
+  const pixels = pictureSize(p.width, p.height, PNG_PIXEL_LIMIT);
+  const jpeg = await rasterise(p.svg, pixels, THEME_COLOURS.light.page);
+  return { jpeg, pixels, width: p.width, height: p.height };
+}
+
+/**
+ * Writes the boards of the note in front as pictures of `format` beside the note; or says why nothing was written.
+ * With `slides`, the pictures are the slides of its boards, as one PDF.
+ */
+async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFormat, slides = false): Promise<void> {
   const { workspace } = plugin.app;
   const note = workspace.getActiveViewOfType(MarkdownView)?.file;
   if (!note) return void new Notice(word('host.boards.no-note'));
   const dark = format !== 'pdf' && activeDocument.body.classList.contains('theme-dark');
-  const pictures = boardPicturesOf((await noteText(plugin.app, note.path)) ?? '', dark ? 'dark' : 'light');
-  if (!pictures.length) return void new Notice(word('host.boards.none'));
+  const text = (await noteText(plugin.app, note.path)) ?? '';
+  const pictures = slides ? slidePicturesOf(text, 'light') : boardPicturesOf(text, dark ? 'dark' : 'light');
+  if (!pictures.length) return void new Notice(word(slides ? 'host.slides.none' : 'host.boards.none'));
   const folder = note.path.split('/').slice(0, -1).join('/');
   const pathOf = (name: string) => freePath(plugin, `${folder ? `${folder}/` : ''}${note.basename}${name}.${format}`);
   const wrote = (path: string) => new Notice(word('host.boards.done', { file: path }));
@@ -51,20 +64,14 @@ async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFor
     const pages: PdfPage[] = [];
     for (const p of pictures) {
       const path = pathOf(` ${p.name}`);
-      const pixels = pictureSize(p.width, p.height, PNG_PIXEL_LIMIT);
       if (format === 'svg') await vaultOps(plugin).write(path, p.svg);
-      else if (format === 'png') await vaultOps(plugin).write(path, await rasterise(p.svg, pixels));
-      else
-        pages.push({
-          jpeg: await rasterise(p.svg, pixels, THEME_COLOURS.light.page),
-          pixels,
-          width: p.width,
-          height: p.height,
-        });
+      else if (format === 'png')
+        await vaultOps(plugin).write(path, await rasterise(p.svg, pictureSize(p.width, p.height, PNG_PIXEL_LIMIT)));
+      else pages.push(await pdfPage(p));
       if (format !== 'pdf') wrote(path);
     }
     if (format !== 'pdf') return;
-    const path = pathOf(' boards');
+    const path = pathOf(slides ? ' slides' : ' boards');
     await vaultOps(plugin).write(path, picturesPdf(pages, note.basename));
     wrote(path);
   } catch (e) {
@@ -72,7 +79,7 @@ async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFor
   }
 }
 
-/** The commands that export the boards of the note in front: one for each whiteboard format and picture format. */
+/** The commands that export the boards of the note in front: one for each whiteboard and picture format, and its slides. */
 export function boardExportCommands(plugin: ThoughtKnotPlugin): PluginCommand[] {
   return [
     {
@@ -90,5 +97,10 @@ export function boardExportCommands(plugin: ThoughtKnotPlugin): PluginCommand[] 
       title: word(`host.command.boards-${format}`),
       run: () => void exportPictures(plugin, format),
     })),
+    {
+      id: 'export-slides-pdf',
+      title: word('host.command.slides-pdf'),
+      run: () => void exportPictures(plugin, 'pdf', true),
+    },
   ];
 }

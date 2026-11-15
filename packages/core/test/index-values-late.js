@@ -453,6 +453,7 @@ export const VALUES_LATE = [
   'BOARD_PICTURE_FORMATS',
   'boardPicturesOf',
   'pictureSize',
+  'slidePicturesOf',
   'picturesPdf',
   // the layout block, the reviewers and metadata from Reading view (layout_block, ai_two_reviewers,
   // reading_view_metadata), 7 Nov 2026
