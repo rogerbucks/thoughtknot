@@ -33,8 +33,7 @@ await esbuild.build({
   target: 'es2022',
   // each icon drawn as the demo draws it, never as its name (editor spec ES§73, render_chrome_slots)
   alias: { obsidian: join(here, 'demo-shim.js') },
-  // the SQLite engine of Import is held inside the bundle, as the plugin's build holds it (spec §20)
-  loader: { '.md': 'text', '.wasm': 'binary' },
+  loader: { '.md': 'text' },
   // the layout worker's own bundle, made as the plugin's build makes it (spec §9, layout_contained)
   plugins: [layoutWorker, pluginWorker, ...(note ? [noteIn(note)] : [])],
   logLevel: 'warning',

@@ -190,3 +190,33 @@ test('a note keeps its arrangements in its layout block, and puts one in use in 
   assert.ok('refused' in arrangementInNote(saved.text, 'trip', 'something else', 'Calm', 'use'), 'the graph changed');
   assert.equal(arrangementInNote(note, 'trip', graph, 'Calm', 'use').text, note, 'nothing saved: nothing written');
 });
+
+// proves: render_cards
+test('a big arrangement is saved, put in use and saved again in one reading of the block, every other line kept', async () => {
+  // The work is asserted, not the time: a writer that read the block again for every card would meet the run ceiling.
+  const { saveArrangement, useArrangement } = await import('../src/layout-block.ts');
+  const count = 800;
+  const cards = (dx) =>
+    new Map(Array.from({ length: count }, (_, i) => [`t${i}`, { x: i * 10 + dx, y: i, fit: 'full', w: 200 }]));
+  const hand = `// graph: g_layout · LAYOUT ON g\n(t0:Place {x: 1,  y: 2}),\n// a note kept\n(t1:Place {x: 3, y: 4})`;
+  const saved = saveArrangement(hand, 'g', 'Big', cards(0));
+  const used = useArrangement(saved, 'g', 'Big');
+  const again = saveArrangement(used, 'g', 'Big', cards(5));
+  const { layout, problems } = readLayout(again);
+  assert.deepEqual(problems, []);
+  assert.equal(layout.cards.size, count, 'every card is in use');
+  assert.equal(layout.arrangements.get('Big').size, count);
+  assert.equal(
+    layout.arrangements.get('Big').get('t7').x,
+    75,
+    'the arrangement saved last took the place of the first',
+  );
+  assert.equal(layout.cards.get('t7').x, 70, 'the cards in use stay as they were put');
+  assert.ok(again.startsWith(`${hand},\n`), 'the places and the note written by hand are as they were');
+  // forgetting it takes every one of its lines, and leaves the last line without a comma
+  const forgot = saveArrangement(again, 'g', 'Big', null);
+  assert.equal(readLayout(forgot).layout.arrangements, undefined);
+  assert.doesNotMatch(forgot, /set: 'Big'/);
+  assert.ok(forgot.endsWith("(t799_card:Card {x: 7990, y: 799, w: 200, graph: 't799', fit: 'full'})"));
+  assert.equal(readLayout(forgot).layout.cards.size, count);
+});

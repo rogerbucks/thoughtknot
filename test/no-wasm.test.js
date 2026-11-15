@@ -31,6 +31,18 @@ test('and the check finds a policy that allows it, or a source that compiles som
   assert.ok(!RUNS_WASM.test('// the window may not run WebAssembly'));
 });
 
+test('no build takes a WebAssembly file into a bundle: none names a loader for one', () => {
+  const builds = execFileSync('git', ['ls-files', '*.mjs', '*.js', '*.ts'], { cwd: path('.'), encoding: 'utf8' })
+    .split('\n')
+    .filter((f) => f && f !== 'test/no-wasm.test.js');
+  const LOADS_WASM = /['"]\.wasm['"]\s*:\s*['"](binary|file|dataurl|base64|copy)['"]/;
+  assert.deepEqual(
+    builds.filter((f) => LOADS_WASM.test(read(f))),
+    [],
+  );
+  assert.ok(LOADS_WASM.test(`loader: { '.wasm': 'binary' }`));
+});
+
 test('no package depends on Graphviz', () => {
   for (const p of jsPackages()) {
     const pkg = readJSON(`${p}/package.json`);
