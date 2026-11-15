@@ -27,6 +27,13 @@ export function bindWheel(
   vp.addEventListener('touchend', (e: TouchEvent) => zoom.settle(e.touches?.length ?? 0));
 }
 
+/** The folded outline under a board in `root`: its list, empty until `outlined` fills it. */
+export function outlineUnder(root: HTMLElement): HTMLElement {
+  const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
+  outline.createEl('summary', { text: word('board.outline') });
+  return outline.createEl('ul');
+}
+
 /** The outline of `board` listed in `list` as text, one line to an item. */
 export function outlined(list: HTMLElement, board: Board): void {
   list.empty();

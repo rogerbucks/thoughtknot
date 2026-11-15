@@ -20,13 +20,14 @@ import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
 import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
-import { bindWheel, outlined } from './board-wheel.ts';
+import { bindWheel, outlined, outlineUnder } from './board-wheel.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver, type Viewer } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
 import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts';
 import { listProblems } from './board-problems.ts';
+import { recorded, undoKey } from './board-undo.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -50,7 +51,7 @@ let boardsShown = 0;
 
 /** The board in `source` opened in `el`. */
 export function showBoard(el: HTMLElement, source: string, host: BoardHost): void {
-  new BoardView(el, source, host);
+  new BoardView(el, source, recorded(host, source));
 }
 
 /** One board open in a host: its parts, its view and where the keyboard is on it. */
@@ -115,9 +116,7 @@ class BoardView {
     this.editor.hidden = true;
     listProblems(root, source);
     this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
-    const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
-    outline.createEl('summary', { text: word('board.outline') });
-    this.list = outline.createEl('ul');
+    this.list = outlineUnder(root);
     this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
@@ -283,7 +282,7 @@ class BoardView {
   private key(e: KeyboardEvent): void {
     if (e.target !== this.vp) return;
     if (e.key === 'Escape' && (this.rail.cancel() || this.sel.clear())) return void this.draw();
-    if (copyKey(e, this.copying())) return;
+    if (copyKey(e, this.copying()) || undoKey(e, this.host.key, this.copying())) return;
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     if (isGroupKey(e) && !this.readOnly) return void groupNotes(this.board, this.write.bind(this), this.say.bind(this));
     const step = boardKey(this.board, this.cursor, press, this.space.centre(), this.readOnly);

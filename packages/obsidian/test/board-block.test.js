@@ -185,6 +185,33 @@ describe('a host that draws the board afresh as soon as the note is written', ()
       env.uninstall();
     }
   });
+
+  test('Ctrl and Z still takes back a change made before the board was drawn afresh', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      press('Tab');
+      press('ArrowDown', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 70/.test(noteNow()) && fresh);
+      await settled();
+      const now = fresh.querySelector('.thoughtknot-board .thoughtknot-viewport');
+      now.dispatch('keydown', { key: 'z', target: now, ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(fresh.querySelector('.thoughtknot-board-said').text, /Undone/);
+    } finally {
+      env.uninstall();
+    }
+  });
 });
 
 describe('a board with a line that cannot be read', () => {
@@ -276,6 +303,31 @@ describe('editing by keyboard, written to the note', () => {
       press('Delete'); // no item is in focus now, so nothing else goes
       await settled();
       assert.equal(noteNow(), after);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Ctrl or Cmd and Z takes back the last change made on the board, and says so', async () => {
+    const { env, press, said, noteNow } = await board();
+    try {
+      press('Tab'); // a
+      press('ArrowRight', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      press('z', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(said(), /Undone/);
+      // an item taken out comes back with its connectors
+      press('Delete');
+      await until(() => !/\(a:Sticky/.test(noteNow()));
+      await settled();
+      press('Z', { metaKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(noteNow(), /\(a\)-\[:CONNECTS[^\]]*\]->\(b\)/);
+      assert.match(said(), /Undone/);
     } finally {
       env.uninstall();
     }

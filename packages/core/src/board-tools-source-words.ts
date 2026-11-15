@@ -28,6 +28,7 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.copied': 'Copied {count} items.',
   'board.pasted': 'Pasted {count} items in the middle of the view.',
   'board.duplicated': 'Duplicated {count} items, just to the right.',
+  'board.undone': 'Undone: your last change to the board is taken back.',
   'board.view.said': '{view} view of {graph}',
   'board.view.gone': 'That view is no longer on the board.',
   'board.view.no-graph': 'This board is not on a graph, so the view has nothing to show.',
