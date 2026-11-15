@@ -36,16 +36,20 @@ const OWN_MS = 400;
 
 /**
  * Gives the viewport's wheel, double click and touch to `zoom`, and goes into and out of boards as the person zooms.
- * `now` gives the board as drawn, its frame and the item in focus.
+ * `drawn` gives the board as drawn, its frame and the item in focus.
  */
 export function bindNest(
   vp: HTMLElement,
   zoom: Zoom,
   space: BoardSpace,
-  now: () => { board: Board; frame: Box; focus: string | null },
+  drawn: () => [board: Board, frame: Box, focus: string | null],
   host: { nest?: NestHost },
 ): void {
   const nest = host.nest;
+  const now = () => {
+    const [board, frame, focus] = drawn();
+    return { board, frame, focus };
+  };
   if (nest) {
     let at: Point | null = null,
       gone = false,

@@ -269,13 +269,7 @@ class BoardView {
 
   private bind(): void {
     const { vp, zoom } = this;
-    bindNest(
-      vp,
-      zoom,
-      this.space,
-      () => ({ board: this.board, frame: this.frame, focus: this.cursor.focus }),
-      this.host,
-    );
+    bindNest(vp, zoom, this.space, () => [this.board, this.frame, this.cursor.focus], this.host);
     vp.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
     vp.addEventListener('pointerdown', (e: PointerEvent) => this.down(e));
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
@@ -290,12 +284,7 @@ class BoardView {
     if (e.key === 'Escape' && (this.rail.cancel() || this.sel.clear())) return void this.draw();
     if (copyKey(e, this.copying())) return;
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
-    if (isGroupKey(e) && !this.readOnly)
-      return void groupNotes(
-        this.board,
-        (c) => this.write(c),
-        (w) => this.say(w),
-      );
+    if (isGroupKey(e) && !this.readOnly) return void groupNotes(this.board, this.write.bind(this), this.say.bind(this));
     const step = boardKey(this.board, this.cursor, press, this.space.centre(), this.readOnly);
     if (!step) {
       if (this.zoom.handle({ kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }))
