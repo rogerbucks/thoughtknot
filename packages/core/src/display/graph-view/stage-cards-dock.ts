@@ -18,7 +18,10 @@ const READ = new WeakSet<object>();
 /** The arrangements of graph `graph`'s cards; read anew from the note when it has them, for the note is the truth. */
 function setsOf(sw: CardsSwitch): Map<string, ReadonlyMap<string, CardSave>> {
   const saved = sw.host?.saves?.arrangements;
-  if (saved && !READ.has(saved)) (READ.add(saved), SETS.set(sw.graph, new Map(saved)));
+  if (saved && !READ.has(saved)) {
+    READ.add(saved);
+    SETS.set(sw.graph, new Map(saved));
+  }
   const had = SETS.get(sw.graph) ?? new Map<string, ReadonlyMap<string, CardSave>>();
   SETS.set(sw.graph, had);
   return had;
