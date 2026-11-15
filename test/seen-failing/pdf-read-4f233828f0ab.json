@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pdf-read.test.js",
+  "test": "pdf_read_pages > a long run of spaces inside a line is read in step with its length",
+  "seen_failing_first": false,
+  "evidence": "It guards time, not a result. The old pattern gave the same text, but looked back over the run again and again: 15 such lines in a small PDF held the reader for 49 seconds. The fix trims each line's end without a pattern."
+}
