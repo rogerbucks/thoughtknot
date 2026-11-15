@@ -453,6 +453,7 @@ export const VALUES_LATE = [
   'BOARD_PICTURE_FORMATS',
   'boardPicturesOf',
   'pictureSize',
+  'slidePicturesOf',
   'picturesPdf',
   // the layout block, the reviewers and metadata from Reading view (layout_block, ai_two_reviewers,
   // reading_view_metadata), 7 Nov 2026
@@ -533,6 +534,8 @@ export const VALUES_LATE = [
   'withStarter',
   // a board asked of an AI in plain words (ES§45, board_proposed), 15 Nov 2026
   'boardMakeAsk',
+  // the board layers shown over a graph's views (ES§70, board_layers_over), 15 Nov 2026
+  'layersOver',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
   'cardInNote',
   'saveCard',
@@ -542,4 +545,14 @@ export const VALUES_LATE = [
   'savedArrangements',
   'saveArrangement',
   'useArrangement',
+  // a picture's own metadata and describing it with AI, 15 Nov 2026
+  'IMAGE_INSTRUCTIONS',
+  'IMAGE_SEND_MOST',
+  'PICTURE_KINDS',
+  'describePlan',
+  'imageBody',
+  'imageMetadata',
+  'imageReview',
+  'metaCovers',
+  'readDescription',
 ];

@@ -127,6 +127,81 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_slides
+  test('has a Present button that shows the board alone, steps the slides by keys and ends by Escape, writing nothing', async () => {
+    const note = NOTE.replace(
+      "(a:Sticky {x: 10, y: 20, text: 'Go by train'}),",
+      (line) =>
+        `(intro:Frame {x: 0, y: 0, w: 280, h: 200, text: 'Why'}),\n(next:Frame {x: 290, y: 0, w: 280, h: 200}),\n${line}`,
+    );
+    const page = await livePage(note);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="a"]'), 8000);
+      const said = () => board().querySelector('.thoughtknot-board-said').textContent;
+      const key = (k) =>
+        vp().dispatchEvent(new page.window.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+      const bar = () => board().querySelector('.thoughtknot-board-present-bar');
+      assert.ok(bar().hidden, 'no bar until the show plays');
+      board().querySelector('.thoughtknot-board-present button').click();
+      assert.ok(board().classList.contains('thoughtknot-board-show'));
+      assert.equal(said(), 'Slide 1 of 2: Why');
+      key('ArrowRight');
+      assert.equal(said(), 'Slide 2 of 2');
+      key('Delete'); // the board under the show does not hear it
+      key('Escape');
+      assert.ok(!board().classList.contains('thoughtknot-board-show'));
+      assert.ok(bar().hidden);
+      assert.equal(page.file(), note, 'the show wrote nothing');
+    } finally {
+      await page.stop();
+    }
+  });
+
+  // proves: board_layers
+  test('has a Layers list, folded at first, that hides a layer in the note, and a new item goes into the layer picked', async () => {
+    const note = NOTE.replace("(a:Sticky {x: 10, y: 20, text: 'Go by train'}),", (line) =>
+      ["(notes:Layer {name: 'Notes', order: 1}),", line.replace("'}", "', in_layer: 'notes'}")].join('\n'),
+    );
+    const page = await livePage(note);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="a"]'), 8000);
+      const does = (what) => board().querySelector(`.thoughtknot-board-layers [data-layer-do="${what}"]`);
+      const fold = () => board().querySelector('.thoughtknot-board-layers-fold');
+      assert.equal(fold().getAttribute('aria-expanded'), 'false', 'folded at first');
+      fold().click();
+      await until(() => does('conceal:notes'), 8000);
+
+      // a new item goes into the layer picked
+      does('pick:notes').click();
+      board().querySelector('.thoughtknot-board-tools [data-tool="shape"]:not(.thoughtknot-board-tools-fold)').click();
+      vp().dispatchEvent(
+        new page.window.PointerEvent('pointerdown', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          clientX: 400,
+          clientY: 300,
+        }),
+      );
+      await until(() => /\(shape1:Shape \{x: -?\d+, y: -?\d+, in_layer: 'notes'\}\)/.test(page.file()), 8000);
+
+      // hiding the layer is written to the note; its items leave the drawing and nothing else moves
+      await until(() => does('conceal:notes'), 8000);
+      does('conceal:notes').click();
+      await until(() => page.file().includes("(notes:Layer {name: 'Notes', order: 1, hidden: true})"), 8000);
+      await until(() => !vp().querySelector('[data-item="a"]'), 8000);
+      assert.ok(vp().querySelector('[data-item="b"]'), 'the other items stay drawn');
+      assert.ok(page.file().includes("text: 'Go by train', in_layer: 'notes'})"), 'the hidden item stays in the note');
+      assert.equal(fold().getAttribute('aria-expanded'), 'true', 'the list stays open when the board is drawn again');
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_handles
   test('sizes the item in focus by its handle, and duplicates it by Ctrl+D as one new item', async () => {
     const page = await livePage(NOTE);

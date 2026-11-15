@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-image.test.js",
+  "test": "what a model says of a picture is held to rules and kept as findings > an answer a model put in a code fence is still read",
+  "seen_failing_first": false,
+  "evidence": "The old pattern also read a fenced answer; the change only removes the slow pattern CodeQL flagged."
+}

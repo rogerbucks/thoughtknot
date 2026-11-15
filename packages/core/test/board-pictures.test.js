@@ -2,7 +2,7 @@
 // As a PNG or a PDF page it is drawn at twice its natural size, within what a canvas holds.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { boardPicturesOf, pictureSize } from '../src/board-pictures.ts';
+import { boardPicturesOf, pictureSize, slidePicturesOf } from '../src/board-pictures.ts';
 
 const NOTE = `# Trip
 
@@ -51,5 +51,29 @@ describe('board_pictures', () => {
     assert.ok(big.width * big.height <= 16_777_216);
     assert.ok(Math.abs(big.width / big.height - 2) < 0.01, 'its shape is kept');
     assert.deepEqual(pictureSize(0, 0, 100), { width: 1, height: 1 });
+  });
+
+  // proves: board_slides
+  test('each slide is a picture of what its frame holds, in the order the show plays them', () => {
+    const deck = `\`\`\`gql
+// graph: deck · BOARD
+(notes:Layer {name: 'Notes', order: 1, hidden: true}),
+(two:Frame {x: 0, y: 0, w: 400, h: 300, text: 'Second', slide: 2}),
+(one:Frame {x: 1000, y: 0, w: 400, h: 300, text: 'First', slide: 1}),
+(out:Frame {x: 2000, y: 0, w: 400, h: 300, text: 'Left out', slide: 0}),
+(a:Sticky {x: 50, y: 50, text: 'On the second'}),
+(b:Sticky {x: 1050, y: 50, text: 'On the first'}),
+(c:Sticky {x: 1050, y: 150, text: 'A hidden note', in_layer: 'notes'})
+\`\`\`
+`;
+    const [first, second, ...more] = slidePicturesOf(NOTE + deck, 'light');
+    assert.deepEqual(more, [], 'a frame left out is no slide, and a board with no frame gives none');
+    assert.deepEqual([first.name, second.name], ['deck 1', 'deck 2']);
+    assert.deepEqual([first.width, first.height], [400, 300], 'a slide is the size of its frame');
+    assert.match(first.svg, /viewBox="1000 0 400 300"/);
+    assert.ok(first.svg.includes('On the first') && !first.svg.includes('On the second'));
+    assert.ok(second.svg.includes('On the second') && !second.svg.includes('On the first'));
+    assert.ok(!first.svg.includes('A hidden note'), 'a hidden layer is not drawn');
+    assert.doesNotMatch(first.svg, /var\(--/, 'no colour is left to the page');
   });
 });

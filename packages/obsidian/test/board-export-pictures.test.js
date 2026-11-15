@@ -24,8 +24,8 @@ const PNG = [137, 80, 78, 71];
 const JPEG = [0xff, 0xd8, 0xff, 0xd9];
 
 /** Loads the plugin with the note in front, and a canvas that makes `PNG` or `JPEG` bytes of whatever is drawn. */
-async function withCanvas(fn) {
-  const env = await load({ files: { [PATH]: NOTE } });
+async function withCanvas(fn, note = NOTE) {
+  const env = await load({ files: { [PATH]: note } });
   const saved = globalThis.Image;
   globalThis.Image = class {
     set src(_url) {
@@ -51,7 +51,7 @@ async function withCanvas(fn) {
   });
   const createEl = env.doc.body.createEl.bind(env.doc.body);
   env.doc.body.createEl = (tag, ...rest) => (tag === 'canvas' ? canvas() : createEl(tag, ...rest));
-  env.state.activeView = new env.obsidian.MarkdownView(env.app.vault.getAbstractFileByPath(PATH), NOTE, 'preview');
+  env.state.activeView = new env.obsidian.MarkdownView(env.app.vault.getAbstractFileByPath(PATH), note, 'preview');
   const run = async (id, notices) => {
     const said = env.state.notices.length;
     await env.state.commands.find((c) => c.id === id).callback();
@@ -124,6 +124,36 @@ describe('The boards of a note are exported as pictures', () => {
       };
       await run('export-boards-png', 1);
       assert.match(env.state.notices.at(-1), /The boards were not exported: /);
+      assert.deepEqual([...env.state.files.keys()], [PATH]);
+    });
+  });
+
+  // proves: board_slides
+  test('slides as PDF: one file with a page for each slide in show order, and no slide says so', async () => {
+    const deck = `${NOTE}
+\`\`\`gql
+// graph: deck · BOARD
+(two:Frame {x: 0, y: 0, w: 400, h: 300, text: 'Second', slide: 2}),
+(one:Frame {x: 1000, y: 0, w: 800, h: 300, text: 'First', slide: 1}),
+(out:Frame {x: 2000, y: 0, w: 400, h: 300, text: 'Left out', slide: 0})
+\`\`\`
+`;
+    await withCanvas(async (env, run, asked, papers) => {
+      await run('export-slides-pdf', 1);
+      const text = String.fromCharCode(...bytes(env.state.files.get('Trips/Plan slides.pdf')));
+      assert.ok(text.startsWith('%PDF-1.4'));
+      assert.match(text, /\/Count 2/);
+      assert.deepEqual(asked, [
+        ['image/jpeg', 1600, 600],
+        ['image/jpeg', 800, 600],
+      ]);
+      assert.deepEqual(papers, ['#ffffff', '#ffffff']);
+      assert.match(env.state.notices.at(-1), /Wrote Trips\/Plan slides\.pdf\./);
+      assert.equal(env.state.files.get(PATH), deck, 'the note is never written');
+    }, deck);
+    await withCanvas(async (env, run) => {
+      await run('export-slides-pdf', 1);
+      assert.match(env.state.notices.at(-1), /This note holds no slide to export\./);
       assert.deepEqual([...env.state.files.keys()], [PATH]);
     });
   });

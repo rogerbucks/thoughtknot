@@ -1,6 +1,7 @@
 // The words of AI suggestions, in UK English (editor spec §42, words_catalogue; §59). They say why a suggestion request
 // or an answer is refused, name the groups suggestions are reviewed in, and write each suggestion's reason.
-// ai-source-words.ts keeps them with the other AI words.
+// The words of describing a picture (ES§18, image_describe_auto) are here too. ai-source-words.ts keeps them with the
+// other AI words.
 
 /** The words of AI suggestions, by key, in UK English. */
 export const AI_SUGGEST_SOURCE_WORDS = {
@@ -59,4 +60,16 @@ export const AI_SUGGEST_SOURCE_WORDS = {
   'ai.suggest.intent': 'Intent',
   'ai.suggest.no-intents': 'The graph {graph} has no Intent to weigh things against.',
   'ai.suggest.question': 'Suggest one for each thing, and say how sure you are and why.',
+  'ai.image.off': 'Describing pictures with AI is turned off in the settings.',
+  'ai.image.has-meta':
+    'The picture’s own metadata already gives a title and a caption or keywords, so no AI was asked.',
+  'ai.image.no-reviewer': 'No reviewer is set up to describe a picture.',
+  'ai.image.public-no': 'Only a public reviewer is set up, and you have not allowed one to be sent a picture.',
+  'ai.image.too-big': 'The picture is {size} bytes. A picture over {most} bytes is not sent to describe.',
+  'ai.image.not-image': 'The file is not an image the editor can send.',
+  'ai.image.question': 'Say what is seen in this picture. Do not name people or guess facts the picture does not show.',
+  'ai.image.not-json': 'The answer is not the JSON the editor asked for.',
+  'ai.image.no-title': 'The answer gives no title.',
+  'ai.image.reason': 'seen in the picture by {model}',
+  'ai.image.meta-reason': 'the picture’s own metadata',
 } as const;

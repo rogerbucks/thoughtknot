@@ -53,6 +53,8 @@ export const ON_DEMAND: Readonly<Record<string, string>> = {
   'thoughtknot-sr': 'words for screen readers, never shown',
   'thoughtknot-rail-list': 'a group’s list of types, beside the side rail, closed by Escape or a pick',
   'thoughtknot-sheet-resizer': 'the grip on the edge of the details',
+  'thoughtknot-board-layers-list': 'a board’s Layers list, under its button, opened and closed by that button',
+  'thoughtknot-board-present-bar': 'the bar of a board’s slide show, only while it plays and the board alone is shown',
 };
 
 /** Cards that share a slot with one before them in SLOTS, and how they keep clear of it. */
