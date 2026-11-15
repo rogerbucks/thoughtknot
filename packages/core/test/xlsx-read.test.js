@@ -164,4 +164,49 @@ describe('xlsx_read_untrusted: a second look at zips, paths, entities and sizes'
     const bigList = zip({ 'xl/workbook.xml': '<workbook/>' }, { lie: WORKBOOK_LIMITS.meta });
     assert.match(workbookSheets(bigList).refused, /larger than/);
   });
+
+  test('a few bytes that name one long shared string in very many cells are refused, not made into a huge table', () => {
+    // 150 rows of 500 cells, each the one string of 10,000 letters: 750 million letters of table from a small file
+    const cells = '<c t="s"><v>0</v></c>'.repeat(500);
+    const sheet = `<row r="1"><c t="s"><v>0</v></c></row>${`<row>${cells}</row>`.repeat(150)}`;
+    const sst = `<sst><si><t>${'x'.repeat(WORKBOOK_LIMITS.cell)}</t></si></sst>`;
+    const book = raw({ 'xl/sharedStrings.xml': sst }, { sheet });
+    assert.ok(book.length < 100_000, `the file is small: ${book.length} bytes`);
+    const read = workbookTable(book, 'S');
+    assert.equal(read.why, 'too-large');
+    assert.match(read.refused, /larger than/);
+  });
+
+  test('a number format of unclosed brackets and quotes is looked over once, and a date format is still found', () => {
+    // The work is asserted, not the time: a reader that looked back from each bracket would meet the run ceiling.
+    const styles = (code) =>
+      `<styleSheet><numFmts><numFmt numFmtId="164" formatCode="${code}"/></numFmts><cellXfs><xf numFmtId="0"/><xf numFmtId="164"/></cellXfs></styleSheet>`;
+    const sheet = '<row r="1"><c t="inlineStr"><is><t>h</t></is></c></row><row r="2"><c s="1"><v>45000</v></c></row>';
+    const hostile = `${'['.repeat(300_000)}&quot;${'&quot;['.repeat(1000)}`;
+    assert.deepEqual(workbookTable(raw({ 'xl/styles.xml': styles(hostile) }, { sheet }), 'S').rows, [['45000']]);
+    // text in quotes and brackets is no date; a letter outside them is
+    const quoted = '[Red]&quot;day&quot;0.0_m\\y*s';
+    assert.deepEqual(workbookTable(raw({ 'xl/styles.xml': styles(quoted) }, { sheet }), 'S').rows, [['45000']]);
+    const dated = '[$-409]d\\ mmm\\ yyyy';
+    assert.deepEqual(workbookTable(raw({ 'xl/styles.xml': styles(dated) }, { sheet }), 'S').rows, [['2023-03-15']]);
+  });
+
+  test('what every sheet shares is read once for a workbook, however many sheets are read', () => {
+    // The work is asserted, not the time: reading 300,000 shared strings again for each of 100 sheets meets the ceiling.
+    const parts = {
+      'xl/workbook.xml': `<workbook ${NS}><sheets>${Array.from({ length: 100 }, (_, i) => `<sheet name="S${i}" sheetId="${i + 1}" r:id="rId${i}"/>`).join('')}</sheets></workbook>`,
+      'xl/_rels/workbook.xml.rels': `<Relationships>${Array.from({ length: 100 }, (_, i) => `<Relationship Id="rId${i}" Target="worksheets/s${i}.xml"/>`).join('')}</Relationships>`,
+      'xl/sharedStrings.xml': `<sst><si><t>head</t></si>${'<si><t>a</t></si>'.repeat(300_000)}</sst>`,
+    };
+    for (let i = 0; i < 100; i++)
+      parts[`xl/worksheets/s${i}.xml`] =
+        `<worksheet ${NS}><sheetData><row><c t="s"><v>0</v></c></row><row><c><v>${i}</v></c></row></sheetData></worksheet>`;
+    const book = zip(parts);
+    const names = workbookSheets(book);
+    assert.equal(names.length, 100);
+    names.forEach((name, i) => {
+      const table = workbookTable(book, name);
+      assert.deepEqual([table.header, table.rows], [['head'], [[String(i)]]]);
+    });
+  });
 });
