@@ -134,6 +134,7 @@ export interface PdfFile {
   streams: Map<number, [number, number]>;
 }
 
+/** The most a PDF may hold before it is refused: its bytes, its objects, what one stream inflates to, and its pages. */
 export const PDF_LIMITS = { bytes: 32 * 1024 * 1024, objects: 500_000, stream: 64 * 1024 * 1024, pages: 5000 };
 
 /** The Latin-1 text of the bytes, made a piece at a time. */
