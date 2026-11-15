@@ -1,5 +1,5 @@
-// The arrangement that fits some chosen things (editor spec ES§45, board_arranged_by_graph): from their links alone, a
-// grid, a tree, a flow or a cluster, the same every time, and each thing given a place.
+// The arrangement that fits some chosen things (editor spec ES§45, board_arranged_by_graph). It is worked out from
+// their links alone: a grid, a tree, a flow or a cluster. It is the same every time, and each thing gets a place.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fitOf, fittingLayout } from '../src/layouts/arrange-fit.ts';
