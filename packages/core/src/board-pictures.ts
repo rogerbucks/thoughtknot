@@ -4,7 +4,7 @@
 // The slides of a board (board_slides) are drawn the same way, each one the part of the board its frame holds.
 import { gqlSpans } from './blocks.ts';
 import { boardOf, readBoard } from './board.ts';
-import { slidesOf } from './board-slides.ts';
+import { slideSvgs, slidesOf } from './board-slides.ts';
 import { boardFrame, boardSvg, itemBox } from './board-svg.ts';
 import { PALETTES } from './palette.ts';
 
@@ -39,10 +39,10 @@ export function slidePicturesOf(note: string, theme: 'light' | 'dark'): BoardPic
   return gqlSpans(note).flatMap((span) => {
     if (!boardOf(span.text)) return [];
     const { board } = readBoard(span.text);
+    const svgs = slideSvgs(board, PALETTES[theme]);
     return slidesOf(board).map((frame, i) => {
       const box = itemBox(frame);
-      const svg = boardSvg(board, PALETTES[theme], box);
-      return { name: `${board.name} ${i + 1}`, svg, width: box.w, height: box.h };
+      return { name: `${board.name} ${i + 1}`, svg: svgs[i] as string, width: box.w, height: box.h };
     });
   });
 }
