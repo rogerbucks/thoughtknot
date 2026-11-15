@@ -516,4 +516,6 @@ export const VALUES_LATE = [
   // an outside data set fetched only when asked, from picked sources (data_set_access), 12 Nov 2026
   'fetchDataSet',
   'placeProblem',
+  // the Arrange by graph button of a board (§45, board_arranged_by_graph), 15 Nov 2026
+  'arrangerOf',
 ];
