@@ -10,11 +10,7 @@ describe('prepare-pr', () => {
     const ran = [];
     const failed = prepare({ run: (...argv) => (ran.push(argv.join(' ')), 0) });
     assert.deepEqual(failed, []);
-    assert.deepEqual(ran, [
-      'plain-docs.mjs --update',
-      'notices.mjs',
-      'tests-first.mjs --update',
-    ]);
+    assert.deepEqual(ran, ['plain-docs.mjs --update', 'notices.mjs', 'tests-first.mjs --update']);
   });
 
   test('in check mode it runs each record’s own check and names every stale record, not just the first', () => {
