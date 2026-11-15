@@ -170,6 +170,14 @@ export const READING_SOURCE_WORDS = {
   'reading.xlsx.no-sheet': 'The workbook has no sheet {name}.',
   'reading.xlsx.empty': 'The sheet {name} holds nothing to read: its first row is the header.',
   'reading.source.workbook': 'The workbook sheet {target}',
+  // a Word document read as blocks of text in plain JavaScript (docx-read.ts)
+  'reading.docx.not-docx': 'This file is not a Word document (.docx), so it was not read.',
+  'reading.docx.old-or-encrypted':
+    'This is an old Word file (.doc) or a password-protected one, so it was not read. Save it as .docx with no password.',
+  'reading.docx.too-large': 'This document (or one of its parts) is larger than {most} bytes, so it was not read.',
+  'reading.docx.too-many-blocks': 'The document holds more than {most} paragraphs and tables, so it was not read.',
+  'reading.docx.block-too-long': 'A paragraph holds more than {most} characters, so the document was not read.',
+  'reading.docx.damaged': 'This document is damaged or in a form this reader does not know, so it was not read.',
   // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
   'reading.table.fetched-now': '{place} was fetched just now.',
   'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',
