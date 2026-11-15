@@ -34,6 +34,10 @@ class TooMany extends Error {
 
 /** The most text kept from one page. */
 const PAGE_TEXT = 1_000_000;
+/** The most text kept from all the pages together. */
+const ALL_TEXT = 32_000_000;
+/** The most characters one code of a font may stand for, and the most codes a `ToUnicode` map is read for. */
+const [CODE_TEXT, CODE_STEPS] = [32, 0x40000];
 
 /** A font as far as text goes. It holds the text each code maps to and how wide a code is. It says if it can be read. */
 interface Font {
@@ -44,25 +48,42 @@ interface Font {
 
 const utf16 = (hex: string): string => {
   let out = '';
-  for (let i = 0; i + 4 <= hex.length; i += 4) out += String.fromCharCode(parseInt(hex.slice(i, i + 4), 16));
+  const end = Math.min(hex.length, CODE_TEXT * 4);
+  for (let i = 0; i + 4 <= end; i += 4) out += String.fromCharCode(parseInt(hex.slice(i, i + 4), 16));
   return out;
 };
+
+/** Each stretch of `text` between a `start` word and the `end` word after it, found without looking back. */
+function sections(text: string, start: string, end: string): string[] {
+  const out: string[] = [];
+  for (let i = text.indexOf(start); i >= 0;) {
+    const j = text.indexOf(end, i + start.length);
+    if (j < 0) break;
+    out.push(text.slice(i + start.length, j));
+    i = text.indexOf(start, j + end.length);
+  }
+  return out;
+}
 
 /** The `ToUnicode` map in `cmap`: each code's text, and the width in bytes of a code. */
 function readCMap(cmap: string): { map: Map<number, string>; width: number } {
   const map = new Map<number, string>();
   const space = /begincodespacerange\s*<([0-9a-fA-F]+)>/.exec(cmap);
   const width = space?.[1] ? Math.max(1, Math.min(2, space[1].length / 2)) : 1;
-  for (const [, body] of cmap.matchAll(/beginbfchar([\s\S]*?)endbfchar/g))
-    for (const [, from, to] of (body ?? '').matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]*)>/g))
-      map.set(parseInt(from ?? '', 16), utf16(to ?? ''));
-  for (const [, body] of cmap.matchAll(/beginbfrange([\s\S]*?)endbfrange/g))
-    for (const [, lo, hi, to] of (body ?? '').matchAll(
-      /<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*(\[[^\]]*\]|<[0-9a-fA-F]*>)/g,
-    )) {
-      const [a, b] = [parseInt(lo ?? '', 16), Math.min(parseInt(hi ?? '', 16), parseInt(lo ?? '', 16) + 65535)];
+  // a code is one or two bytes, so a map holds 65536 codes at most: a file that names more is read no further
+  let steps = 0;
+  for (const body of sections(cmap, 'beginbfchar', 'endbfchar'))
+    for (const [, from, to] of body.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]*)>/g)) {
+      const code = parseInt(from ?? '', 16);
+      if (code > 0xffff || ++steps > CODE_STEPS) continue;
+      map.set(code, utf16(to ?? ''));
+    }
+  for (const body of sections(cmap, 'beginbfrange', 'endbfrange'))
+    for (const [, lo, hi, to] of body.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*(\[[^\]]*\]|<[0-9a-fA-F]*>)/g)) {
+      const [a, b] = [parseInt(lo ?? '', 16), Math.min(parseInt(hi ?? '', 16), 0xffff)];
       const targets = [...(to ?? '').matchAll(/<([0-9a-fA-F]*)>/g)].map((t) => t[1] ?? '');
       for (let c = a; c <= b; c++) {
+        if (++steps > CODE_STEPS) break;
         const t = targets.length > 1 ? targets[c - a] : targets[0];
         if (t === undefined) break;
         map.set(
@@ -96,6 +117,7 @@ function decode(font: Font | null, s: string): string {
   for (let i = 0; i + font.width <= s.length; i += font.width) {
     const code = font.width === 2 ? (s.charCodeAt(i) << 8) | s.charCodeAt(i + 1) : s.charCodeAt(i);
     out += font.map.get(code) ?? '';
+    if (out.length > PAGE_TEXT) break;
   }
   return out;
 }
@@ -123,7 +145,7 @@ function contentText(content: string, fonts: Map<string, Font>): string {
     const v = next[0];
     if (typeof v !== 'object' || v === null || !('op' in v)) {
       stack.push(v);
-      if (stack.length > 4096) stack.shift();
+      if (stack.length > 4096) stack.splice(0, 2048);
       continue;
     }
     const [a, b] = [stack[stack.length - 2], stack[stack.length - 1]];
@@ -217,7 +239,7 @@ export function pdfPages(
     if (bytes.length > most.bytes) throw new TooBig();
     if (!String.fromCharCode(...bytes.subarray(0, 1024)).includes('%PDF-'))
       return { why: 'not-pdf', refused: word('reading.pdf.not-pdf') };
-    const f = readObjects(bytes);
+    const f = readObjects(bytes, most.total);
     if (/\/Encrypt\s*(<<|\d+\s+\d+\s+R)/.test(f.text))
       return { why: 'encrypted', refused: word('reading.pdf.encrypted') };
     let catalog: Map<string, PdfValue> | null = null;
@@ -225,6 +247,7 @@ export function pdfPages(
     if (!catalog) return { why: 'not-pdf', refused: word('reading.pdf.not-pdf') };
     const list = pageList(f, catalog.get('Pages'), most.pages);
     const cache = new Map<PdfValue, Font>();
+    let all = 0;
     const pages = list.map(({ page, res }, n): PdfPage => {
       const fontDict = dictOf(f, dictOf(f, res)?.get('Font'));
       const fonts = new Map<string, Font>();
@@ -242,10 +265,13 @@ export function pdfPages(
         const body = streamText(f, r.r);
         if (body !== null) text += `${contentText(body, fonts)}\n`;
       }
+      if ((all += text.length) > ALL_TEXT) throw new TooBig();
+      // each line's end is trimmed a line at a time: one pattern over the page would look back over a long run of spaces
+      const lines = text.split('\n').map((l) => l.trimEnd());
       return {
         number: n + 1,
-        text: text
-          .replace(/[ \t]+\n/g, '\n')
+        text: lines
+          .join('\n')
           .replace(/\n{3,}/g, '\n\n')
           .trim(),
       };

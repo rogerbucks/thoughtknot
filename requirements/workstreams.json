@@ -758,7 +758,8 @@
       "board_layers",
       "board_slides",
       "board_view_items",
-      "board_main_screen"
+      "board_main_screen",
+      "board_many"
     ]
   },
   "B2": {
