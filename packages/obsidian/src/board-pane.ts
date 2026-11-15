@@ -16,21 +16,15 @@ export const BOARD_PANE = 'thoughtknot-board';
 /** Where the choice of what comes first is kept, in this vault on this device. */
 const FIRST_KEY = 'thoughtknot-board-first';
 
-/** What Obsidian keeps for a vault on a device; absent where the app gives no such store. */
-interface LocalStore {
-  loadLocalStorage?: (key: string) => unknown;
-  saveLocalStorage?: (key: string, value: unknown) => void;
-}
-
 /** The person's choice: 'board' or 'note', or null before they first chose. */
 function chosen(plugin: ThoughtKnotPlugin): string | null {
-  const v = (plugin.app as unknown as LocalStore).loadLocalStorage?.(FIRST_KEY);
+  const v: unknown = plugin.app.loadLocalStorage(FIRST_KEY);
   return typeof v === 'string' ? v : null;
 }
 
 /** Keeps the person's choice of what comes first. */
 function choose(plugin: ThoughtKnotPlugin, first: 'board' | 'note'): void {
-  (plugin.app as unknown as LocalStore).saveLocalStorage?.(FIRST_KEY, first);
+  plugin.app.saveLocalStorage(FIRST_KEY, first);
 }
 
 /** The board a note opens on: its first written board, else its starter board, else none. */

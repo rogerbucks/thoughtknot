@@ -1,5 +1,5 @@
-// The views the plugin adds to Obsidian: the edit pane, the details pane (ES§25), the Graph view of Bases (ES§20), and
-// the board pane (ES§45).
+// The views the plugin adds to Obsidian. They are the edit pane, the details pane (ES§25), the Graph view of Bases
+// (ES§20) and the board pane (ES§45).
 import { GraphPane, PANE } from './pane';
 import { DETAILS_PANE, DetailsPaneView } from './details-pane';
 import { registerBaseView } from './bases/base-view';

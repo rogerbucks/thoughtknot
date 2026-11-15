@@ -4,7 +4,7 @@
 // stand-ins.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 
 before(() => build());
 
@@ -53,14 +53,14 @@ describe('a note opened in Obsidian', () => {
     const env = await load({ files: { [PATH]: NOTE, 'Words.md': '# Just words\n' } });
     try {
       opened(env, 'Words.md');
-      await new Promise((r) => setTimeout(r, 50));
+      for (let i = 0; i < 5; i++) await settled();
       assert.equal(panes(env).length, 0, 'a note with no graph opens alone');
       opened(env, PATH);
       await until(() => !!pane(env)?.querySelector('.thoughtknot-board-first button'), 8000);
       pane(env).querySelector('.thoughtknot-board-first button').click();
       assert.equal(panes(env).length, 0, 'the note alone');
       opened(env, PATH);
-      await new Promise((r) => setTimeout(r, 50));
+      for (let i = 0; i < 5; i++) await settled();
       assert.equal(panes(env).length, 0, 'and so from then on');
       await env.state.commands.find((c) => c.id === 'open-board').callback();
       await until(() => !!pane(env)?.querySelector('[data-item="view1"]'), 8000);
