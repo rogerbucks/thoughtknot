@@ -10,6 +10,7 @@ import type { BoardChange } from '../../board-edit.ts';
 import type { Board } from '../../board.ts';
 import { LAYOUT_GLIDE_MS, easeGlide } from '../../layout-glide.ts';
 import { reducedMotion } from '../graph-view/details-nav.ts';
+import type { Place } from './board-aim.ts';
 
 /** What the host gives the button. */
 export interface ArrangeHooks {
@@ -26,6 +27,8 @@ export interface ArrangeBoard {
   svg: () => SVGSVGElement | null;
   /** The items chosen, or none. */
   chosen: () => string[];
+  /** Where the view goes to bring items into sight (null when they are), and the way to put it there. */
+  space: { aimAt(board: Board, ids: string[]): { from: Place; to: Place } | null; go(to: Place): void };
 }
 
 /** What ends a glide at once: the person reaching for the board. */
@@ -43,6 +46,13 @@ const HOW = {
   flow: 'board.arrange.how.flow',
   cluster: 'board.arrange.how.cluster',
 } as const;
+
+/** A place part of the way from one to another: `t` is 0 at `a` and 1 at `b`. */
+const between = (a: Place, b: Place, t: number): Place => ({
+  scale: a.scale + (b.scale - a.scale) * t,
+  x: a.x + (b.x - a.x) * t,
+  y: a.y + (b.y - a.y) * t,
+});
 
 /** The button, its undo, and the glide of the items arranged. */
 export class ArrangeBar {
@@ -133,11 +143,18 @@ export class ArrangeBar {
     this.undo.hidden = !this.back.length;
   }
 
-  /** Each item eases from where it was to where it is drawn; the connectors fade in over the second half. */
+  /**
+   * Each item eases from where it was to where it is drawn; the connectors fade in over the second half. The view
+   * eases with them only when an item arranged would end out of sight; with motion reduced it goes there at once.
+   */
   private glide(moved: Glide[]): void {
     const svg = this.h.svg(),
       win = this.vp.ownerDocument.defaultView;
-    if (!svg || !win || !moved.length || reducedMotion(win)) return;
+    const view = this.h.space.aimAt(
+      this.h.board(),
+      moved.map((g) => g.id),
+    );
+    if (!svg || !win || !moved.length || reducedMotion(win)) return view ? this.h.space.go(view.to) : undefined;
     const run = ++this.run;
     const items = moved.flatMap((g) => {
       const el = svg.querySelector<SVGGElement>(`[data-item="${g.id}"]`);
@@ -153,10 +170,12 @@ export class ArrangeBar {
         el.setAttribute('transform', was ? `${by} ${was}` : by);
       }
       for (const l of links) l.setCssStyles({ opacity: String(Math.max(0, easeGlide(2 * t - 1))) });
+      if (view) this.h.space.go(between(view.from, view.to, 1 - left));
     };
     this.end = () => {
       for (const { el, was } of items) was ? el.setAttribute('transform', was) : el.removeAttribute('transform');
       for (const l of links) l.setCssStyles({ opacity: '' });
+      if (view) this.h.space.go(view.to);
     };
     show(0);
     let start: number | null = null;

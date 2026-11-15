@@ -6,6 +6,7 @@ import { STYLE, type Zoom } from '@thoughtknot/core';
 
 import type { Board } from '../../board.ts';
 import { READABLE_PX } from '../../details-nav.ts';
+import { aimAt, type Place } from './board-aim.ts';
 import { boardOutline, itemBox, type Box } from '../../board-svg.ts';
 
 /** How tall a board's viewport is in a note, in pixels. */
@@ -48,6 +49,22 @@ export class BoardSpace {
     const part = { x: b.x, y: b.y, w: Math.min(b.w, s.width / scale), h: Math.min(b.h, s.height / scale) };
     const to = this.zoom().aim(this.unit(part), scale, true);
     if (to) this.zoom().restore(to.scale, to.x, to.y);
+  }
+
+  /**
+   * Where the view goes so the items `ids` are all in sight, and where it is now. Null when they are in sight already
+   * (board-aim.ts).
+   */
+  aimAt(board: Board, ids: string[]): { from: Place; to: Place } | null {
+    const { scale, x, y } = this.zoom().view();
+    const boxes = board.items.filter((i) => ids.includes(i.id)).map(itemBox);
+    const to = aimAt({ scale, x, y }, this.size(), this.frame(), boxes);
+    return to && { from: { scale, x, y }, to };
+  }
+
+  /** Puts the view at a place, within the zoom's limits. */
+  go(to: Place): void {
+    this.zoom().restore(to.scale, to.x, to.y);
   }
 
   /** The middle of the view, in board units. */

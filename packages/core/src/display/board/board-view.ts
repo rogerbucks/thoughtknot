@@ -201,13 +201,7 @@ class BoardView {
   }
 
   private arranging() {
-    return {
-      write: this.write.bind(this),
-      say: this.say.bind(this),
-      board: () => this.board,
-      svg: () => this.svg,
-      chosen: () => this.sel.list(),
-    };
+    return { ...this.copying(), svg: () => this.svg, chosen: () => this.sel.list(), space: this.space };
   }
 
   /** The hooks the lists under the board work by. */
