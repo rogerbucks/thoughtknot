@@ -1,5 +1,5 @@
-<svg viewBox="0 0 493 108" width="657.33" height="144" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
-  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+<svg viewBox="0 0 493 108" width="657.33" height="144" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:block;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)" paint="display:inline">
     <g id="p2">
       <path d="M220.34,-47.4C220.34,-47.4 172.44,-47.4 172.44,-47.4 166.44,-47.4 160.44,-41.4 160.44,-35.4 160.44,-35.4 160.44,-3 160.44,-3 160.44,3 166.44,9 172.44,9 172.44,9 220.34,9 220.34,9 226.34,9 232.34,3 232.34,-3 232.34,-3 232.34,-35.4 232.34,-35.4 232.34,-41.4 226.34,-47.4 220.34,-47.4" paint="fill:rgba(83, 223, 221, 0.16);stroke:rgb(117, 222, 220);stroke-width:4">
       <text x="179.83" y="-26.6" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> PLACE
@@ -9,25 +9,25 @@
       <text x="301.72" y="-7.62" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> PLACE
       <text x="293.62" y="12.67" text-anchor="start" paint="fill:rgb(218, 218, 218);stroke:rgb(30, 30, 30);stroke-width:5.6px"> The park
     <g id="p4">
-      <path d="M232.34,-19.2C232.34,-19.2 232.34,-19.2 232.34,-19.2 253.34,-19.2 253.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22" paint="stroke:rgb(223, 221, 139);stroke-width:2px">
-      <polygon points="267.34,2.23 274.34,-0.22 267.34,-2.67 267.34,2.23" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139);stroke-width:2.2px">
+      <path d="M232.34,-19.2C232.34,-19.2 232.34,-19.2 232.34,-19.2 253.34,-19.2 253.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22" paint="stroke:rgb(222, 221, 139);stroke-width:2px">
+      <polygon points="267.34,2.23 274.34,-0.22 267.34,-2.67 267.34,2.23" paint="fill:rgb(222, 221, 139);stroke:rgb(222, 221, 139);stroke-width:2.2px">
       <text x="259.96" y="-17.35" text-anchor="middle" paint="fill:rgb(221, 220, 166);stroke:rgb(30, 30, 30);stroke-width:5.6px"> near
     <g id="p5">
       <path d="M457.19,-28.42C457.19,-28.42 416.23,-28.42 416.23,-28.42 410.23,-28.42 404.23,-22.42 404.23,-16.43 404.23,-16.43 404.23,15.97 404.23,15.97 404.23,21.97 410.23,27.97 416.23,27.97 416.23,27.97 457.19,27.97 457.19,27.97 463.19,27.97 469.19,21.97 469.19,15.97 469.19,15.97 469.19,-16.43 469.19,-16.43 469.19,-22.42 463.19,-28.42 457.19,-28.42" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246)">
       <text x="423.27" y="-7.62" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> CAFE
       <text x="423.51" y="12.67" text-anchor="start" paint="fill:rgb(218, 218, 218);stroke:rgb(30, 30, 30);stroke-width:5.6px"> Cafe
     <g id="p6">
-      <path d="M362.23,-0.22C362.23,-0.22 362.23,-0.22 362.23,-0.22 383.23,-0.22 383.23,-0.22 404.23,-0.22 404.23,-0.22 404.23,-0.22 404.23,-0.22" paint="stroke:rgb(223, 221, 139);stroke-width:2px">
-      <polygon points="397.23,2.23 404.23,-0.22 397.23,-2.68 397.23,2.23" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139);stroke-width:2.2px">
+      <path d="M362.23,-0.22C362.23,-0.22 362.23,-0.22 362.23,-0.22 383.23,-0.22 383.23,-0.22 404.23,-0.22 404.23,-0.22 404.23,-0.22 404.23,-0.22" paint="stroke:rgb(222, 221, 139);stroke-width:2px">
+      <polygon points="397.23,2.23 404.23,-0.22 397.23,-2.68 397.23,2.23" paint="fill:rgb(222, 221, 139);stroke:rgb(222, 221, 139);stroke-width:2.2px">
       <text x="383.23" y="-6" text-anchor="middle" paint="fill:rgb(221, 220, 166);stroke:rgb(30, 30, 30);stroke-width:5.6px"> near
     <g id="p7">
-      <path d="M106.44,-28.42C106.44,-28.42 21,-28.42 21,-28.42 15,-28.42 9,-22.42 9,-16.43 9,-16.43 9,15.97 9,15.97 9,21.97 15,27.97 21,27.97 21,27.97 106.44,27.97 106.44,27.97 112.44,27.97 118.44,21.97 118.44,15.97 118.44,15.97 118.44,-16.43 118.44,-16.43 118.44,-22.42 112.44,-28.42 106.44,-28.42" paint="fill:rgba(168, 130, 255, 0.16);stroke:rgb(181, 152, 246)">
+      <path d="M106.44,-28.42C106.44,-28.42 21,-28.42 21,-28.42 15,-28.42 9,-22.42 9,-16.43 9,-16.43 9,15.97 9,15.97 9,21.97 15,27.97 21,27.97 21,27.97 106.44,27.97 106.44,27.97 112.44,27.97 118.44,21.97 118.44,15.97 118.44,15.97 118.44,-16.43 118.44,-16.43 118.44,-22.42 112.44,-28.42 106.44,-28.42" paint="fill:rgba(168, 130, 255, 0.16);stroke:rgb(180, 152, 246)">
       <text x="50.28" y="-7.62" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> PATH
       <text x="28.28" y="12.67" text-anchor="start" paint="fill:rgb(218, 218, 218);stroke:rgb(30, 30, 30);stroke-width:5.6px"> Sunday walk
     <g id="p8">
-      <path d="M118.44,-0.22C118.44,-0.22 118.44,-0.22 118.44,-0.22 139.44,-0.22 139.44,-19.2 160.44,-19.2 160.44,-19.2 160.44,-19.2 160.44,-19.2" paint="stroke:rgb(181, 152, 246);stroke-width:2px">
-      <polygon points="153.44,-16.75 160.44,-19.2 153.44,-21.65 153.44,-16.75" paint="fill:rgb(181, 152, 246);stroke:rgb(181, 152, 246);stroke-width:2.2px">
+      <path d="M118.44,-0.22C118.44,-0.22 118.44,-0.22 118.44,-0.22 139.44,-0.22 139.44,-19.2 160.44,-19.2 160.44,-19.2 160.44,-19.2 160.44,-19.2" paint="stroke:rgb(180, 152, 246);stroke-width:2px">
+      <polygon points="153.44,-16.75 160.44,-19.2 153.44,-21.65 153.44,-16.75" paint="fill:rgb(180, 152, 246);stroke:rgb(180, 152, 246);stroke-width:2.2px">
       <text x="142.32" y="0.85" text-anchor="middle" paint="fill:rgb(193, 174, 237);stroke:rgb(30, 30, 30);stroke-width:5.6px"> step
     <g id="p9">
-      <path d="M118.44,-0.22C118.44,-0.22 118.44,-0.22 118.44,-0.22 139.44,-0.22 139.44,18.75 160.44,18.75 196.39,18.75 196.39,18.75 232.34,18.75 253.34,18.75 253.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22" paint="stroke:rgb(181, 152, 246);stroke-width:2px">
-      <polygon points="267.34,2.22 274.34,-0.22 267.34,-2.67 267.34,2.22" paint="fill:rgb(181, 152, 246);stroke:rgb(181, 152, 246);stroke-width:2.2px">
+      <path d="M118.44,-0.22C118.44,-0.22 118.44,-0.22 118.44,-0.22 139.44,-0.22 139.44,18.75 160.44,18.75 196.39,18.75 196.39,18.75 232.34,18.75 253.34,18.75 253.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22 274.34,-0.22" paint="stroke:rgb(180, 152, 246);stroke-width:2px">
+      <polygon points="267.34,2.22 274.34,-0.22 267.34,-2.67 267.34,2.22" paint="fill:rgb(180, 152, 246);stroke:rgb(180, 152, 246);stroke-width:2.2px">
