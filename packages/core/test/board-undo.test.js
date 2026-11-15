@@ -27,12 +27,21 @@ function board() {
     },
     BOARD,
   );
-  const hooks = { write: async (change) => void (await host.write(change)), say: (w) => state.said.push(w) };
+  let heard = () => {};
+  const hooks = {
+    write: async (change) => void (await host.write(change)),
+    say: (w) => {
+      state.said.push(w);
+      heard();
+    },
+  };
+  /** Presses a key and waits for what the board says of it, as every undo and redo ends in words. */
   const press = async (k, mods = {}) => {
     let stopped = false;
     const e = { key: k, ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...mods };
+    const told = new Promise((done) => (heard = done));
     const used = undoKey({ ...e, preventDefault: () => (stopped = true) }, key, hooks);
-    await new Promise((r) => setTimeout(r, 0));
+    if (used) await told;
     return used && stopped;
   };
   const xOf = (id) => Number(new RegExp(`\\(${id}:\\w+ \\{x: (-?\\d+)`).exec(state.text)?.[1]);
@@ -93,7 +102,10 @@ describe('undo and redo on a board', () => {
     let stopped = false;
     const e = { key: 'z', ctrlKey: true, metaKey: false, shiftKey: false, altKey: false };
     assert.equal(
-      undoKey({ ...e, preventDefault: () => (stopped = true) }, 'undo read only', { write: async () => {}, say: () => {} }),
+      undoKey({ ...e, preventDefault: () => (stopped = true) }, 'undo read only', {
+        write: async () => {},
+        say: () => {},
+      }),
       false,
     );
     assert.equal(stopped, false);
