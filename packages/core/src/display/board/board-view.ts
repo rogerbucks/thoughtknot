@@ -148,6 +148,7 @@ class BoardView {
 
   /** The board drawn again, the view kept on the same spot of the board even when its edges moved. */
   private draw(): void {
+    if (this.svg && !this.vp.isConnected) return; // the host drew the board afresh: that one is the board now
     const was = this.frame,
       v = this.zoom.view();
     this.frame = boardFrame(this.board);
