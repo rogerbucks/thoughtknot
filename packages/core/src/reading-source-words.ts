@@ -178,6 +178,14 @@ export const READING_SOURCE_WORDS = {
   'reading.docx.too-many-blocks': 'The document holds more than {most} paragraphs and tables, so it was not read.',
   'reading.docx.block-too-long': 'A paragraph holds more than {most} characters, so the document was not read.',
   'reading.docx.damaged': 'This document is damaged or in a form this reader does not know, so it was not read.',
+  // a PDF read as pages of text in plain JavaScript (pdf-read.ts)
+  'reading.pdf.not-pdf': 'This file is not a PDF, so it was not read.',
+  'reading.pdf.encrypted': 'This PDF is password-protected, so it was not read. Save a copy with no password.',
+  'reading.pdf.too-large': 'This PDF (or one of its parts) is larger than {most} bytes, so it was not read.',
+  'reading.pdf.too-many-pages': 'This PDF holds more than {most} pages, so it was not read.',
+  'reading.pdf.no-text':
+    'This PDF holds no text this reader can use. It may be scanned pictures of pages: only text is read.',
+  'reading.pdf.damaged': 'This PDF is damaged or in a form this reader does not know, so it was not read.',
   // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
   'reading.table.fetched-now': '{place} was fetched just now.',
   'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',
