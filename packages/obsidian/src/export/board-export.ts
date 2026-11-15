@@ -8,6 +8,7 @@
 import { MarkdownView, Notice } from 'obsidian';
 import {
   BOARD_PICTURE_FORMATS,
+  THEME_COLOURS,
   boardFilesOf,
   boardPicturesOf,
   pictureSize,
@@ -53,7 +54,13 @@ async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFor
       const pixels = pictureSize(p.width, p.height, PNG_PIXEL_LIMIT);
       if (format === 'svg') await vaultOps(plugin).write(path, p.svg);
       else if (format === 'png') await vaultOps(plugin).write(path, await rasterise(p.svg, pixels));
-      else pages.push({ jpeg: await rasterise(p.svg, pixels, 'image/jpeg'), pixels, width: p.width, height: p.height });
+      else
+        pages.push({
+          jpeg: await rasterise(p.svg, pixels, THEME_COLOURS.light.page),
+          pixels,
+          width: p.width,
+          height: p.height,
+        });
       if (format !== 'pdf') wrote(path);
     }
     if (format !== 'pdf') return;
