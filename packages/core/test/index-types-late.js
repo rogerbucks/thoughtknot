@@ -494,4 +494,10 @@ export const TYPES_LATE = [
   'HostFetch',
   // a card's saved line in the layout block, 15 Nov 2026
   'LayoutCard',
+  // a picture's own metadata and describing it with AI, 15 Nov 2026
+  'AiImages',
+  'DescribeInput',
+  'DescribePlan',
+  'ImageMeta',
+  'PictureDescription',
 ];

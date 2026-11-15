@@ -532,4 +532,14 @@ export const VALUES_LATE = [
   'savedArrangements',
   'saveArrangement',
   'useArrangement',
+  // a picture's own metadata and describing it with AI, 15 Nov 2026
+  'IMAGE_INSTRUCTIONS',
+  'IMAGE_SEND_MOST',
+  'PICTURE_KINDS',
+  'describePlan',
+  'imageBody',
+  'imageMetadata',
+  'imageReview',
+  'metaCovers',
+  'readDescription',
 ];
