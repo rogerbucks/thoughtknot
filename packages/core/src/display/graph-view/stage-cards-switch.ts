@@ -1,21 +1,19 @@
 // Cards on and off for the new rendering's stage (ES§73, render_cards): the dock's Cards button, and the cards' sizes,
 // places, pins and choice. stage-cards-lay.ts lays them and glides them on and off; stage-cards.ts draws them.
-import type { NoteReading } from '../../note-reading.ts';
-import { noteOf } from '../../links.ts';
-import type { LinkHost } from '../link-host.ts';
-import { cardSizeOf, type CardFit } from '../../render/render-cards.ts';
+import { CARD_W_LEAST, CARD_W_MOST, cardSizeOf, type CardFit } from '../../render/render-cards.ts';
 import type { View } from '../../render/render-marks.ts';
 import { roomSizes } from '../../render/render-detail.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import { word } from '../../words.ts';
 import { button } from '../button.ts';
 import { StageCards, type CardWords } from './stage-cards.ts';
-import { cardsChosen, chooseCards, fitsOf, glide, placesOf } from './stage-cards-fit.ts';
+import { cardsChosen, chooseCards, fitsOf, glide, placesOf, widthsOf } from './stage-cards-fit.ts';
 import { MoveUndo } from './move-undo.ts';
 import { groundShift } from '../../render/render-tilt.ts';
 import { CardChoice, fitOfStep, sharedStep, type CardStep } from '../../card-choice.ts';
 import { choiceBar } from './stage-cards-choice.ts';
 import { layCards, switchCards, withHands, type CardsHost } from './stage-cards-lay.ts';
+export { cardWordsOf } from './stage-cards-lay.ts';
 
 /**
  * The dock's Cards button in `root`, for `stage`, on graph `graph`: pressed, each item shows as a card with its whole
@@ -47,22 +45,6 @@ export function cardsControl(
   return { unload: () => b.remove() };
 }
 
-/**
- * What a card's options give its cards. The host renders their Markdown, made safe. Each thing that is a note embeds
- * that note (node_is_a_note). Without a host that renders, the cards show plain text.
- */
-export function cardWordsOf(o: { links?: LinkHost; reading: NoteReading; graph: string }): CardWords {
-  const host = o.links;
-  if (!host) return {};
-  return {
-    render: (markdown, el, owner) => host.render(markdown, el, owner),
-    linked: (key) => {
-      const note = noteOf(o.reading, o.graph, key);
-      return note ? `![[${note.opens}]]` : undefined;
-    },
-  };
-}
-
 /** A stage's cards while Cards is on, what the host gives them to show, and the glide between on and off. */
 export class CardsSwitch {
   cards: StageCards | null = null;
@@ -82,17 +64,15 @@ export class CardsSwitch {
     if (on === !!this.cards) return h.view;
     this.stop(); // a press mid-glide starts from where that glide was going
     this.choose([]); // cards drawn anew start with none chosen
-    const [fits, places] = [fitsOf(this.graph), placesOf(this.graph)];
+    const [fits, places, widths] = [fitsOf(this.graph), placesOf(this.graph), widthsOf(this.graph)];
     // as saved in the note, when it is: the layout block is the truth, and the card drawn again reads it anew
-    if (h.saves?.cards) {
-      fits.clear();
-      places.clear();
-    }
+    if (h.saves?.cards) for (const m of [fits, places, widths]) m.clear();
     for (const [k, c] of h.saves?.cards ?? []) {
       if (c.fit) fits.set(k, { fit: c.fit, ...(c.h && { tall: c.h }) });
       if (c.placed) places.set(k, { x: c.x, y: c.y });
+      if (c.w) widths.set(k, c.w);
     }
-    this.host = { ...h, words: this.words, fits, places, onFit: (k, f, tall) => this.fit(k, f, tall) };
+    this.host = { ...h, words: this.words, fits, places, widths, onFit: (k, f, tall) => this.fit(k, f, tall) };
     const next = switchCards(this.host, this.cards, on, h.draw, done, atOnce);
     [this.cards, this.stop] = [next.cards, next.stop];
     if (this.cards) this.cards.onUnpin = (k) => this.unpin([k]);
@@ -191,25 +171,46 @@ export class CardsSwitch {
    */
   private save(key: string): void {
     const [h, cards] = [this.host, this.cards];
-    const [f, p] = [fitsOf(this.graph).get(key), placesOf(this.graph).get(key)];
+    const [f, p, w] = [fitsOf(this.graph).get(key), placesOf(this.graph).get(key), widthsOf(this.graph).get(key)];
     const at = cards?.laid.cards.find((c) => c.key === key);
     if (!h?.saves?.card || !cards || !at) return;
     const { spread, cx, cy } = cards.laid;
     const here = p ?? { x: cx + (at.x - cx) / spread, y: cy + (at.y - cy) / spread };
     const c =
-      f || p ? { ...here, ...(p && { placed: true }), ...(f && { fit: f.fit }), ...(f?.tall && { h: f.tall }) } : null;
+      f || p || w
+        ? {
+            ...here,
+            ...(p && { placed: true }),
+            ...(f && { fit: f.fit }),
+            ...(f?.tall && { h: f.tall }),
+            ...(w && { w }),
+          }
+        : null;
     void h.saves.card(key, c);
   }
 
-  /** The card held by its head, where it was, whether it has moved, and the view it is dragged under. */
-  private held: { key: string; from: Spot; moved: boolean; view: () => View } | null = null;
+  /**
+   * The card held by its head, where it was, whether it has moved, and the view it is dragged under. Held by its edge,
+   * it is made wider or narrower. Then `wide` says how wide it was, and how wide it is now.
+   */
+  private held: {
+    key: string;
+    from: Spot;
+    moved: boolean;
+    view: () => View;
+    wide?: { was: number; now: number; dx: number };
+  } | null = null;
   private undoes: MoveUndo | null = null;
 
-  /** Takes the card whose head is at `x`, `y` on the screen under `view`; says whether it took one. */
+  /** Takes the card whose edge, or else head, is at `x`, `y` on the screen under `view`; says whether it took one. */
   grab(x: number, y: number, view: () => View): boolean {
-    const key = this.cards && !this.cards.laid.only ? this.cards.pickAt(x, y, true) : null,
-      from = key ? this.host?.spots.get(key) : undefined;
+    const cards = this.cards && !this.cards.laid.only ? this.cards : null,
+      edge = cards?.pickAt(x, y, 'edge') ?? null,
+      key = edge ?? cards?.pickAt(x, y, 'head') ?? null,
+      from = key ? this.host?.spots.get(key) : undefined,
+      was = edge ? cards?.laid.cards.find((c) => c.key === edge)?.w : undefined;
     this.held = key && from ? { key, from: { ...from }, moved: false, view } : null;
+    if (this.held && was) this.held.wide = { was, now: was, dx: 0 };
     if (this.held) this.stop(); // a card taken mid-glide is taken where it is going
     return !!this.held;
   }
@@ -221,6 +222,13 @@ export class CardsSwitch {
     if (!h || !held || !s || !this.cards) return;
     const v = held.view(),
       [gx, gy] = groundShift(v, dx, dy);
+    if (held.wide) {
+      // the edge follows the pointer across the card, within the widths a card may have; the left edge stays
+      held.wide.dx += gx / v.scale;
+      held.wide.now = Math.min(CARD_W_MOST, Math.max(CARD_W_LEAST, held.wide.was + held.wide.dx));
+      this.cards.widen(held.key, held.wide.now);
+      return void (held.moved = true);
+    }
     h.spots.set(held.key, { ...s, x: s.x + gx / v.scale, y: s.y + gy / v.scale });
     [held.moved, this.cards.settled] = [true, false]; // its arrows wait until it is let go
     h.draw();
@@ -232,6 +240,7 @@ export class CardsSwitch {
     this.held = null;
     const to = held?.moved ? h?.spots.get(held.key) : undefined;
     if (!h || !held || !cards || !to) return;
+    if (held.wide) return this.widened(held.key, held.wide.was, held.wide.now);
     const had = placesOf(this.graph).get(held.key);
     const at = this.baseOf(to);
     const put = (p: { x: number; y: number } | undefined, s: Spot) => this.put(new Map([[held.key, { p, s }]]));
@@ -241,6 +250,36 @@ export class CardsSwitch {
       word('layout.placed', { thing: name }),
       () => put(had, held.from),
       () => put(at, to),
+    );
+  }
+
+  /**
+   * Makes card `key` `now` wide, from `was`: its left edge and top stay, its words wrap anew, and the cards it would
+   * cover move aside. With all it holds, it is measured again. The change is saved, and undoes.
+   */
+  private widened(key: string, was: number, now: number): void {
+    const name = this.host?.scene.nodes.get(key)?.name ?? key;
+    const set = (from: number, to: number): void => {
+      const [cards, widths] = [this.cards, widthsOf(this.graph)];
+      if (!cards) return;
+      if (to === cardSizeOf({ key, name: '' }).w) widths.delete(key);
+      else widths.set(key, to);
+      cards.widen(key, to);
+      const s = cards.laid.spots.get(key),
+        spots = new Map(cards.laid.spots);
+      if (s) spots.set(key, { ...s, x: s.x + (to - from) / 2 }); // the left edge stays where it was
+      const f = fitsOf(this.graph).get(key);
+      if (f?.fit === 'full')
+        fitsOf(this.graph).set(key, { fit: 'full', ...((t) => (t ? { tall: t } : {}))(cards.tall(key)) });
+      this.save(key);
+      this.stop();
+      this.relay([key], spots);
+    };
+    set(was, now);
+    this.offer(
+      word('view.cards.widened', { thing: name }),
+      () => set(now, was),
+      () => set(was, now),
     );
   }
 

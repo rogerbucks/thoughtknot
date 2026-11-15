@@ -22,7 +22,7 @@ import { isTilted, onScreen } from '../../render/render-tilt.ts';
 import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { Lifecycle } from '../lifecycle.ts';
-import { markFit, nameOnly, tallOf, unpinButton } from './stage-cards-fit.ts';
+import { markFit, nameOnly, tallOf, unpinButton, wayOnScreen } from './stage-cards-fit.ts';
 
 /** Below this alpha a card is not shown. */
 const SHOWN = 0.05;
@@ -31,30 +31,14 @@ const FADE_FROM = 48;
 const FADE_TO = 96;
 /** Below this width on screen, in pixels, a card shows only its name. */
 const FAR_PX = 150;
+/** How near its right edge, in screen pixels, a press takes a card's edge. */
+const EDGE_PX = 8;
 
 /** How clearly the cards show at zoom `scale`: not at all far out, where dots stand for them, then fading in. */
 export const cardAlpha = (scale: number): number =>
   Math.min(1, Math.max(0, (CARD_W * scale - FADE_FROM) / (FADE_TO - FADE_FROM)));
 /** Where `p` lies on the screen under `view`, at depth `depth`, and how much a card there is scaled: tilt and globe too. */
 const seen = (p: [number, number], view: View, depth = 0) => onScreen({ x: p[0], y: p[1], r: 1 }, view, depth);
-/** How many pieces each leg of an arrow is cut into on the globe, so it bends with the ball. */
-const GLOBE_PIECES = 8;
-
-/** An arrow's way on the screen under `view`, at `depth`; none if any of it is round the back of the globe. */
-function wayOnScreen(way: readonly [number, number][], view: View, depth = 0): [number, number][] | null {
-  const pieces = isGlobe(view) ? GLOBE_PIECES : 1;
-  const out: [number, number][] = [];
-  for (let i = 0; i < way.length; i++) {
-    const [p, q] = [way[i] as [number, number], way[i + 1]];
-    for (let j = 0; j < (q ? pieces : 1); j++) {
-      const t = j / pieces;
-      const s = seen(q ? [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t] : p, view, depth);
-      if (s.behind) return null;
-      out.push([s.x, s.y]);
-    }
-  }
-  return out;
-}
 /** The radius of an arrow's corners, and the length of its head, in screen pixels. */
 const CORNER_PX = 8;
 const HEAD_PX = 7;
@@ -147,7 +131,7 @@ export class StageCards {
   /** The outermost groups, whose clouds stay faint under the cards. */
   private readonly outer: Set<string>;
   /** Each card's box on the screen, as last drawn, top card last, for a click to pick from. */
-  private boxes: { key: string; x: number; y: number; w: number; h: number }[] = [];
+  private boxes: { key: string; x: number; y: number; w: number; h: number; k: number }[] = [];
 
   /** Each card's body and the words it waits to show, and the cards whose words are in. */
   private readonly bodies = new Map<string, { body: HTMLElement; words: string[] }>();
@@ -331,7 +315,7 @@ export class StageCards {
       el.toggleClass('is-selected', selected === key);
       // an open card grows to its words, so a click picks it over all it covers
       const tall = el.hasClass('is-open') ? Math.max(h, (el.offsetHeight || 0) * k) : h;
-      if (alpha >= 0.5) this.boxes.push({ key, x, y, w, h: tall });
+      if (alpha >= 0.5) this.boxes.push({ key, x, y, w, h: tall, k });
     }
     const alpha = cardAlpha(view.scale);
     if (c && this.settled && alpha >= SHOWN) this.arrows(c, view, look, alpha, behind);
@@ -368,15 +352,23 @@ export class StageCards {
     c.restore();
   }
 
-  /** The item whose card is at `x`, `y` on the screen, the top card first; none off every card. `head`: on its head. */
-  pickAt(x: number, y: number, head = false): string | null {
+  /**
+   * The item whose card is at `x`, `y` on the screen, the top card first; none off every card. `part`: only on its head,
+   * which moves it, or its right edge, which makes it wider or narrower.
+   */
+  pickAt(x: number, y: number, part: 'card' | 'head' | 'edge' = 'card'): string | null {
     for (let i = this.boxes.length - 1; i >= 0; i--) {
       const b = this.boxes[i] as (typeof this.boxes)[number];
       if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h)
-        return !head || y <= b.y + CARD_HEAD * (b.w / CARD_W) ? b.key : null; // a card is moved by its head
+        return part === 'card' || (part === 'head' ? y <= b.y + CARD_HEAD * b.k : x >= b.x + b.w - EDGE_PX)
+          ? b.key
+          : null;
     }
     return null;
   }
+
+  /** Card `key` drawn `w` wide while its edge is dragged, its left edge where it was; laying it again sets it. */
+  widen = (key: string, w: number): void => this.els.get(key)?.setCssProps({ '--thoughtknot-card-w': `${w}px` });
 
   /** Takes the cards away. */
   remove(): void {

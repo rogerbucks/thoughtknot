@@ -140,6 +140,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'view.cards.every': 'Choose every card',
   'view.cards.none': 'Clear the choice',
   'view.cards.pin': 'Pin where they are',
+  'view.cards.widened': 'Resized {thing}',
   'view.cards.unpin': 'Unpin: back to the layout',
   'view.cards.unpin-all': 'Unpin: back to the layout',
   'view.cards.pinned': { one: 'Pinned {count} card', other: 'Pinned {count} cards' },

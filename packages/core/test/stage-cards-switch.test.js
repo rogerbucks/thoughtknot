@@ -36,7 +36,7 @@ test('Cards on spreads the drawing and lays a card over each item; a click picks
     installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
     const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
     const { cardsControl } = await import('../src/display/graph-view/stage-cards-switch.ts');
-    const { cardsChosen } = await import('../src/display/graph-view/stage-cards.ts');
+    const { cardsChosen } = await import('../src/display/graph-view/stage-cards-fit.ts');
     const { drawing, g, keys } = drawingAndGraph();
     const root = doc.createElement('div');
     doc.body.appendChild(root);
