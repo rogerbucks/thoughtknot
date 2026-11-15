@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-tools-source-words.test.js",
+  "test": "the words of a board’s tools, layers and slides > every key is a board key, lower-case and dotted, and every wording is a sentence or a name",
+  "seen_failing_first": false,
+  "evidence": "The catalogue passed 100 lines, so it needs a test named after it; the words were already there."
+}
