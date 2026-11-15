@@ -2640,7 +2640,6 @@ pre.thoughtknot-code {
   background: var(--gn-bg);
   box-shadow: var(--gn-shadow-s);
   font-size: var(--gn-font-size-s);
-  white-space: nowrap;
 }
 .thoughtknot-stage-cards-chosen button[aria-pressed='true'] {
   color: var(--gn-accent);
