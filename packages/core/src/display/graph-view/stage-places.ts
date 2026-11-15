@@ -26,6 +26,9 @@ export interface PlacesHost {
   /** How each thing's card was sized and put, as saved; and how to save one, or forget it with none (render_cards). */
   cards?: ReadonlyMap<string, CardSave>;
   card?: (key: string, c: CardSave | null) => Wrote;
+  /** The arrangements of the cards saved by name; and how to save one, forget it with none, or put it in use. */
+  arrangements?: ReadonlyMap<string, ReadonlyMap<string, CardSave>>;
+  arrange?: (name: string, cards: ReadonlyMap<string, CardSave> | null | 'use') => Wrote;
 }
 
 /** What the mover reads of the stage. */

@@ -3,8 +3,9 @@
 // `// graph: trip_layout · LAYOUT ON trip`. Each line places one thing, named by its key in the graph:
 //   (ann:Place {x: 120, y: 40, group: 'Team'}).
 // A thing's card, in the card view, has a line of its own, as its reader sized it and put it (Roger, 15 Nov 2026):
-//   (ann_card:Card {graph: 'ann', x: 300, y: 80, h: 410, locked: true, fit: 'full'})
-// `locked` is a card put by hand; `fit` is 'title' or 'full'; `h` how tall all of it was seen to be.
+//   (ann_card:Card {graph: 'ann', x: 300, y: 80, w: 360, h: 410, locked: true, fit: 'full'})
+// `locked` is a card put by hand. `fit` is 'title' or 'full'. `w` is how wide its reader made it. `h` is how tall all
+// of it was seen to be.
 // The graph block is never rewritten to save a layout. Deleting this block loses only where things sat
 // (layout_block_optional). A place for a thing the graph no longer holds is a problem whose fix forgets it
 // (layout_block_checked). It is read with the board's reader (board.ts), with one kind.
@@ -34,6 +35,8 @@ export interface CardSave {
   fit?: 'title' | 'full';
   /** How tall all of it was seen to be, in pixels. */
   h?: number;
+  /** How wide its reader made it, in pixels; none, as wide as a card is. */
+  w?: number;
 }
 
 /** The layout of one graph. */
@@ -45,9 +48,26 @@ export interface Layout {
   places: Map<string, Place>;
   /** Each thing's card, by its key in the graph: kept apart from its place (render_cards, layout_block). */
   cards?: Map<string, CardSave>;
+  /** The arrangements of the cards saved by name, each with every card as it was (render_cards). */
+  arrangements?: Map<string, Map<string, CardSave>>;
 }
 
 const KINDS = new Set(['Place', 'Card']);
+
+/** The items of the layout block `text`, the `block`-th of its note, with their problems. */
+const itemsOf = (text: string, block = 0) =>
+  readItems(
+    text,
+    layoutOf(text),
+    KINDS,
+    (kind, id) => ({
+      code: 'GN909',
+      message: word('layout.kind-unknown', { kind, id }),
+      fix: word('layout.kind-unknown.fix'),
+    }),
+    undefined,
+    block,
+  );
 
 /** The name of the line that saves `thing`'s card. */
 const cardLine = (thing: string): string => `${thing}_card`;
@@ -59,18 +79,7 @@ const cardLine = (thing: string): string => `${thing}_card`;
  */
 export function readLayout(text: string, things?: Set<string>, block = 0): { layout: Layout; problems: Problem[] } {
   const line = layoutOf(text);
-  const read = readItems(
-    text,
-    line,
-    KINDS,
-    (kind, id) => ({
-      code: 'GN909',
-      message: word('layout.kind-unknown', { kind, id }),
-      fix: word('layout.kind-unknown.fix'),
-    }),
-    undefined,
-    block,
-  );
+  const read = itemsOf(text, block);
   const layout: Layout = { name: line?.name ?? '', on: line?.on ?? '', places: new Map() };
   const problems = read.problems;
   const lineOf = new Map<string, number>();
@@ -95,7 +104,12 @@ export function readLayout(text: string, things?: Set<string>, block = 0): { lay
     if (card) {
       const fit = it.more.fit === 'title' || it.more.fit === 'full' ? it.more.fit : undefined;
       const save: CardSave = { x: it.x, y: it.y, ...(it.locked && { placed: true }), ...(fit && { fit }) };
-      (layout.cards ??= new Map()).set(thing, it.h ? { ...save, h: it.h } : save);
+      const set = typeof it.more.set === 'string' ? it.more.set : undefined;
+      const all =
+        set === undefined
+          ? (layout.cards ??= new Map<string, CardSave>())
+          : setIn((layout.arrangements ??= new Map<string, Map<string, CardSave>>()), set);
+      all.set(thing, { ...save, ...(it.h && { h: it.h }), ...(it.w && { w: it.w }) });
       continue;
     }
     // the board's reader keeps a group as its own field
@@ -113,19 +127,30 @@ function placeGql(thing: string, place: Place): string {
   return itemGql(item);
 }
 
-/** One card written as GQL, in the one fixed form. */
-function cardGql(thing: string, c: CardSave): string {
+/** The cards of arrangement `name` in `sets`, made when there are none yet. */
+function setIn(sets: Map<string, Map<string, CardSave>>, name: string): Map<string, CardSave> {
+  const had = sets.get(name);
+  if (had) return had;
+  const made = new Map<string, CardSave>();
+  sets.set(name, made);
+  return made;
+}
+
+/** One card written as GQL, in the one fixed form; in arrangement `set`, under its own name `id`. */
+function cardGql(thing: string, c: CardSave, set?: { name: string; id: string }): string {
   const item: BoardItem = {
-    id: cardLine(thing),
+    id: set?.id ?? cardLine(thing),
     kind: 'Card',
     x: c.x,
     y: c.y,
     graph: thing,
     more: {},
   };
+  if (c.w) item.w = c.w;
   if (c.h) item.h = c.h;
   if (c.placed) item.locked = true;
   if (c.fit) item.more.fit = c.fit;
+  if (set) item.more.set = set.name;
   return itemGql(item);
 }
 
@@ -162,7 +187,7 @@ export function placeThing(text: string | null, graph: string, thing: string, x:
   const line = placeGql(thing, { ...at, ...(keep !== undefined && { group: keep }) });
   if (was && w) return text.slice(0, w.open) + line + text.slice(w.close + 1);
   const body = text.trimEnd();
-  return readLayout(text).layout.places.size ? `${body},\n${line}` : `${body}\n${line}`;
+  return itemsOf(text).board.items.length ? `${body},\n${line}` : `${body}\n${line}`;
 }
 
 /**
@@ -197,12 +222,21 @@ export function renamePlace(text: string, from: string, to: string): string {
   return text.slice(0, w.open) + placeGql(to, was) + text.slice(w.close + 1);
 }
 
+/** Card `c` in whole pixels. */
+const rounded = (c: CardSave): CardSave => ({
+  ...c,
+  x: Math.round(c.x),
+  y: Math.round(c.y),
+  ...(c.h && { h: Math.round(c.h) }),
+  ...(c.w && { w: Math.round(c.w) }),
+});
+
 /**
  * The block with `thing`'s card saved as `c`, its place rounded to whole numbers; with none, its line goes. With no
  * block yet (`text` null), a new one is made for `graph`. Only the card's own line changes (render_cards, layout_block).
  */
 export function saveCard(text: string | null, graph: string, thing: string, c: CardSave | null): string | null {
-  const at = c && { ...c, x: Math.round(c.x), y: Math.round(c.y), ...(c.h && { h: Math.round(c.h) }) };
+  const at = c && rounded(c);
   if (text === null || !layoutOf(text)) {
     if (!at) return text;
     return writeLayout({ name: layoutName(graph), on: graph, places: new Map(), cards: new Map([[thing, at]]) });
@@ -211,7 +245,50 @@ export function saveCard(text: string | null, graph: string, thing: string, c: C
   if (!at) return w ? forgetPlace(text, cardLine(thing)) : text;
   const line = cardGql(thing, at);
   if (w) return text.slice(0, w.open) + line + text.slice(w.close + 1);
-  const { places, cards } = readLayout(text).layout;
   const body = text.trimEnd();
-  return places.size || cards?.size ? `${body},\n${line}` : `${body}\n${line}`;
+  return itemsOf(text).board.items.length ? `${body},\n${line}` : `${body}\n${line}`;
+}
+
+/**
+ * The block with the arrangement `name` saved as `cards`, every card as it is. It takes the place of the one saved
+ * by that name before; with none, it is forgotten. With no block yet, one is made for `graph`. Each card has a line of
+ * its own, named after its thing and the arrangement. The cards in use, and every other line, stay as they were.
+ */
+export function saveArrangement(
+  text: string | null,
+  graph: string,
+  name: string,
+  cards: ReadonlyMap<string, CardSave> | null,
+): string | null {
+  let out = text !== null && layoutOf(text) ? text : null;
+  for (const it of out === null ? [] : itemsOf(out).board.items)
+    if (it.more.set === name) out = forgetPlace(out as string, it.id);
+  if (!cards?.size) return out ?? text;
+  out ??= writeLayout({ name: layoutName(graph), on: graph, places: new Map() });
+  const taken = new Set(itemsOf(out).board.items.map((it) => it.id));
+  const tag =
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '') || 'set';
+  let n = 1;
+  const id = (thing: string): string => `${thing}_card_${tag}${n > 1 ? `_${n}` : ''}`;
+  while ([...cards.keys()].some((k) => taken.has(id(k)))) n++;
+  const lines = [...cards].map(([k, c]) => cardGql(k, rounded(c), { name, id: id(k) }));
+  const body = out.trimEnd();
+  return `${body}${itemsOf(out).board.items.length ? ',' : ''}\n${lines.join(',\n')}`;
+}
+
+/**
+ * The block with the arrangement `name` put in use. Every card in use is sized and put as that arrangement saved it.
+ * A card it does not hold goes back to the layout. The arrangement stays saved. One unknown changes nothing.
+ */
+export function useArrangement(text: string, graph: string, name: string): string {
+  const { cards, arrangements } = readLayout(text).layout;
+  const set = arrangements?.get(name);
+  if (!set) return text;
+  let out: string = text;
+  for (const k of cards?.keys() ?? []) if (!set.has(k)) out = saveCard(out, graph, k, null) ?? out;
+  for (const [k, c] of set) out = saveCard(out, graph, k, c) ?? out;
+  return out;
 }

@@ -376,3 +376,76 @@ test('a card put by hand shows its pin, stays put, and its pin gives it back to 
     uninstall();
   }
 });
+
+// proves: render_cards
+test('a card dragged by its right edge grows wider or narrower: its left edge stays, its words wrap anew, and it undoes', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { installHost } = await import('../src/display/host.ts');
+    installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { cardsControl } = await import('../src/display/graph-view/stage-cards-switch.ts');
+    const { MoveUndo } = await import('../src/display/graph-view/move-undo.ts');
+    const { CARD_W, CARD_W_MOST } = await import('../src/render/render-cards.ts');
+    const { drawing, g, keys } = drawingAndGraph();
+    const root = doc.createElement('div');
+    doc.body.appendChild(root);
+    const dock = root.createDiv({ cls: 'thoughtknot-view-dock' }).createDiv({ cls: 'thoughtknot-dock-body' });
+    const viewport = root.createDiv();
+    const stage = new RenderStage(viewport, drawing, g, { open: () => {}, clear: () => {}, selected: () => null });
+    cardsControl(root, stage, 'wide-plan');
+    dock.querySelector('button').click();
+    const w1 = stage.spots.get('W1');
+    stage.view = { ...stage.view, scale: 1, x: w1.x - 400, y: w1.y - 300 };
+    stage.draw();
+    const sw = stage.cardsOn;
+    const was = boxesOf(stage).get('W1');
+    const el = cardEl(viewport, 'Work 1');
+    const [x, y] = ['x', 'y'].map((a) => parseFloat(el.cssProps[`--thoughtknot-card-${a}`]));
+    const left = (b) => b.x - b.w / 2;
+    // its body is no handle, its right edge is
+    assert.equal(
+      sw.grab(x + was.w / 2, y + 60, () => stage.view),
+      false,
+      'the middle of its body: the stage pans',
+    );
+    assert.ok(
+      sw.grab(x + was.w - 3, y + 60, () => stage.view),
+      'its right edge takes it',
+    );
+    sw.drag(160, 0);
+    assert.equal(el.cssProps['--thoughtknot-card-w'], `${CARD_W + 160}px`, 'it widens as the edge is dragged');
+    sw.drop();
+    let now = boxesOf(stage);
+    assert.equal(now.get('W1').w, CARD_W + 160, 'wider');
+    assert.ok(Math.abs(left(now.get('W1')) - left(was)) < 1e-6, 'its left edge stays');
+    const { cardSizeOf } = await import('../src/render/render-cards.ts');
+    const para = { key: 'p', name: 'P', note: 'word '.repeat(120) };
+    assert.ok(cardSizeOf({ ...para, wide: CARD_W + 160 }).h < cardSizeOf(para).h, 'a long line wraps into fewer lines');
+    for (const a of keys)
+      for (const b of keys) if (a < b) assert.ok(!covers(now.get(a), now.get(b)), `${a} clear of ${b}`);
+    // no wider than a card may be
+    stage.draw();
+    const [x2] = ['x'].map((a) => parseFloat(el.cssProps[`--thoughtknot-card-${a}`]));
+    assert.ok(sw.grab(x2 + now.get('W1').w - 3, y + 60, () => stage.view));
+    sw.drag(5000, 0);
+    sw.drop();
+    assert.equal(boxesOf(stage).get('W1').w, CARD_W_MOST, 'at most as wide as a card may be');
+    // kept when Cards is turned off and on; undone twice, as wide as a card is
+    dock.querySelector('button').click();
+    dock.querySelector('button').click();
+    assert.equal(boxesOf(stage).get('W1').w, CARD_W_MOST, 'kept for the graph');
+    const undo = new MoveUndo(viewport, 'wide-plan');
+    assert.ok(undo.undo());
+    for (let i = 0; i < 3; i++) await Promise.resolve(); // the undo's toast says so before the page goes
+    assert.ok(undo.undo());
+    for (let i = 0; i < 3; i++) await Promise.resolve();
+    now = boxesOf(stage);
+    assert.equal(now.get('W1').w, CARD_W, 'as wide as a card is again');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

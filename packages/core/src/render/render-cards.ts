@@ -52,6 +52,8 @@ export interface CardText {
   fit?: CardFit;
   /** How tall it was seen to be with all it holds, in pixels, once drawn: a note read later is measured so. */
   tall?: number;
+  /** How wide its reader made it, in pixels, by dragging its edge; none, CARD_W. */
+  wide?: number;
 }
 
 /** How a card is drawn: its size, the lines of text it shows, and how many more wait behind "Show all". */
@@ -78,34 +80,44 @@ export interface CardArrow {
   way: [number, number][];
 }
 
-/** The letters on one line of a card's text. */
-const LETTERS = Math.floor((CARD_W - 2 * CARD_PAD) / textWidth('m', CARD_PX));
+/** How narrow a reader may make a card, in pixels. */
+export const CARD_W_LEAST = 160;
+/** How wide a reader may make a card, in pixels. */
+export const CARD_W_MOST = 720;
+/** How wide a card is drawn: as its reader made it, within the bounds; none, CARD_W. */
+export const cardWidth = (c: { wide?: number }): number =>
+  Math.min(CARD_W_MOST, Math.max(CARD_W_LEAST, c.wide ?? CARD_W));
+/** The letters on one line of a card's text, on a card `w` wide. */
+const lettersOn = (w: number): number => Math.floor((w - 2 * CARD_PAD) / textWidth('m', CARD_PX));
+const LETTERS = lettersOn(CARD_W);
 
 /** How many lines `markdown` takes on a card, each paragraph on its lines and a blank line as half of one. */
-export function linesOf(markdown: string): number {
+export function linesOf(markdown: string, letters = LETTERS): number {
   let lines = 0;
   for (const para of markdown.split('\n')) {
     const text = para.replace(/[*_`#>]/g, '').trim();
-    lines += text ? wrapName(text, LETTERS, Number.MAX_SAFE_INTEGER).length : 0.5;
+    lines += text ? wrapName(text, letters, Number.MAX_SAFE_INTEGER).length : 0.5;
   }
   return Math.ceil(lines);
 }
 
 /** The size of the card for `c`: its whole text up to CARD_MOST_LINES lines, and how many lines are left over. */
 export function cardSizeOf(c: CardText): CardSize {
-  if (c.fit === 'title') return { w: CARD_W, h: CARD_HEAD, shown: 0, more: 0 };
+  const w = cardWidth(c),
+    letters = lettersOn(w);
+  if (c.fit === 'title') return { w, h: CARD_HEAD, shown: 0, more: 0 };
   const text = [c.note, c.linked].filter((t): t is string => !!t && !!t.trim());
   const full = c.fit === 'full';
   // a linked note's length is not known until it is read: a card waiting for it is as tall as a cut card, or twice
-  const waits = Math.max((full ? 2 : 1) * CARD_MOST_LINES, linesOf(c.note ?? ''));
-  const all = c.linkedTall ? waits : text.reduce((n, t) => n + linesOf(t), 0);
+  const waits = Math.max((full ? 2 : 1) * CARD_MOST_LINES, linesOf(c.note ?? '', letters));
+  const all = c.linkedTall ? waits : text.reduce((n, t) => n + linesOf(t, letters), 0);
   const shown = full ? all : Math.min(all, CARD_MOST_LINES);
   // a note read later may be longer than the card: Show all is offered for it
   const more = full ? 0 : c.linkedTall ? Math.max(1, all - shown) : all - shown;
   const props = Math.min(c.props?.length ?? 0, CARD_PROPS);
   const body = shown + props + (more ? 1 : 0);
   const h = CARD_HEAD + (body ? 2 * CARD_PAD + body * CARD_LINE : 0);
-  return { w: CARD_W, h: full && c.tall ? Math.max(CARD_HEAD, c.tall) : h, shown, more };
+  return { w, h: full && c.tall ? Math.max(CARD_HEAD, c.tall) : h, shown, more };
 }
 
 const byKey = (a: CardBox, b: CardBox) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
