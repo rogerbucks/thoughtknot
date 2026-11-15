@@ -41,8 +41,8 @@ export function placeFrom(was: Kept, x: number, y: number): [number, number, num
 }
 
 /**
- * A board just drawn stands for its key from now on. What was said a moment ago is put in its `said` line again, and
- * the keyboard is put back on it when `focused` says the board before it had it.
+ * A board just drawn stands for its key from now on. What was said a moment ago is put in its `said` line again.
+ * The keyboard is put back on it when `focused` says the board before it had it.
  */
 export function born(key: string, vp: HTMLElement, view: unknown, said: HTMLElement, focused: boolean): void {
   live.set(key, { vp, view });
