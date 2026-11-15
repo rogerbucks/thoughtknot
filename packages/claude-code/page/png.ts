@@ -24,7 +24,7 @@ export function rasterise(
   win: Window & typeof globalThis,
   svg: string,
   size: PngSize,
-  type: 'image/png' | 'image/jpeg' = 'image/png',
+  paper?: string,
 ): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const url = win.URL.createObjectURL(new win.Blob([sized(svg, size)], { type: 'image/svg+xml' }));
@@ -37,9 +37,9 @@ export function rasterise(
         canvas.height = size.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error(tooLarge());
-        // a JPEG holds no clear pixels, so it is drawn on white: a PDF holds a JPEG as it is
-        if (type === 'image/jpeg') {
-          ctx.fillStyle = '#ffffff';
+        // with a paper colour a JPEG is made, drawn on it: a JPEG holds no clear pixels, and a PDF holds one as it is
+        if (paper) {
+          ctx.fillStyle = paper;
           ctx.fillRect(0, 0, size.width, size.height);
         }
         ctx.drawImage(img, 0, 0, size.width, size.height);
@@ -50,7 +50,7 @@ export function rasterise(
             if (!blob) return reject(new Error(tooLarge()));
             blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
           },
-          type,
+          paper ? 'image/jpeg' : 'image/png',
           0.92,
         );
       } catch (e) {

@@ -88,11 +88,16 @@ describe('whiteboard files on the browser editor’s page', () => {
     try {
       await until(() => bar(page), 8000);
       const got = kept(page);
+      assert.deepEqual(
+        [...bar(page).querySelectorAll('option')].map((o) => o.textContent),
+        ['JSON Canvas', 'Excalidraw', 'SVG pictures', 'PNG pictures', 'One PDF'],
+        'each format is named by a word of the catalogue',
+      );
       exportAs(page, 'canvas');
       await until(() => status(page), 8000);
       assert.equal(got[1], 'ideas.canvas');
       assert.equal(JSON.parse(got[0]).nodes[0].text, 'Go by train');
-      assert.match(status(page), /1 board was handed over as a file\. 1 items were left out/);
+      assert.match(status(page), /Boards handed over as files: 1\. 1 items were left out/);
       exportAs(page, 'excalidraw');
       await until(() => got.length === 4, 8000);
       assert.equal(got[3], 'ideas.excalidraw');

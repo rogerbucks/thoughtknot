@@ -5,6 +5,7 @@
 // - Out: the boards of the note are handed over as files to keep: JSON Canvas, Excalidraw, SVG, PNG, or one PDF.
 // The readers and writers are the core's own. What a format cannot hold is said in a sentence.
 import {
+  THEME_COLOURS,
   boardFileBlock,
   boardFilesOf,
   boardPicturesOf,
@@ -21,14 +22,8 @@ import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 
 type Win = Window & typeof globalThis;
 
-/** The formats the boards are handed over as, each with the name the person reads. */
-const FORMATS: [string, string][] = [
-  ['canvas', 'JSON Canvas'],
-  ['excalidraw', 'Excalidraw'],
-  ['svg', 'SVG'],
-  ['png', 'PNG'],
-  ['pdf', 'PDF'],
-];
+/** The formats the boards are handed over as; the name the person reads is the word `host.boards.as.` and this. */
+const FORMATS = ['canvas', 'excalidraw', 'svg', 'png', 'pdf'] as const;
 
 /** A graph name made from a file's name, and not one the note already holds: a taken name gets a number after it. */
 export function boardNameFor(file: string, note: string): string {
@@ -83,7 +78,12 @@ async function handOver(win: Win, note: string, format: string): Promise<string>
       if (format === 'svg') download(win, `${p.name}.svg`, p.svg, 'image/svg+xml');
       else if (format === 'png') download(win, `${p.name}.png`, await rasterise(win, p.svg, size), 'image/png');
       else
-        pages.push({ jpeg: await rasterise(win, p.svg, size, 'image/jpeg'), pixels, width: p.width, height: p.height });
+        pages.push({
+          jpeg: await rasterise(win, p.svg, size, THEME_COLOURS.light.page),
+          pixels,
+          width: p.width,
+          height: p.height,
+        });
       count++;
     }
     if (pages.length) download(win, 'boards.pdf', picturesPdf(pages, word('page.boards')), 'application/pdf');
@@ -121,10 +121,10 @@ export function exchangeBar(win: Win, note: BoardNote): HTMLElement {
   const giving = bar.appendChild(doc.createElement('label'));
   giving.textContent = word('page.board-exchange.as');
   const select = doc.createElement('select');
-  for (const [value, name] of FORMATS) {
+  for (const value of FORMATS) {
     const option = select.appendChild(doc.createElement('option'));
     option.value = value;
-    option.textContent = name;
+    option.textContent = word(`host.boards.as.${value}`);
   }
   giving.append(' ', select);
   const run = bar.appendChild(doc.createElement('button'));

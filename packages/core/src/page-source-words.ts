@@ -78,10 +78,7 @@ export const PAGE_SOURCE_WORDS = {
   'page.board-exchange.as': 'Export the boards as',
   'page.board-exchange.run': 'Export',
   'page.board-exchange.imported': 'Added the board {graph}, copied from {file}.',
-  'page.board-exchange.done': {
-    one: '{count} board was handed over as a file.',
-    other: '{count} boards were handed over as files.',
-  },
+  'page.board-exchange.done': 'Boards handed over as files: {count}.',
   'page.too-large': 'This note is too large to read here.',
   'page.text-only': 'This graph is shown as text only: it is over what is drawn here.',
   'page.alt': '{graph}: {things}, {links}',
