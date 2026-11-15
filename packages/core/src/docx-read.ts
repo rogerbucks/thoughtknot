@@ -81,7 +81,7 @@ function blocksOf(xml: string, limits: typeof DOCX_LIMITS): DocBlock[] {
         } else if (trimmed) {
           const level = headingLevel(style);
           if (level !== null) add({ kind: 'heading', level, text: trimmed });
-          else add(listed ? { kind: 'list', text: trimmed } : { kind: 'paragraph', text: text.replace(/\s+$/, '') });
+          else add(listed ? { kind: 'list', text: trimmed } : { kind: 'paragraph', text: text.trimEnd() });
         }
       } else if (n === 'tc' && depth === 1) row.push(cell.join('\n'));
       else if (n === 'tr' && depth === 1) rows.push(row);
