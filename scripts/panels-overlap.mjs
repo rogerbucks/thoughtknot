@@ -46,8 +46,8 @@ export const FULL = `document.querySelector('.thoughtknot-bar [aria-label="Full 
 export const SPACE_AT = (n) => `${VIEW}.querySelectorAll('.thoughtknot-rail [data-space]')[${n}].click()`;
 
 /**
- * Whether the view has drawn its side rail with space `n` on it. The page holds other pictures before the drawing
- * is there, so a picture on the page does not say the view is ready; on a slow machine it comes later.
+ * Whether the view has drawn its side rail with space `n` on it. A picture on the page does not say so: the page
+ * holds other pictures before the drawing is there, and on a slow machine the rail comes later.
  */
 export const RAIL_HAS = (n) =>
   `Boolean(document.querySelector('.thoughtknot-view')) && ${VIEW}.querySelectorAll('.thoughtknot-rail [data-space]').length > ${n}`;
