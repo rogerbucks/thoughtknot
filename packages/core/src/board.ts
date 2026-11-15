@@ -41,11 +41,24 @@ export interface BoardItem {
   more: Record<string, Value>;
 }
 
-/** A connector between two items: a CONNECTS link, with its label if it has one. */
+/** The ways a connector may be told to run from one item to the other. */
+export const ROUTES = ['straight', 'elbow', 'curved'] as const;
+/** One way a connector runs. */
+export type Route = (typeof ROUTES)[number];
+/** Where a connector may have an arrowhead: at its end, at both ends, or at neither. */
+export const TIPS = ['end', 'both', 'none'] as const;
+/** Where a connector has its arrowheads. */
+export type Tips = (typeof TIPS)[number];
+
+/** A connector between two items: a CONNECTS link, with its label, route and arrowheads where it has them. */
 export interface Connector {
   from: string;
   to: string;
   label?: string;
+  /** How it runs; without one it is straight, and bows round an item in its way. */
+  route?: Route;
+  /** Where its arrowheads are; without it, one at its end. */
+  tips?: Tips;
 }
 
 /** A board as read from its block. */
@@ -149,6 +162,8 @@ export function readItems(
     if (!held.has(from) || !held.has(to)) continue;
     const c: Connector = { from, to };
     if (typeof props.label === 'string') c.label = props.label;
+    if (ROUTES.includes(props.route as Route)) c.route = props.route as Route;
+    if (props.tips === 'both' || props.tips === 'none') c.tips = props.tips;
     board.connectors.push(c);
   }
   problems.sort((a, b) => a.line - b.line);
@@ -189,9 +204,14 @@ export function writeBoard(board: Board): string {
   const head = `// graph: ${board.name} · BOARD${board.on ? ` ON ${board.on}` : ''}`;
   const lines = [
     ...board.items.map(itemGql),
-    ...board.connectors.map(
-      (c) => `(${c.from})-[:CONNECTS${c.label !== undefined ? ` {label: ${quoted(c.label)}}` : ''}]->(${c.to})`,
-    ),
+    ...board.connectors.map((c) => {
+      const props = [
+        ...(c.label !== undefined ? [`label: ${quoted(c.label)}`] : []),
+        ...(c.route ? [`route: '${c.route}'`] : []),
+        ...(c.tips && c.tips !== 'end' ? [`tips: '${c.tips}'`] : []),
+      ];
+      return `(${c.from})-[:CONNECTS${props.length ? ` {${props.join(', ')}}` : ''}]->(${c.to})`;
+    }),
   ];
   return [head, ...lines.map((l, i) => (i < lines.length - 1 ? `${l},` : l))].join('\n');
 }

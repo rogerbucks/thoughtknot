@@ -1,6 +1,7 @@
 // The format bar of a board (editor spec ES§45, board_format; panels start small). One Format button beside the tools.
 // A press opens the looks an item may have: a colour, a line, a size of words and bold. Each is a button, pressed when
 // every item chosen has that look. A press changes the items chosen, or the one in focus, as one change.
+// The connectors of the items chosen have looks too: how each runs, and where its arrowheads are (board_routes).
 //
 // The bar draws nothing by itself. It writes the change (board-format.ts) and the board draws what was written.
 import { word, type Palette, type WordKey } from '@thoughtknot/core';
@@ -8,6 +9,8 @@ import { word, type Palette, type WordKey } from '@thoughtknot/core';
 import type { Board } from '../../board.ts';
 import type { BoardChange } from '../../board-edit.ts';
 import { LINES, TEXT_SIZES, sharedFormat, type Format } from '../../board-format.ts';
+import { ROUTES, TIPS } from '../../board.ts';
+import { connectorsOf, sharedRoute, type RouteSet } from '../../board-route.ts';
 import { STYLE } from '../../layout.ts';
 import { STYLE_HUES } from '../../style-graph.ts';
 
@@ -24,7 +27,10 @@ export interface FormatBoard {
 /** One look the bar offers: what a press sets, and how its button is named. */
 interface Look {
   name: string;
-  set: Partial<Format>;
+  /** What it sets on an item; a look of a connector sets none. */
+  set?: Partial<Format>;
+  /** What it sets on a connector. */
+  link?: RouteSet;
   label: WordKey;
   /** The shorter words its button shows, when its name is long. */
   short?: WordKey;
@@ -62,6 +68,18 @@ const GROUPS: readonly { label: WordKey; looks: readonly Look[] }[] = [
       { name: 'bold', set: { bold: true }, label: 'board.format.bold' },
     ],
   },
+  {
+    label: 'board.format.connector',
+    looks: [
+      ...ROUTES.map((route) => ({ name: `route-${route}`, link: { route }, label: `board.route.${route}` as const })),
+      ...TIPS.map((tips) => ({
+        name: `tips-${tips}`,
+        link: { tips },
+        label: `board.tips.${tips}` as const,
+        ...(tips === 'both' ? { short: 'board.tips.both.short' as const } : {}),
+      })),
+    ],
+  },
 ];
 
 /** Whether each board's bar was left open, by its host's key, for when it is drawn again. */
@@ -80,6 +98,8 @@ export class FormatBar {
   private readonly key: string;
   private readonly h: FormatBoard;
   private ids: string[] = [];
+  /** The group of a connector's looks, shown only when the items chosen have a connector. */
+  private links: HTMLElement | null = null;
 
   /**
    * The bar is put above the viewport `vp`. `key` names the board in its host. `reselect` chooses again the items
@@ -103,6 +123,7 @@ export class FormatBar {
     this.panel = bar.createDiv({ cls: 'thoughtknot-board-format-looks' });
     for (const group of GROUPS) {
       const box = this.panel.createDiv({ attr: { role: 'group', 'aria-label': word(group.label) } });
+      if (group.looks.some((l) => l.link)) this.links = box;
       for (const look of group.looks) {
         const name = word(look.label);
         const b = box.createEl('button', {
@@ -156,33 +177,44 @@ export class FormatBar {
     this.fold.setAttribute('aria-disabled', String(!some));
     this.fold.setAttribute('title', word(some ? 'board.format.tip' : 'board.format.none'));
     this.panel.hidden = !open;
+    const board = this.h.board();
     const ids = new Set(this.ids);
-    const shared = sharedFormat(this.h.board().items.filter((i) => ids.has(i.id)));
-    for (const [look, b] of this.looks) b.setAttribute('aria-pressed', String(has(shared, look.set)));
+    const shared = sharedFormat(board.items.filter((i) => ids.has(i.id)));
+    const joined = connectorsOf(board, this.ids);
+    if (this.links) this.links.hidden = !joined.length;
+    const route = sharedRoute(joined);
+    for (const [look, b] of this.looks)
+      b.setAttribute('aria-pressed', String(look.link ? has(route, look.link) : has(shared, look.set ?? {})));
   }
 
-  /** A press sets the look; on a line or bold already set it takes it off again. */
+  /** A press sets the look; on a line, bold or a route already set it takes it off again. */
   private async press(look: Look): Promise<void> {
     const before = this.h.board();
     const ids = new Set(this.ids);
-    const on = has(sharedFormat(before.items.filter((i) => ids.has(i.id))), look.set);
-    const set: Partial<Format> = !on
-      ? look.set
-      : 'bold' in look.set
-        ? { bold: false }
-        : 'line' in look.set
-          ? { line: null }
-          : look.set;
+    const joined = connectorsOf(before, this.ids);
     // set before the write: the host may draw the board afresh at once, and the new bar picks these up
     carried.set(this.key, { ids: this.h.chosen(), on: look.name, at: Date.now() });
-    await this.h.write({ kind: 'formats', ids: this.ids, set });
+    let said: string;
+    if (look.link) {
+      const on = has(sharedRoute(joined), look.link);
+      const set = on && 'route' in look.link ? { route: null } : look.link;
+      const links = joined.map(({ from, to }) => ({ from, to }));
+      await this.h.write({ kind: 'routes', links, set });
+      said = word('board.route.done', { count: links.length });
+    } else {
+      const to = look.set ?? {};
+      const on = has(sharedFormat(before.items.filter((i) => ids.has(i.id))), to);
+      const set: Partial<Format> = !on ? to : 'bold' in to ? { bold: false } : 'line' in to ? { line: null } : to;
+      await this.h.write({ kind: 'formats', ids: this.ids, set });
+      said = word('board.format.done', { count: this.ids.length });
+    }
     if (!this.vp.isConnected) return; // drawn afresh: the new bar took these up
     carried.delete(this.key);
-    if (this.h.board() !== before) this.h.say(word('board.format.done', { count: this.ids.length }));
+    if (this.h.board() !== before) this.h.say(said);
   }
 }
 
 /** Whether the look the items share has all that `set` names. */
-function has(shared: Partial<Format>, set: Partial<Format>): boolean {
-  return (Object.keys(set) as (keyof Format)[]).every((k) => k in shared && shared[k] === set[k]);
+function has<T extends object>(shared: Partial<T>, set: Partial<T>): boolean {
+  return (Object.keys(set) as (keyof T)[]).every((k) => k in shared && shared[k] === set[k]);
 }

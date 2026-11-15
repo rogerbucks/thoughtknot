@@ -759,7 +759,8 @@
       "board_main_screen",
       "board_ink",
       "board_images",
-      "board_format"
+      "board_format",
+      "board_routes"
     ]
   },
   "B2": {

@@ -2960,7 +2960,8 @@ button.thoughtknot-stage-card-pin {
 .thoughtknot-board-format-looks {
   column-gap: var(--gn-space-3);
 }
-.thoughtknot-board-format-looks[hidden] {
+.thoughtknot-board-format-looks[hidden],
+.thoughtknot-board-format-looks > [hidden] {
   display: none;
 }
 .thoughtknot-board-format [aria-disabled='true'] {

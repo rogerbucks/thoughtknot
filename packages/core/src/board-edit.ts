@@ -13,6 +13,7 @@ import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
 import { commentedMore } from './board-comments.ts';
 import { formatPatch, type Format } from './board-format.ts';
+import { routedAs, type RouteSet } from './board-route.ts';
 import type { CommentOp } from './board-comments.ts';
 import { hiddenMore } from './board-session.ts';
 import { votedMore } from './board-vote.ts';
@@ -39,6 +40,8 @@ export type BoardChange =
   | { kind: 'remove'; id: string }
   | { kind: 'connect'; from: string; to: string; label?: string }
   | { kind: 'disconnect'; from: string; to: string }
+  /** The route or arrowheads of several connectors changed at once, as the format bar changes them. */
+  | { kind: 'routes'; links: { from: string; to: string }[]; set: RouteSet }
   | { kind: 'put'; item: BoardItem };
 
 /** The smallest an item's side may be made, so it can still be seen and pointed at. */
@@ -99,6 +102,10 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
     if (at < 0) return { refused: word('board.edit.gone', { id: change.item.id }) };
     if (board.items[at]?.locked && !undoing) return { refused: word('board.edit.locked') };
     board.items[at] = change.item;
+  } else if (change.kind === 'routes') {
+    const is = (c: Connector) => change.links.some((l) => l.from === c.from && l.to === c.to);
+    if (!board.connectors.some(is)) return { refused: word('board.edit.gone', { id: 'connector' }) };
+    board.connectors = board.connectors.map((c) => (is(c) ? routedAs(c, change.set) : c));
   } else if (change.kind === 'disconnect') {
     const { from, to } = change;
     if (!board.connectors.some((c) => c.from === from && c.to === to))

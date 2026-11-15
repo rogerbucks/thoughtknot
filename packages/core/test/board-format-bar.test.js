@@ -86,7 +86,7 @@ describe('the format bar', () => {
     assert.equal(fold.getAttribute('aria-expanded'), 'true');
     assert.deepEqual(
       [...el.querySelectorAll('[role="group"]')].map((g) => g.getAttribute('aria-label')),
-      ['Colour', 'Line', 'Text'],
+      ['Colour', 'Line', 'Text', 'Connector'],
     );
     assert.equal(look('colour-blue').getAttribute('aria-pressed'), 'true');
     assert.equal(look('colour-pink').getAttribute('aria-pressed'), 'false');
@@ -96,6 +96,7 @@ describe('the format bar', () => {
     assert.equal(look('size-normal').getAttribute('aria-pressed'), 'true');
     assert.equal(look('bold').getAttribute('aria-pressed'), 'false');
     assert.equal(look('line-dashed').textContent, 'Dashed');
+    assert.ok(look('route-elbow').parentElement.hidden, 'no connector on this item, so none of its looks');
   });
 
   // proves: board_format
@@ -146,5 +147,46 @@ describe('the format bar', () => {
     await new Promise((r) => setImmediate(r));
     assert.equal(again.window.document.activeElement, again.look('line-dotted'));
     assert.equal(bar([], 'the page board').done.reselected, null, 'only straight after the change');
+  });
+});
+
+describe('the looks of a connector in the format bar', () => {
+  const JOINED = `${TEXT},
+(a)-[:CONNECTS]->(b),
+(b)-[:CONNECTS {label: 'then'}]->(c)`;
+
+  // proves: board_routes
+  test('are offered when an item chosen has a connector, and a press changes the connectors between the items chosen', async () => {
+    const { fold, look, done, f } = bar(['a', 'b'], undefined, JOINED);
+    f.show(null);
+    fold.click();
+    assert.ok(!look('route-elbow').parentElement.hidden);
+    assert.equal(look('tips-end').getAttribute('aria-pressed'), 'true', 'an arrow at the end, as made');
+    assert.equal(look('route-straight').getAttribute('aria-pressed'), 'false', 'no route of its own yet');
+    look('route-elbow').click();
+    await new Promise((r) => setImmediate(r));
+    assert.deepEqual(done.writes, [{ kind: 'routes', links: [{ from: 'a', to: 'b' }], set: { route: 'elbow' } }]);
+    assert.match(done.text, /\(a\)-\[:CONNECTS \{route: 'elbow'\}\]->\(b\)/);
+    assert.match(done.text, /\(b\)-\[:CONNECTS \{label: 'then'\}\]->\(c\)/, 'the other connector is as it was');
+    assert.equal(done.said.at(-1), 'Changed 1 connectors.');
+    assert.equal(look('route-elbow').getAttribute('aria-pressed'), 'true');
+    look('route-elbow').click();
+    await new Promise((r) => setImmediate(r));
+    assert.deepEqual(done.writes.at(-1).set, { route: null }, 'a second press gives the route back to the board');
+    assert.equal(done.text, JOINED);
+  });
+
+  // proves: board_routes
+  test('with one item chosen change every connector that touches it, arrowheads too', async () => {
+    const { fold, look, done, f } = bar(['b'], undefined, JOINED);
+    f.show(null);
+    fold.click();
+    look('tips-both').click();
+    await new Promise((r) => setImmediate(r));
+    assert.equal(done.writes.at(-1).links.length, 2);
+    assert.match(done.text, /\(a\)-\[:CONNECTS \{tips: 'both'\}\]->\(b\)/);
+    assert.match(done.text, /\(b\)-\[:CONNECTS \{label: 'then', tips: 'both'\}\]->\(c\)/);
+    assert.equal(look('tips-both').getAttribute('aria-pressed'), 'true');
+    assert.equal(look('tips-both').getAttribute('aria-label'), 'Arrow at both ends');
   });
 });
