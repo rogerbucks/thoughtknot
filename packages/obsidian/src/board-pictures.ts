@@ -18,12 +18,17 @@ const ENDING: Record<string, string> = {
   'image/bmp': 'bmp',
 };
 
+const ALNUM = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
 /** A file name safe to keep in a vault: no folder, and none of the marks a link or a file system cannot hold. */
 export function safeName(name: string, type: string): string {
   const last = (name.split(/[\\/]/).pop() ?? '').replace(/[\\/:*?"<>|#^[\]]/g, ' ').trim();
   const ending = ENDING[type.toLowerCase()] ?? 'png';
   if (!last || last.startsWith('.')) return `${word('board.image.pasted-name')}.${ending}`;
-  return /\.[a-z0-9]+$/i.test(last) ? last : `${last}.${ending}`;
+  // it keeps an ending of its own: a dot, then letters and digits alone
+  const own = last.slice(last.lastIndexOf('.') + 1).toLowerCase();
+  const ended = last.includes('.') && own !== '' && [...own].every((c) => ALNUM.includes(c));
+  return ended ? last : `${last}.${ending}`;
 }
 
 /**
