@@ -289,6 +289,9 @@
         "boardEditInNote": [
           "value: (note: string, name: string, change: BoardChange) => { note: string; text: string; } | { refused: string; }"
         ],
+        "boardMakeAsk": [
+          "value: (base: Omit<SendAsk, 'question' | 'answers' | 'choice'>, graph: string, asked: string) => SendAsk | SendRefused"
+        ],
         "BoardRole": [
           "type = 'view' | 'comment' | 'edit'"
         ],
@@ -1830,7 +1833,7 @@
           "settings: { load: () => Promise<unknown>; save: (value: unknown) => Promise<void>; }"
         ],
         "HostAbility": [
-          "type = 'settings' | 'notice' | 'secrets' | 'files'"
+          "type = 'settings' | 'secrets' | 'notice' | 'files'"
         ],
         "HostAi": [
           "interface",
@@ -5970,7 +5973,7 @@
         ],
         "ThoughtKnotPlugin": [
           "interface",
-          "abilities?: Array<'settings' | 'notice' | 'secrets' | 'files'> | undefined",
+          "abilities?: Array<'settings' | 'secrets' | 'notice' | 'files'> | undefined",
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
