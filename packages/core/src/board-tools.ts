@@ -3,7 +3,7 @@
 //
 // - Choose: a press on an item chooses it, a drag moves it. The tool the board starts with.
 // - Hand: every press pans, even on an item, so nothing is moved by mistake.
-// - Sticky, Text, Shape and Frame: a press on the board makes that item there, then the tool goes back to Choose.
+// - Sticky, Text, Shape, Frame and View: a press on the board makes that item there, then the tool goes back to Choose.
 // - Connect: a press on one item, then on another, joins the two. Escape or a press on an empty spot stops it.
 //
 // Host-free: the host passes each press in and does what comes back. A new item is made where it was asked for. If that
@@ -13,13 +13,13 @@ import { freeId } from './board-edit.ts';
 import { itemBox } from './board-svg.ts';
 
 /** The tools, in the order the rail shows them. */
-export const BOARD_TOOLS = ['choose', 'hand', 'sticky', 'text', 'shape', 'frame', 'connect'] as const;
+export const BOARD_TOOLS = ['choose', 'hand', 'sticky', 'text', 'shape', 'frame', 'view', 'connect'] as const;
 
 /** One tool of a board. */
 export type BoardTool = (typeof BOARD_TOOLS)[number];
 
 /** The tools that make an item: each makes the kind of its own name. */
-const MAKING = new Set<BoardTool>(['sticky', 'text', 'shape', 'frame']);
+const MAKING = new Set<BoardTool>(['sticky', 'text', 'shape', 'frame', 'view']);
 
 /** The kind of item a tool makes, or null for a tool that makes none. */
 export function toolMakes(tool: BoardTool): BoardKind | null {

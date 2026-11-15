@@ -44,6 +44,7 @@ const SIZES: Record<BoardKind, [number, number]> = {
   Ink: [120, 80],
   Image: [200, 150],
   Glyph: [48, 48],
+  View: [400, 300],
 };
 const HUES: Partial<Record<BoardKind, string>> = {
   Sticky: 'yellow',
@@ -78,7 +79,16 @@ const kindSaid = (kind: BoardKind) => word(`board.kind.${kind.toLowerCase() as L
 const glyphOf = (item: BoardItem) =>
   item.kind === 'Glyph' && typeof item.more.glyph === 'string' ? glyphNamed(item.more.glyph) : undefined;
 
-const named = (item: BoardItem) => {
+/** What a View item shows, in words: its view type and its graph (board-views.ts). */
+const viewSaid = (board: Board, item: BoardItem) =>
+  word('board.view.said', {
+    view: typeof item.more.view === 'string' ? item.more.view : 'force',
+    graph: typeof item.more.of === 'string' ? item.more.of : (board.on ?? ''),
+  });
+
+const named = (item: BoardItem, board?: Board) => {
+  if (item.kind === 'View' && board)
+    return word('board.said', { kind: kindSaid(item.kind), text: viewSaid(board, item) });
   const text = item.kind === 'Card' ? cardSaid(cardOf(item)) : (glyphOf(item)?.said ?? item.text);
   return text ? word('board.said', { kind: kindSaid(item.kind), text }) : kindSaid(item.kind);
 };
@@ -92,7 +102,7 @@ export function itemSaid(board: Board, item: BoardItem): string {
       other = byId.get(out ? c.to : c.from);
     if ((!out && c.to !== item.id) || !other) continue;
     const key = out ? 'board.leads-to' : 'board.comes-from';
-    const said = named(other);
+    const said = named(other, board);
     joins.push(c.label ? word(`${key}-as`, { other: said, label: c.label }) : word(key, { other: said }));
   }
   const votes = tallySaid(item, (people, list) => word('board.vote.said', { people, list }));
@@ -100,7 +110,7 @@ export function itemSaid(board: Board, item: BoardItem): string {
   const clash = clashOf(item);
   const flagged = clash ? word('board.clash.said', { other: clash }) : '';
   return [
-    named(item),
+    named(item, board),
     ...joins,
     ...(votes ? [votes] : []),
     ...(talk ? [talk] : []),
@@ -170,19 +180,23 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const fill = item.kind === 'Frame' || !hue ? 'none' : palette.fill(hue);
   const stroke = hue ? palette.blend(hue, STYLE.line_mix) : palette.edge;
   const dash = item.kind === 'Frame' || item.kind === 'Ink' ? ' stroke-dasharray="6 4"' : '';
-  const corner = item.kind === 'Card' || item.kind === 'Frame' ? 8 : item.kind === 'Shape' ? box.h / 2 : 2;
+  const corner =
+    item.kind === 'Card' || item.kind === 'Frame' || item.kind === 'View' ? 8 : item.kind === 'Shape' ? box.h / 2 : 2;
   const shape =
     item.kind === 'Text'
       ? ''
       : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`;
-  const size = item.kind === 'Frame' ? STYLE.kind_font_size : STYLE.font_size;
+  const quiet = item.kind === 'Frame' || item.kind === 'View';
+  const size = quiet ? STYLE.kind_font_size : STYLE.font_size;
   const pad = 8;
   const rows =
     item.kind === 'Card'
       ? cardLines(cardOf(item)).flatMap((l) => linesOf(l.text, box.w - 2 * pad, size).map((t) => ({ ...l, text: t })))
-      : item.text
-        ? linesOf(item.text, box.w - 2 * pad, size).map((t) => ({ text: t, role: 'body' as const }))
-        : [];
+      : item.kind === 'View'
+        ? [{ text: viewSaid(board, item), role: 'body' as const }]
+        : item.text
+          ? linesOf(item.text, box.w - 2 * pad, size).map((t) => ({ text: t, role: 'body' as const }))
+          : [];
   const text = rows
     .map(
       (l, i) =>
@@ -194,7 +208,7 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
     ? `<text x="${num(box.x + box.w / 2)}" y="${num(box.y + box.h / 2)}" font-size="${num(Math.min(box.w, box.h) * 0.7)}" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${glyph.char}</text>`
     : '';
   const words = text
-    ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${item.kind === 'Frame' ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
+    ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${quiet ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
     : '';
   const open = openThreads(item);
   const talk = open
@@ -207,7 +221,8 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const flag = clashOf(item)
     ? `<g aria-hidden="true" data-clash="${escaped(clashOf(item) ?? '')}"><path d="M${num(box.x + box.w - 18)} ${num(box.y + 4)}h14l-7 12z" fill="${palette.text}"/><text x="${num(box.x + box.w - 11)}" y="${num(box.y + 14)}" font-size="9" text-anchor="middle" fill="${palette.page ?? '#fff'}">!</text></g>`
     : '';
-  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}${flag}</g>`;
+  const slot = item.kind === 'View' ? ` data-view="${escaped(item.id)}"` : '';
+  return `<g data-item="${escaped(item.id)}"${slot} role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}${flag}</g>`;
 }
 
 /** The part of the board drawn: from the origin, or further up and left, to the furthest item. */
