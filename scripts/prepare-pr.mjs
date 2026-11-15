@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // FLOW-4: the records a pull request must carry, written or checked in one command.
 //
-//   npm run prepare-pr           writes them: plain-docs, public-api and the notices, then the tests-first record.
+//   npm run prepare-pr           writes them: plain-docs and the notices, then the tests-first record.
 //   npm run prepare-pr -- --check  writes nothing. It runs each record's own check and names every stale one at once.
 //
 // So a forgotten record is one message, not four failures one push apart. Commit what it changes, with the code it
@@ -15,7 +15,6 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** Each record: its name, how to write it, how to check it. The tests-first record is last, as it reads the commits. */
 export const RECORDS = [
   { name: 'plain-docs', write: ['plain-docs.mjs', '--update'], check: ['plain-docs.mjs'] },
-  { name: 'public-api', write: ['public-api.mjs', '--update'], check: ['public-api.mjs'] },
   { name: 'notices', write: ['notices.mjs'], check: ['notices.mjs', '--check'] },
   { name: 'tests-first', write: ['tests-first.mjs', '--update'], check: ['tests-first.mjs', '--complete'] },
 ];

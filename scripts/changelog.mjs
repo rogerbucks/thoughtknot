@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { provedIds, specRules, SPEC, suiteCases } from './graph-spec-proved.mjs';
 import { readVersion } from './graph-spec-version.mjs';
-import { breakingChanges, declarationAt, lastRelease, readInterface } from './public-api.mjs';
+import { breakingChanges, interfaceAt, lastRelease, readInterface } from './public-api.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const MERGE = /^Merge pull request #(\d+) from /;
@@ -168,7 +168,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     from,
     pulls: pullRequests(ROOT, from),
     repo: process.env.GITHUB_REPOSITORY || 'rogerbucks/thoughtknot',
-    before: from ? declarationAt(from, ROOT) : null,
+    before: from ? interfaceAt(from, ROOT) : null,
     after: readInterface(ROOT),
     spec: graphSpecFacts(ROOT),
   });
