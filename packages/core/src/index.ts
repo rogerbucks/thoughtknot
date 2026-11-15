@@ -387,4 +387,3 @@ export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-alt
 export * from './index-process.ts';
 export * from './index-profiles.ts';
 export * from './index-rules.ts';
-export * from './index-images.ts';
