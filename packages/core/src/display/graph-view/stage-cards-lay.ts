@@ -1,7 +1,9 @@
 // Laying the cards for the new rendering's stage, and the glide as Cards turns on or off (ES§73, render_cards). The
 // cards are laid from the layout's places, each sized as its reader chose, round the cards put by hand.
 import type { Graph } from '@thoughtknot/graph-spec';
-import type { GraphDrawing } from '../../note-reading.ts';
+import type { GraphDrawing, NoteReading } from '../../note-reading.ts';
+import { noteOf } from '../../links.ts';
+import type { LinkHost } from '../link-host.ts';
 import { CARD_ON_CHOICE, cardsInPlace, cardsLaid, type CardFit, type CardsLaid } from '../../render/render-cards.ts';
 import type { View } from '../../render/render-marks.ts';
 import { MORPH_MS, morphed } from '../../render/render-morph.ts';
@@ -28,6 +30,8 @@ export interface CardsHost {
   /** How each card was sized by its reader; and told when the reader sizes one. */
   fits?: ReadonlyMap<string, { fit: CardFit; tall?: number }>;
   onFit?: (key: string, fit: CardFit | undefined, tall?: number) => void;
+  /** How wide the reader made cards, by dragging their edges. */
+  widths?: ReadonlyMap<string, number>;
   /** Where the reader put cards by hand, in the layout's own places. */
   places?: ReadonlyMap<string, { x: number; y: number }>;
   /** Where the cards' sizes and places are saved: the note's layout block (render_cards, layout_block). */
@@ -44,7 +48,7 @@ export function layCards(
   keep?: number,
   pinned?: ReadonlySet<string>,
 ): CardsLaid {
-  const texts = withFits(cardTexts(h.drawing, h.g, h.words), h.fits ?? new Map());
+  const texts = withFits(cardTexts(h.drawing, h.g, h.words), h.fits ?? new Map(), h.widths);
   return h.kind && CARD_ON_CHOICE.has(h.kind)
     ? cardsInPlace(h.scene, spots, texts) // where a place means something, nothing spreads
     : cardsLaid(h.scene, spots, texts, h.drawing.links, 1, keep, pinned);
@@ -114,4 +118,20 @@ export function switchCards(
   };
   frame(step);
   return { cards, view, stop };
+}
+
+/**
+ * What a card's options give its cards. The host renders their Markdown, made safe. Each thing that is a note embeds
+ * that note (node_is_a_note). Without a host that renders, the cards show plain text.
+ */
+export function cardWordsOf(o: { links?: LinkHost; reading: NoteReading; graph: string }): CardWords {
+  const host = o.links;
+  if (!host) return {};
+  return {
+    render: (markdown, el, owner) => host.render(markdown, el, owner),
+    linked: (key) => {
+      const note = noteOf(o.reading, o.graph, key);
+      return note ? `![[${note.opens}]]` : undefined;
+    },
+  };
 }

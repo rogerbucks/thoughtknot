@@ -3,8 +3,9 @@
 // `// graph: trip_layout · LAYOUT ON trip`. Each line places one thing, named by its key in the graph:
 //   (ann:Place {x: 120, y: 40, group: 'Team'}).
 // A thing's card, in the card view, has a line of its own, as its reader sized it and put it (Roger, 15 Nov 2026):
-//   (ann_card:Card {graph: 'ann', x: 300, y: 80, h: 410, locked: true, fit: 'full'})
-// `locked` is a card put by hand; `fit` is 'title' or 'full'; `h` how tall all of it was seen to be.
+//   (ann_card:Card {graph: 'ann', x: 300, y: 80, w: 360, h: 410, locked: true, fit: 'full'})
+// `locked` is a card put by hand. `fit` is 'title' or 'full'. `w` is how wide its reader made it. `h` is how tall all
+// of it was seen to be.
 // The graph block is never rewritten to save a layout. Deleting this block loses only where things sat
 // (layout_block_optional). A place for a thing the graph no longer holds is a problem whose fix forgets it
 // (layout_block_checked). It is read with the board's reader (board.ts), with one kind.
@@ -34,6 +35,8 @@ export interface CardSave {
   fit?: 'title' | 'full';
   /** How tall all of it was seen to be, in pixels. */
   h?: number;
+  /** How wide its reader made it, in pixels; none, as wide as a card is. */
+  w?: number;
 }
 
 /** The layout of one graph. */
@@ -95,7 +98,7 @@ export function readLayout(text: string, things?: Set<string>, block = 0): { lay
     if (card) {
       const fit = it.more.fit === 'title' || it.more.fit === 'full' ? it.more.fit : undefined;
       const save: CardSave = { x: it.x, y: it.y, ...(it.locked && { placed: true }), ...(fit && { fit }) };
-      (layout.cards ??= new Map()).set(thing, it.h ? { ...save, h: it.h } : save);
+      (layout.cards ??= new Map()).set(thing, { ...save, ...(it.h && { h: it.h }), ...(it.w && { w: it.w }) });
       continue;
     }
     // the board's reader keeps a group as its own field
@@ -123,6 +126,7 @@ function cardGql(thing: string, c: CardSave): string {
     graph: thing,
     more: {},
   };
+  if (c.w) item.w = c.w;
   if (c.h) item.h = c.h;
   if (c.placed) item.locked = true;
   if (c.fit) item.more.fit = c.fit;
@@ -202,7 +206,13 @@ export function renamePlace(text: string, from: string, to: string): string {
  * block yet (`text` null), a new one is made for `graph`. Only the card's own line changes (render_cards, layout_block).
  */
 export function saveCard(text: string | null, graph: string, thing: string, c: CardSave | null): string | null {
-  const at = c && { ...c, x: Math.round(c.x), y: Math.round(c.y), ...(c.h && { h: Math.round(c.h) }) };
+  const at = c && {
+    ...c,
+    x: Math.round(c.x),
+    y: Math.round(c.y),
+    ...(c.h && { h: Math.round(c.h) }),
+    ...(c.w && { w: Math.round(c.w) }),
+  };
   if (text === null || !layoutOf(text)) {
     if (!at) return text;
     return writeLayout({ name: layoutName(graph), on: graph, places: new Map(), cards: new Map([[thing, at]]) });

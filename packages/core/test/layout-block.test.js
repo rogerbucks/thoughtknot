@@ -123,6 +123,10 @@ test('a card has a line of its own, kept apart from its thing place, saved, read
   // saved again, only its own line changes; forgotten, it goes
   text = saveCard(text, 'trip', 'ann', { x: 5, y: 6 });
   assert.deepEqual(readLayout(text).layout.cards.get('ann'), { x: 5, y: 6 });
+  // a card made wider keeps its width, in whole pixels
+  text = saveCard(text, 'trip', 'ann', { x: 5, y: 6, w: 360.4 });
+  assert.match(text, /\(ann_card:Card \{x: 5, y: 6, w: 360, graph: 'ann'\}\)/);
+  assert.deepEqual(readLayout(text).layout.cards.get('ann'), { x: 5, y: 6, w: 360 });
   text = saveCard(text, 'trip', 'ann', null);
   assert.equal(readLayout(text).layout.cards, undefined);
   // a card for a thing that is gone is a problem, as a place is

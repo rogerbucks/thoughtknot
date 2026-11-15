@@ -2772,6 +2772,17 @@ button.thoughtknot-stage-card-pin svg {
   inline-size: 1em;
   block-size: 1em;
 }
+/* a card picked or chosen shows the grip on its right edge, which makes it wider or narrower */
+.thoughtknot-stage-card:is(.is-selected, .is-chosen)::after {
+  content: '';
+  position: absolute;
+  inset-block: 35%;
+  inset-inline-end: 2px;
+  inline-size: 4px;
+  border-radius: 2px;
+  background: var(--thoughtknot-card-colour);
+  opacity: 0.6;
+}
 /* a card put by hand shows its pin; pressed, the card goes back to the layout */
 button.thoughtknot-stage-card-pin {
   margin-inline-start: 0;
