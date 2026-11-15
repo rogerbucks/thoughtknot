@@ -2961,6 +2961,12 @@ button.thoughtknot-stage-card-pin {
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
+.thoughtknot-board-tools button,
+.thoughtknot-board-bar button,
+.thoughtknot-board-outline > summary {
+  min-height: 24px;
+  min-width: 24px;
+}
 .thoughtknot-board .thoughtknot-board-view-picture {
   pointer-events: none;
 }

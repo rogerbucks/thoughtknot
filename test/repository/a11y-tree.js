@@ -134,6 +134,7 @@ export function treeProblems(window) {
 export function textVersionProblems(root) {
   const problems = [];
   for (const svg of root.querySelectorAll('svg.thoughtknot-svg')) {
+    if (svg.closest('.thoughtknot-board')) continue; // a board is said by its outline, item by item (board_keyboard)
     const holder = svg.closest('[aria-describedby]');
     const described = holder && (root.ownerDocument ?? root).getElementById(holder.getAttribute('aria-describedby'));
     const lines = [...(described ?? root).querySelectorAll('li')].map((li) => li.textContent.trim());

@@ -174,7 +174,9 @@ export async function openAppEditor(folder, path, language) {
       await until(() => button('Undo') !== before, 8000);
     },
     ready: async () => {
-      await until(() => !!page.field() && !!doc.querySelector('.thoughtknot-svg'), 8000);
+      // the graph drawn, not a board's picture: the board comes first on the page now (board_main_screen)
+      const drawn = () => [...doc.querySelectorAll('.thoughtknot-svg')].some((s) => !s.closest('.thoughtknot-board'));
+      await until(() => !!page.field() && drawn(), 8000);
       return page;
     },
   };

@@ -199,6 +199,45 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_main_screen
+  test('opens a note with a graph and no board on a starter board first, writes it only once changed, and turns back', async () => {
+    const note = [
+      '# Trip',
+      '```gql',
+      '// graph: trip',
+      '(paris:City), (lyon:City), (paris)-[:ROAD]->(lyon)',
+      '```',
+      '',
+    ].join('\n');
+    const page = await livePage(note);
+    try {
+      const graph = () => page.doc.querySelector('.gn-graph');
+      const boards = () => graph()?.querySelector('.gn-boards');
+      const vp = () => boards()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="view1"] .thoughtknot-board-view-picture'), 8000);
+      assert.equal(graph().firstElementChild, boards(), 'the board comes first');
+      assert.match(boards().querySelector('.gn-board-first').textContent, /open on a board/);
+      assert.equal(page.file(), note, 'opening the note changes nothing in it');
+      // a change to the starter board writes it to the note, with the change
+      vp().focus();
+      const key = (k, more = {}) =>
+        vp().dispatchEvent(
+          new page.window.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...more }),
+        );
+      key('Tab');
+      key('ArrowDown', { shiftKey: true });
+      await until(() => page.file().includes('BOARD ON trip'), 8000);
+      assert.ok(page.file().startsWith(note.trimEnd()), 'the note as it was comes first');
+      assert.match(page.file(), /\(view1:View \{x: 0, y: 50, w: 480, h: 360, of: 'trip'\}\)/);
+      // the way back: the graph first, as before
+      boards().querySelector('.gn-board-turn').click();
+      await until(() => graph().lastElementChild === boards(), 8000);
+      assert.match(boards().querySelector('.gn-board-turn').textContent, /board first/);
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_view, board_keyboard
   test('opens as a board that zooms by keys, and an item moved by keys is written to the note', async () => {
     const page = await livePage(NOTE);

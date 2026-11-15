@@ -9,7 +9,7 @@
 // - C starts a connector from the item in focus; C again on another item joins the two. Escape stops it.
 // - Delete or Backspace takes the item in focus out, with its connectors.
 // - G puts notes that share a tag or a word into frames (the host does it, board-cluster.ts).
-// - Escape lets go of the item in focus.
+// - Escape lets go of the item in focus, and the next Tab then leaves the board.
 import { writeBoard } from './board.ts';
 import type { Board, BoardItem } from './board.ts';
 import { boardEdit, MIN_SIDE, newItem } from './board-edit.ts';
@@ -21,6 +21,8 @@ import { word } from './words.ts';
 export interface BoardCursor {
   focus: string | null;
   linking: string | null;
+  /** Set by Escape: the next Tab leaves the board, so the keyboard is never kept on it. */
+  free?: boolean;
 }
 
 /** A key as pressed, with the keys held with it. */
@@ -78,7 +80,7 @@ export function boardKey(
   if (key === 'Tab') return tabbed(board, cursor, focus, !!press.shift);
   if (key === 'Escape') {
     if (cursor.linking) return { cursor: { ...cursor, linking: null }, said: word('board.connect-stopped') };
-    return focus ? at(null, word('board.let-go')) : null;
+    return focus ? { ...at(null, word('board.let-go')), cursor: { ...NO_CURSOR, free: true } } : null;
   }
   const arrow = ARROWS[key];
   if (arrow && !focus) {
@@ -154,7 +156,7 @@ function change(board: Board, cursor: BoardCursor, edit: BoardChange, say?: stri
 /** Tab and Shift+Tab: the next or last item in the outline's order. Null past either end, so focus leaves the board. */
 function tabbed(board: Board, cursor: BoardCursor, focus: BoardItem | null, back: boolean): BoardStep | null {
   const order = boardOutline(board).map((l) => l.id);
-  if (!order.length) return null;
+  if (!order.length || cursor.free) return null;
   const now = focus ? order.indexOf(focus.id) : back ? order.length : -1;
   const id = order[now + (back ? -1 : 1)];
   if (id === undefined) return null;

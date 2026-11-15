@@ -520,6 +520,9 @@ export const VALUES_LATE = [
   'arrangerOf',
   // a live graph view kept on a board (ES§45, board_view_items), 15 Nov 2026
   'viewerOf',
+  // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
+  'starterBoard',
+  'withStarter',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
   'cardInNote',
   'saveCard',
