@@ -194,6 +194,14 @@ export function parseColour(text) {
     if (p.length < 3) return null;
     return [num(p[0], 255), num(p[1], 255), num(p[2], 255), p[3] === undefined ? 1 : num(p[3], 1)];
   }
+  // jsdom 31 works a color-mix() out itself and writes the result so: color(srgb 0.73 0.38 0.03), or with / 0.5
+  m = /^color\(srgb ([^)]+)\)$/.exec(t);
+  if (m) {
+    const p = m[1].split(/[\s/]+/).filter(Boolean);
+    if (p.length < 3) return null;
+    const num = (s, scale) => (s.endsWith('%') ? parseFloat(s) / 100 : parseFloat(s)) * scale;
+    return [num(p[0], 255), num(p[1], 255), num(p[2], 255), p[3] === undefined ? 1 : num(p[3], 1)];
+  }
   m = /^hsla?\(([^)]+)\)$/.exec(t);
   if (m) {
     const p = m[1].split(/[\s,/]+/).filter(Boolean);
@@ -242,12 +250,25 @@ export function withoutSystemAsks(css) {
 
 // ── the DOM ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 /**
+ * The theme's variables as a :root rule, for a page to hold. A jsdom from 31 works out each var() and color-mix()
+ * itself, from what the page declares, so a variable no rule declares paints nothing. Each of the theme's colours is
+ * given with its channels too (`--color-cyan-rgb: 0, 191, 188`), as Obsidian gives them.
+ */
+export function themeRoot(variables) {
+  const channels = Object.entries(variables).flatMap(([name, value]) => {
+    const c = /^--color-[a-z]+$/.test(name) && !Object.hasOwn(variables, `${name}-rgb`) && parseColour(value);
+    return c ? [[`${name}-rgb`, c.slice(0, 3).map(Math.round).join(', ')]] : [];
+  });
+  return `:root{${[...Object.entries(variables), ...channels].map(([name, value]) => `${name}:${value};`).join('')}}`;
+}
+
+/**
  * A page for a view: the view's HTML inside a document with a language and a title (the host gives these in Obsidian).
  * Its stylesheets are written out with the theme's variables. The theme's class is on the body, its page colour behind.
  */
 export function pageFor({ html, css, theme, title = 'ThoughtKnot view', lang = 'en' }) {
   const vars = obsidianVariables(theme);
-  const style = withVariables(withObsidianNames(withoutSystemAsks(css)), vars);
+  const style = `${themeRoot(vars)}${withVariables(withObsidianNames(withoutSystemAsks(css)), vars)}`;
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${escapeText(title)}</title><style>${style}</style></head><body class="theme-${theme}" style="background-color: ${vars['--background-primary']}; color: ${vars['--text-normal']}">${html}</body></html>`;
 }
 
@@ -281,7 +302,8 @@ export function pageStyleFor(sheet, theme) {
         .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()]),
     ),
   );
-  return { style: withVariables(css.replace(dark[0], ''), declared), variables: declared };
+  // the theme's variables are declared last, so the page reads the dark ones in the dark theme
+  return { style: `${withVariables(css.replace(dark[0], ''), declared)}${themeRoot(declared)}`, variables: declared };
 }
 
 /** The axe rules to run: those tagged WCAG 2.0, 2.1 or 2.2 at A or AA. The rules that need a layout are skipped, below. */
