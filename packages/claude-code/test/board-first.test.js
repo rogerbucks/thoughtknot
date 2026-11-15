@@ -55,12 +55,13 @@ describe('the board as the main screen', () => {
   test('the board comes first until the person chooses the graph first, and a storage that refuses changes nothing', () => {
     const kept = store();
     assert.equal(boardFirst(kept), true);
+    assert.equal(firstTimeLine(kept), true, 'the line about the change, until the person chooses');
+    assert.equal(firstTimeLine(kept), true);
     chooseFirst(kept, false);
+    assert.equal(firstTimeLine(kept), false);
     assert.equal(boardFirst(kept), false);
     chooseFirst(kept, true);
     assert.equal(boardFirst(kept), true);
-    assert.equal(firstTimeLine(kept), true);
-    assert.equal(firstTimeLine(kept), false, 'the line about the change is shown once');
     const refusing = {
       getItem() {
         throw new Error('no');

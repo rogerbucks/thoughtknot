@@ -148,7 +148,7 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
         assert.doesNotMatch(m, /<[^>]*\sstyle=/, 'no style attribute in the markup the drawing is parsed from');
         assert.doesNotMatch(m, /<style[\s>]/, 'no style sheet in it either');
       }
-      const label = page.doc.querySelector('.thoughtknot-svg g.node text');
+      const label = page.doc.querySelector('.thoughtknot-pane-drawing .thoughtknot-svg g.node text');
       assert.ok(label.style.getPropertyValue('fill'), 'a label’s colour is set, through the CSSOM');
       assert.equal(label.getAttribute('data-gn-style'), null, 'the waiting attribute is gone');
       // the page itself holds no inline style, and the policy is the server’s, unchanged: self only, never unsafe-inline
@@ -165,7 +165,10 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       page.type(typed);
       await until(() => page.file() !== NOTE, 5000);
       assert.equal(page.file(), NOTE.replace(READER, typed));
-      await until(() => page.doc.querySelectorAll('.thoughtknot-svg g.node').length === 4, 8000);
+      await until(
+        () => page.doc.querySelectorAll('.thoughtknot-pane-drawing .thoughtknot-svg g.node').length === 4,
+        8000,
+      );
     });
 
     test('Undo and Redo take back and put back the page’s own writes, through the server', async () => {

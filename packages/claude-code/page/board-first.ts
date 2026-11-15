@@ -2,14 +2,12 @@
 // desktop app and the phone app run. A note opens on its board, above the graph drawn as before.
 // - A note with no board yet opens on a starter board: one View item for each of its graphs, side by side. It is not
 //   written to the note until the person changes it, so opening a note never changes it.
-// - The first time, one line says what changed, with a way back: the graph drawn first, as before. The choice is kept
-//   for this person in this browser only.
+// - Until the person first chooses, one line says what changed, with a way back: the graph drawn first, as before.
+//   The choice is kept for this person in this browser only.
 import { gqlBlocks, readNote, word } from '@thoughtknot/core';
 
 /** Where the choice of what comes first is kept for this person, in this browser. */
 const FIRST_KEY = 'thoughtknot-board-first';
-/** Where it is kept that the line about the change was seen. */
-const SEEN_KEY = 'thoughtknot-board-first-seen';
 /** The size of each view on a starter board, and the gap between two, in board units. */
 const W = 480,
   H = 360,
@@ -45,12 +43,10 @@ export function chooseFirst(kept: Kept, board: boolean): void {
   }
 }
 
-/** Whether the line about the change is still to be shown, once; it is marked seen as it is shown. */
+/** Whether the line about the change is still to be shown: until this person first chooses what comes first. */
 export function firstTimeLine(kept: Kept): boolean {
   try {
-    if (kept?.getItem(SEEN_KEY) === 'seen') return false;
-    kept?.setItem(SEEN_KEY, 'seen');
-    return true;
+    return (kept?.getItem(FIRST_KEY) ?? null) === null;
   } catch {
     return false;
   }

@@ -38,8 +38,16 @@ describe('reaching items', () => {
   });
 
   test('Escape lets go of the item in focus', () => {
-    assert.deepEqual(key(on('a'), 'Escape').cursor, NO_CURSOR);
+    assert.deepEqual(key(on('a'), 'Escape').cursor, { ...NO_CURSOR, free: true });
     assert.equal(key(NO_CURSOR, 'Escape'), null);
+  });
+
+  // proves: board_keyboard
+  test('after Escape, Tab leaves the board, so the keyboard is never kept on it; another key takes it back', () => {
+    const free = key(on('a'), 'Escape').cursor;
+    assert.equal(key(free, 'Tab'), null);
+    assert.equal(key(free, 'Tab', { shift: true }), null);
+    assert.equal(key(NO_CURSOR, 'Tab').cursor.focus, 'a', 'Tab into the board again starts at the first item');
   });
 });
 
