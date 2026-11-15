@@ -757,7 +757,8 @@
       "board_handles",
       "board_layers",
       "board_view_items",
-      "board_main_screen"
+      "board_main_screen",
+      "board_many"
     ]
   },
   "B2": {
