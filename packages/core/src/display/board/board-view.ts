@@ -20,7 +20,10 @@ import { openCapture, openEditor } from './board-fields.ts';
 import type { FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
-import { fromTrackpad } from '../../render/render-tilt.ts';
+import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
+import { BoardSpace, HEIGHT } from './board-space.ts';
+import { BoardSelection } from './board-select.ts';
+import { bindWheel, outlined } from './board-wheel.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -34,12 +37,12 @@ export interface BoardHost {
   key: string;
   /** The seat of this person at a shared board: the others are drawn over it, and the edits go through it. */
   together?: Together;
+  /** Where the linked items go by the graph; with it the board offers an Arrange by graph button. */
+  arrange?: ArrangeHooks['arrange'];
 }
 
 /** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
 const kept = new Map<string, { place: View; cursor: BoardCursor; focused: boolean }>();
-/** How tall a board's viewport is in a note, in pixels. */
-const HEIGHT = 420;
 /** How far a pointer moves before a press is a drag, in pixels. */
 const SLOP = 4;
 let boardsShown = 0;
@@ -62,9 +65,12 @@ class BoardView {
   private readonly list: HTMLElement;
   /** The others at a shared board, and the clashes to settle. */
   private readonly people: BoardPeople | null;
+  private readonly bar: ArrangeBar | null = null;
+  private readonly sel = new BoardSelection((n) => this.bar?.chosen(n));
   /** The text of the shared board as last read, to tell when someone else has changed it. */
   private seen = '';
   private frame: Box;
+  private readonly space: BoardSpace;
   private readonly zoom: Zoom;
   private svg: SVGSVGElement | null = null;
   /** An item a mouse or pen is dragging. */
@@ -94,8 +100,15 @@ class BoardView {
         'aria-describedby': helpId,
       },
     });
+    this.space = new BoardSpace(
+      this.vp,
+      () => this.zoom,
+      () => this.frame,
+    );
     const text = word(this.readOnly ? 'board.help-read' : 'board.help');
     root.createEl('p', { cls: 'thoughtknot-board-help', text, attr: { id: helpId } });
+    if (host.arrange && !this.readOnly)
+      this.bar = new ArrangeBar(root, this.vp, host.arrange, this.arranging(), host.key);
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
     this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
     this.editor.hidden = true;
@@ -104,17 +117,13 @@ class BoardView {
     outline.createEl('summary', { text: word('board.outline') });
     this.list = outline.createEl('ul');
     this.frame = boardFrame(this.board);
-    this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.size(), 'note');
+    this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
     host.together?.watch(() => this.othersChanged());
     this.draw();
     if (was) this.zoom.restore(was.place.scale, was.place.x, was.place.y);
     if (was?.focused) this.vp.focus({ preventScroll: true });
     this.bind();
-  }
-
-  private size() {
-    return { width: this.vp.getBoundingClientRect().width || 600, height: HEIGHT };
   }
 
   private say(words?: string) {
@@ -141,7 +150,7 @@ class BoardView {
     const was = this.frame,
       v = this.zoom.view();
     this.frame = boardFrame(this.board);
-    this.zoom.resize(this.size(), { width: this.frame.w, height: this.frame.h });
+    this.zoom.resize(this.space.size(), { width: this.frame.w, height: this.frame.h });
     this.zoom.restore(v.scale, v.x + (this.frame.x - was.x) * v.scale, v.y + (this.frame.y - was.y) * v.scale);
     const next = parsedSvg({ svg: boardSvg(this.board, this.host.palette) } as Drawn);
     next.addClass('thoughtknot-svg');
@@ -149,10 +158,8 @@ class BoardView {
     this.svg = next;
     for (const g of Array.from(next.querySelectorAll('[data-item]')))
       g.toggleClass('is-focused', g.getAttribute('data-item') === this.cursor.focus);
-    this.list.empty();
-    for (const line of boardOutline(this.board))
-      this.list.createEl('li', { text: line.said, attr: { 'data-item': line.id, 'data-depth': line.depth } });
-    if (!this.board.items.length) this.list.createEl('li', { text: word('board.empty') });
+    outlined(this.list, this.board);
+    this.sel.paint(next, this.board.items);
     this.apply(this.zoom.view());
     this.people?.paint(next);
     this.people?.refresh();
@@ -168,11 +175,21 @@ class BoardView {
       board: () => this.board,
       write: (c) => this.write(c),
       say: (w) => this.say(w),
-      centre: () => this.centre(),
+      centre: () => this.space.centre(),
       focus: (id) => {
         this.cursor = { ...this.cursor, focus: id };
         this.reveal();
       },
+    };
+  }
+
+  private arranging() {
+    return {
+      write: this.write.bind(this),
+      say: this.say.bind(this),
+      board: () => this.board,
+      svg: () => this.svg,
+      chosen: () => this.sel.list(),
     };
   }
 
@@ -186,7 +203,7 @@ class BoardView {
       parse: (svg: string) => parsedSvg({ svg } as Drawn),
       mayEdit: !this.readOnly,
       show: (spot: [number, number]) =>
-        this.zoom.reveal(this.unit({ x: spot[0] - 100, y: spot[1] - 100, w: 200, h: 200 })),
+        this.zoom.reveal(this.space.unit({ x: spot[0] - 100, y: spot[1] - 100, w: 200, h: 200 })),
       settle: (item: BoardItem) => void this.write({ kind: 'put', item }),
       say: (w: string) => this.say(w),
     };
@@ -209,6 +226,7 @@ class BoardView {
 
   /** Writes an edit, then draws what was written; a refusal is said and changes nothing. */
   private async write(change: BoardChange): Promise<void> {
+    this.bar?.forget();
     const t = this.host.together;
     if (t) {
       const why = await t.change(change).catch((e: unknown) => word('board.write-failed', { why: String(e) }));
@@ -226,28 +244,10 @@ class BoardView {
     this.draw();
   }
 
-  /** A box of the board as a part of the whole board, as the zoom wants it. */
-  private unit(b: Box) {
-    const f = this.frame;
-    return { x: (b.x - f.x) / f.w, y: (b.y - f.y) / f.h, width: b.w / f.w, height: b.h / f.h };
-  }
-
   /** The item in focus brought into view; the view moves only when it is out of sight. */
   private reveal(): void {
     const item = this.board.items.find((i) => i.id === this.cursor.focus);
-    if (item) this.zoom.reveal(this.unit(itemBox(item)));
-  }
-
-  /** The middle of the view, in board units. */
-  private centre(): [number, number] {
-    const v = this.zoom.view(),
-      s = this.size();
-    return [this.frame.x + (s.width / 2 - v.x) / v.scale, this.frame.y + (s.height / 2 - v.y) / v.scale];
-  }
-
-  private point(e: { clientX: number; clientY: number }): Point {
-    const r = this.vp.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    if (item) this.zoom.reveal(this.space.unit(itemBox(item)));
   }
 
   private bind(): void {
@@ -257,23 +257,14 @@ class BoardView {
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
     vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
-    const wheel = (e: WheelEvent) => {
-      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      const keys = { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad: fromTrackpad(e) };
-      if (zoom.handle({ kind: 'wheel', ...this.point(e), dy, ...keys })) e.preventDefault();
-    };
-    vp.addEventListener('wheel', wheel, { passive: false });
-    vp.addEventListener('dblclick', (e: MouseEvent) => {
-      const onBox = !!(e.target as Element | null)?.closest?.('[data-item]');
-      if (zoom.handle({ kind: 'dblclick', ...this.point(e), onBox })) e.preventDefault();
-    });
-    vp.addEventListener('touchend', (e: TouchEvent) => zoom.settle(e.touches?.length ?? 0));
-    new ResizeObserver(() => zoom.resize(this.size())).observe(vp);
+    bindWheel(vp, zoom, (e) => this.space.point(e));
+    new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
 
   /** A key: the board's own first (board-keys.ts), else the zoom's. */
   private key(e: KeyboardEvent): void {
     if (e.target !== this.vp) return;
+    if (e.key === 'Escape' && this.sel.clear()) return void this.draw();
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     if (isGroupKey(e) && !this.readOnly)
       return void groupNotes(
@@ -281,7 +272,7 @@ class BoardView {
         (c) => this.write(c),
         (w) => this.say(w),
       );
-    const step = boardKey(this.board, this.cursor, press, this.centre(), this.readOnly);
+    const step = boardKey(this.board, this.cursor, press, this.space.centre(), this.readOnly);
     if (!step) {
       if (this.zoom.handle({ kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }))
         e.preventDefault();
@@ -315,15 +306,20 @@ class BoardView {
   private down(e: PointerEvent): void {
     const id = (e.target as Element | null)?.closest?.('[data-item]')?.getAttribute('data-item') ?? null;
     const item = this.board.items.find((i) => i.id === id);
+    if (item && BoardSelection.is(e) && e.button === 0) {
+      e.preventDefault();
+      this.sel.toggle(item.id);
+      return void this.draw();
+    }
     const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
     if (item && pointer !== 'touch' && e.button === 0 && !this.readOnly && !item.locked) {
-      this.drag = { pointer: e.pointerId, id: item.id, from: this.point(e), moved: false };
+      this.drag = { pointer: e.pointerId, id: item.id, from: this.space.point(e), moved: false };
       this.vp.setPointerCapture(e.pointerId);
       this.vp.focus({ preventScroll: true });
       return;
     }
-    this.tap = item ? { pointer: e.pointerId, id: item.id, from: this.point(e) } : null;
-    if (this.zoom.handle({ kind: 'down', id: e.pointerId, pointer, ...this.point(e), onBox: !!item })) {
+    this.tap = item ? { pointer: e.pointerId, id: item.id, from: this.space.point(e) } : null;
+    if (this.zoom.handle({ kind: 'down', id: e.pointerId, pointer, ...this.space.point(e), onBox: !!item })) {
       e.preventDefault();
       this.vp.setPointerCapture(e.pointerId);
       this.vp.focus({ preventScroll: true });
@@ -334,7 +330,7 @@ class BoardView {
   private move(e: PointerEvent): void {
     const drag = this.drag;
     if (drag?.pointer === e.pointerId) {
-      const p = this.point(e),
+      const p = this.space.point(e),
         dx = p.x - drag.from.x,
         dy = p.y - drag.from.y,
         s = this.zoom.view().scale;
@@ -343,19 +339,13 @@ class BoardView {
       e.preventDefault();
       return;
     }
-    this.people?.tell(this.onBoard(this.point(e)), this.cursor.focus);
-    if (this.zoom.handle({ kind: 'move', id: e.pointerId, ...this.point(e) })) e.preventDefault();
-  }
-
-  /** A spot of the view in board units. */
-  private onBoard(p: Point): [number, number] {
-    const v = this.zoom.view();
-    return [Math.round(this.frame.x + (p.x - v.x) / v.scale), Math.round(this.frame.y + (p.y - v.y) / v.scale)];
+    this.people?.tell(this.space.onBoard(this.space.point(e)), this.cursor.focus);
+    if (this.zoom.handle({ kind: 'move', id: e.pointerId, ...this.space.point(e) })) e.preventDefault();
   }
 
   /** A lift: a drag writes where the item went; a tap on an item chooses it; else the zoom takes it. */
   private lift(e: PointerEvent): void {
-    const p = this.point(e),
+    const p = this.space.point(e),
       drag = this.drag,
       tap = this.tap;
     if (drag?.pointer === e.pointerId) {
