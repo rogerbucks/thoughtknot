@@ -40,6 +40,27 @@ export function withFits(
   return texts;
 }
 
+/** Whether Cards is on for each graph, by its name, while the plugin runs: a card drawn again keeps it. */
+const turnedOn = new Map<string, boolean>();
+/** Whether Cards is on for `graph`. */
+export const cardsChosen = (graph: string): boolean => turnedOn.get(graph) ?? false;
+/** Keeps whether Cards is on for `graph`. */
+export const chooseCards = (graph: string, on: boolean): void => void turnedOn.set(graph, on);
+
+/** The pin in a card's head `head`, shown while the card is put by hand: pressed, `unpin` gives it back to the layout. */
+export function unpinButton(head: HTMLElement, unpin: () => void): void {
+  const label = word('view.cards.unpin');
+  const b = head.createEl('button', {
+    cls: 'thoughtknot-stage-card-pin',
+    attr: { type: 'button', tabindex: '-1', 'aria-label': label, title: label },
+  });
+  setIcon(b, 'pin');
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    unpin();
+  });
+}
+
 /** The card's own button in its head `head`, to show its name only or the whole card again; `press` is told. */
 export function nameOnly(head: HTMLElement, press: () => void): void {
   const b = head.createEl('button', { cls: 'thoughtknot-stage-card-fit', attr: { type: 'button', tabindex: '-1' } });
