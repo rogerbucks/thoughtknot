@@ -65,9 +65,53 @@ describe('a board opened in a note', () => {
 });
 
 describe('pan and zoom, as a drawing', () => {
+  /** How big the board's text is on screen, in pixels, and where a spot of the board is across the viewport. */
+  const textPx = (el, place) =>
+    (Number(el.querySelector('[data-item="a"] text').getAttribute('font-size')) * place().w) /
+    Number(el.querySelector('svg.thoughtknot-svg').getAttribute('viewBox').split(' ')[2]);
+  const across = (el, place, at) => {
+    const [fx, , fw] = el.querySelector('svg.thoughtknot-svg').getAttribute('viewBox').split(' ').map(Number);
+    return place().x + ((at - fx) * place().w) / fw;
+  };
+
+  test('a board too big to read when fitted opens with readable text on its first item; a small one opens fitted', async () => {
+    const { env, el, press, place } = await board();
+    try {
+      assert.ok(textPx(el, place) >= 11 - 1e-6, `text is ${textPx(el, place)} px at open`);
+      const a = across(el, place, 10);
+      assert.ok(a >= 0 && a < 600, 'the first item is in view');
+      const open = place().w;
+      press('0');
+      assert.ok(place().w < open && place().w <= 600, '0 still fits the whole board');
+    } finally {
+      env.uninstall();
+    }
+    const small = await board(NOTE.replace('x: 1600, y: 1200', 'x: 300, y: 200'));
+    try {
+      const open = small.place();
+      small.press('0');
+      assert.deepEqual(small.place(), open, 'it was fitted already');
+    } finally {
+      small.env.uninstall();
+    }
+  });
+
+  test('a big board with frames opens on the top left of its first frame', async () => {
+    const framed = NOTE.replace('(a)-[', "(f:Frame {x: 900, y: 700, w: 900, h: 700, text: 'Plan'}),\n(a)-[");
+    const { env, el, place } = await board(framed);
+    try {
+      assert.ok(textPx(el, place) >= 11 - 1e-6);
+      const x = across(el, place, 900);
+      assert.ok(x >= 0 && x < 300, `the frame's left edge is in the left half of the view, at ${x}`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('the keys + and - zoom in and out, and 0 fits the whole board again', async () => {
     const { env, press, place } = await board();
     try {
+      press('0'); // a board this big opens zoomed in to be read
       const fit = place().w;
       press('+');
       assert.ok(place().w > fit, 'zoomed in');
@@ -164,6 +208,7 @@ describe('a host that draws the board afresh as soon as the note is written', ()
         return r;
       };
       vp.focus();
+      press('0'); // the whole board in view, so the view has no cause to follow the item moved
       press('Tab');
       const was = onScreen(el, 300);
       press('ArrowLeft', { shiftKey: true }); // a goes left of the board's corner, so the corner moves

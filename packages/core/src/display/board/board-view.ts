@@ -123,6 +123,7 @@ class BoardView {
     host.together?.watch(() => this.othersChanged());
     this.draw();
     if (was) this.zoom.restore(...placeFrom(was, this.frame.x, this.frame.y));
+    else this.space.open(this.board);
     born(host.key, this.vp, this, this.said, !!was?.focused);
     this.bind();
     this.rail.held((id) => openEditor(this.fields(), id)); // a sticky just made, its board drawn afresh

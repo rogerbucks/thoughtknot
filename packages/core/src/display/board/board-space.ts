@@ -1,10 +1,12 @@
 // Where things are on a board's screen (editor spec §45, board_view). It gives the viewport's size and a spot of the
-// view in board units, and back. It also gives a box of the board as a part of the whole. Kept apart so board-view.ts
-// stays small.
+// view in board units, and back. It also gives a box of the board as a part of the whole, and opens a board at a
+// size its text can be read. Kept apart so board-view.ts stays small.
 
-import type { Zoom } from '@thoughtknot/core';
+import { STYLE, type Zoom } from '@thoughtknot/core';
 
-import type { Box } from '../../board-svg.ts';
+import type { Board } from '../../board.ts';
+import { READABLE_PX } from '../../details-nav.ts';
+import { boardOutline, itemBox, type Box } from '../../board-svg.ts';
 
 /** How tall a board's viewport is in a note, in pixels. */
 export const HEIGHT = 420;
@@ -28,6 +30,24 @@ export class BoardSpace {
   unit(b: Box) {
     const f = this.frame();
     return { x: (b.x - f.x) / f.w, y: (b.y - f.y) / f.h, width: b.w / f.w, height: b.h / f.h };
+  }
+
+  /**
+   * Opens a board at a size its text can be read (never disorient: a board opened too small to read says nothing).
+   * A board whose text can be read when the whole of it fits stays fitted. A bigger one opens on its first frame, or
+   * on its first item when it has no frame. The rest is a pan away, and Fit still shows the whole.
+   */
+  open(board: Board): void {
+    const lines = boardOutline(board).map((l) => board.items.find((i) => i.id === l.id));
+    const first = lines.find((i) => i?.kind === 'Frame') ?? lines[0];
+    const scale = READABLE_PX / STYLE.font_size;
+    if (!first || this.zoom().view().scale >= scale) return;
+    const s = this.size(),
+      b = itemBox(first);
+    // a frame bigger than the view opens on its top left corner, where reading starts
+    const part = { x: b.x, y: b.y, w: Math.min(b.w, s.width / scale), h: Math.min(b.h, s.height / scale) };
+    const to = this.zoom().aim(this.unit(part), scale, true);
+    if (to) this.zoom().restore(to.scale, to.x, to.y);
   }
 
   /** The middle of the view, in board units. */
