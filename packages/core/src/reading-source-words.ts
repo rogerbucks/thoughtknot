@@ -194,6 +194,21 @@ export const READING_SOURCE_WORDS = {
     'Colours of their own and background pictures are not kept: a board uses the colours of the theme.',
   'reading.canvas.out-skipped':
     '{count} items were left out: JSON Canvas cannot hold a view of a graph or a hand drawing.',
+  // a board read from and written as an Excalidraw drawing in plain JavaScript (board-excalidraw.ts)
+  'reading.excalidraw.not-excalidraw': 'This file is not an Excalidraw drawing (.excalidraw), so it was not read.',
+  'reading.excalidraw.compressed':
+    'This drawing is compressed, so it was not read. In Obsidian, run Decompress current Excalidraw file, then import it again.',
+  'reading.excalidraw.too-large': 'This drawing is larger than {most} characters, so it was not read.',
+  'reading.excalidraw.too-many': 'This drawing holds more than {most} shapes, so it was not read.',
+  'reading.excalidraw.text-too-long': 'A text holds more than {most} characters, so the drawing was not read.',
+  'reading.excalidraw.skipped-items':
+    '{count} items were left out: each needs a name of its own, a known type and a place in numbers.',
+  'reading.excalidraw.skipped-pictures':
+    '{count} pictures were left out: a picture kept inside a drawing has no file a board can show.',
+  'reading.excalidraw.look':
+    'Colours of their own, fills and turns are not kept: a board uses the colours of the theme.',
+  'reading.excalidraw.out-skipped':
+    '{count} items were left out: an Excalidraw drawing cannot hold a view of a graph or a picture kept in a file.',
   // a PDF read as pages of text in plain JavaScript (pdf-read.ts)
   'reading.pdf.not-pdf': 'This file is not a PDF, so it was not read.',
   'reading.pdf.encrypted': 'This PDF is password-protected, so it was not read. Save a copy with no password.',
