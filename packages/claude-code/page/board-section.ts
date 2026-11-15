@@ -4,9 +4,19 @@
 import { arrangerOf, gqlBlocks, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import {
+  boardFromGraph,
+  draftFor,
+  proposeBoard,
+  showBoardDraft,
+  withBoardKept,
+} from '@thoughtknot/core/display/board/board-draft';
+import {
   boardInFront,
   boardListChanged,
+  boardTrail,
+  enterBoard,
   glideIn,
+  leaveBoard,
   putInFront,
   showBoardList,
 } from '@thoughtknot/core/display/board/board-list';
@@ -44,6 +54,31 @@ export function whenSeatsReady(win: Window, then: () => void): void {
   (win as Window & WithSeats).thoughtknotSeatsReady?.(then);
 }
 
+/** The board proposed for the note shown in `section`, in place of its board in front; kept, it is written. */
+function proposedIn(
+  section: HTMLElement,
+  draft: NonNullable<ReturnType<typeof draftFor>>,
+  note: BoardNote,
+  key: string,
+  palette: (typeof PALETTES)['light'],
+  again?: () => void,
+): HTMLElement {
+  showBoardDraft(section, draft, {
+    key,
+    palette,
+    views: viewerOf(() => note.text, palette),
+    keep: async (d) => {
+      const kept = withBoardKept(note.text, d);
+      const w = await note.writeWhole(kept.note);
+      if (!w.ok) return w.why;
+      putInFront(key, kept.name);
+      return null;
+    },
+    done: () => again?.(),
+  });
+  return section;
+}
+
 /**
  * A section with the note's board in front opened, under the list of its boards, or null when the note holds none.
  * `key` names the note. A board with a seat is edited together with the others there, and the others are drawn on it.
@@ -77,6 +112,14 @@ export function boardSection(
     names,
     current: name,
     open: () => again?.(),
+    propose: () => {
+      const on = boardOf(b.text)?.on;
+      const d = on ? boardFromGraph(note.text, on) : { refused: word('board.view.no-graph') };
+      if ('refused' in d) return d.refused;
+      proposeBoard(key, d);
+      again?.();
+      return null;
+    },
     change: seat
       ? undefined
       : async (ask) => {
@@ -89,12 +132,15 @@ export function boardSection(
           return null;
         },
   });
-  const holder = section.appendChild(doc.createElement('div'));
-  glideIn(holder, key);
   const own = {
     palette: dark ? PALETTES.dark : PALETTES.light,
     key: `${key}\n${name}`,
   };
+  // a board proposed is shown in place of the board in front, until it is kept or dropped (board_proposed)
+  const draft = draftFor(key);
+  if (draft) return proposedIn(section, draft, note, key, own.palette, again);
+  const holder = section.appendChild(doc.createElement('div'));
+  glideIn(holder, key);
   if (seat) {
     showBoard(holder, seat.text(), { ...own, together: seat });
     return section;
@@ -108,7 +154,21 @@ export function boardSection(
       return w.ok ? { text: r.text } : { refused: w.why };
     },
     arrange: starter ? undefined : arrangerOf(() => note.text, name),
-    views: viewerOf(() => note.text),
+    views: viewerOf(() => note.text, own.palette),
+    // zooming in on a view of a board goes into it, and zooming out comes back (board_nested)
+    nest: {
+      depth: boardTrail(key).length,
+      text: (inner) => boards[names.indexOf(inner)]?.text,
+      keyOf: (inner) => `${key}\n${inner}`,
+      enter: (inner) => {
+        enterBoard(key, name, inner);
+        again?.();
+      },
+      leave: () => {
+        leaveBoard(key);
+        again?.();
+      },
+    },
   });
   return section;
 }

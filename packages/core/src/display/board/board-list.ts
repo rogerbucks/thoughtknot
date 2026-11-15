@@ -21,6 +21,10 @@ export interface BoardListHost {
   open: (name: string) => void;
   /** Does `ask` to the board in front, and answers why not when refused. Left out, the list only switches. */
   change?: (ask: BoardListAsk) => Promise<string | null>;
+  /** Proposes a board from the graph, shown before it is kept; answers why not when there is none to propose. */
+  propose?: () => string | null;
+  /** Asks the person's AI for a board in their own words; left out where AI is off or the host has none. */
+  askAi?: (words: string) => void;
 }
 
 /** The board in front of each note, and whether its list was left open, by the host's key. */
@@ -28,6 +32,29 @@ const front = new Map<string, string>(),
   opened = new Map<string, boolean>();
 /** The notes whose board in front has just changed, so the next one drawn glides in. */
 const switched = new Set<string>();
+
+/** The boards each note's board in front was entered through, outermost first, by the host's key (board_nested). */
+const trails = new Map<string, string[]>();
+
+/** The boards the board in front of the note `key` was entered through, outermost first. */
+export function boardTrail(key: string): readonly string[] {
+  return trails.get(key) ?? [];
+}
+
+/** Puts the board `name` in front, entered from the board `from` by zooming in on its view there. */
+export function enterBoard(key: string, from: string, name: string): void {
+  trails.set(key, [...boardTrail(key), from]);
+  putInFront(key, name);
+}
+
+/** Puts the board the one in front was entered from back in front; `to` goes that many boards further out. */
+export function leaveBoard(key: string, to = boardTrail(key).length - 1): void {
+  const trail = boardTrail(key);
+  const name = trail[to];
+  if (name === undefined) return;
+  trails.set(key, trail.slice(0, to));
+  putInFront(key, name);
+}
 
 /** The board of `names` in front for the note `key`: the one last put there, else the first. */
 export function boardInFront(key: string, names: readonly string[]): string | undefined {
@@ -56,9 +83,26 @@ function wordButton(parent: HTMLElement, text: string, then: () => void): HTMLBu
   return b;
 }
 
+/** The trail above a board entered by zooming in: each board it sits in is a way back out, then its own name. */
+function showTrail(el: HTMLElement, host: BoardListHost): void {
+  const trail = boardTrail(host.key).filter((name) => host.names.includes(name));
+  if (!trail.length) return;
+  const nav = el.createEl('nav', { cls: 'thoughtknot-board-trail', attr: { 'aria-label': word('board.trail') } });
+  trail.forEach((name, n) => {
+    const b = wordButton(nav, name, () => {
+      leaveBoard(host.key, n);
+      host.open(name);
+    });
+    b.setAttribute('aria-label', word('board.trail.back', { name }));
+    nav.createSpan({ text: ' › ', attr: { 'aria-hidden': 'true' } });
+  });
+  nav.createSpan({ text: host.current, attr: { 'aria-current': 'true' } });
+}
+
 /** The list drawn in `el`: folded to one line at first. */
 export function showBoardList(el: HTMLElement, host: BoardListHost): HTMLElement {
   const { names, current, key } = host;
+  showTrail(el, host);
   const list = el.createEl('details', { cls: 'thoughtknot-board-list' });
   if (opened.get(key)) list.setAttribute('open', '');
   list.addEventListener('toggle', () => opened.set(key, list.hasAttribute('open')));
@@ -72,6 +116,7 @@ export function showBoardList(el: HTMLElement, host: BoardListHost): HTMLElement
   // one board alone has nothing to switch to, so it has no button
   for (const name of names.length > 1 ? names : []) {
     const b = wordButton(row, name, () => {
+      trails.delete(key); // a board opened from the list is entered from nowhere
       putInFront(key, name);
       host.open(name);
     });
@@ -98,7 +143,17 @@ export function showBoardList(el: HTMLElement, host: BoardListHost): HTMLElement
     input.focus();
     input.select();
   });
+  wordButton(acts, word('board.list.nest'), () => ask({ kind: 'nest' }));
   wordButton(acts, word('board.list.copy'), () => ask({ kind: 'copy' }));
+  const propose = host.propose;
+  if (propose) wordButton(acts, word('board.list.propose'), () => (said.textContent = propose() ?? ''));
+  const askAi = host.askAi;
+  if (askAi) {
+    const asking = list.createDiv({ cls: 'thoughtknot-board-list-ask' });
+    const words = asking.createEl('input', { attr: { type: 'text', 'aria-label': word('board.list.ask') } });
+    words.setAttribute('placeholder', word('board.list.ask'));
+    wordButton(asking, word('board.list.ask-send'), () => askAi(words.value));
+  }
   const sure = list.createDiv({ cls: 'thoughtknot-board-list-sure' });
   sure.hidden = true;
   sure.createSpan({ text: `${word('board.list.remove-sure', { name: current })} ` });

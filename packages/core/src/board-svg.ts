@@ -82,10 +82,12 @@ const glyphOf = (item: BoardItem) =>
 
 /** What a View item shows, in words: its view type and its graph (board-views.ts). */
 const viewSaid = (board: Board, item: BoardItem) =>
-  word('board.view.said', {
-    view: typeof item.more.view === 'string' ? item.more.view : 'force',
-    graph: typeof item.more.of === 'string' ? item.more.of : (board.on ?? ''),
-  });
+  typeof item.more.board === 'string' && item.more.board
+    ? word('board.nest.said', { name: item.more.board })
+    : word('board.view.said', {
+        view: typeof item.more.view === 'string' ? item.more.view : 'force',
+        graph: typeof item.more.of === 'string' ? item.more.of : (board.on ?? ''),
+      });
 
 const named = (item: BoardItem, board?: Board) => {
   if (item.kind === 'View' && board)
