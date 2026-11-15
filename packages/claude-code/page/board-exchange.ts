@@ -11,6 +11,7 @@ import {
   boardPicturesOf,
   pictureSize,
   picturesPdf,
+  slidePicturesOf,
   pngSize,
   withImport,
   word,
@@ -23,7 +24,7 @@ import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 type Win = Window & typeof globalThis;
 
 /** The formats the boards are handed over as; the name the person reads is the word `host.boards.as.` and this. */
-const FORMATS = ['canvas', 'excalidraw', 'svg', 'png', 'pdf'] as const;
+const FORMATS = ['canvas', 'excalidraw', 'svg', 'png', 'pdf', 'slides'] as const;
 
 /** A graph name made from a file's name, and not one the note already holds: a taken name gets a number after it. */
 export function boardNameFor(file: string, note: string): string {
@@ -59,9 +60,13 @@ async function bringIn(note: BoardNote, file: string, text: string): Promise<str
   return '';
 }
 
-/** Hands the boards of the note over as files of `format`; what it says is how many, with what was left out. */
+/**
+ * Hands the boards of the note over as files of `format`; what it says is how many, with what was left out.
+ * As `slides` it hands over one PDF with a page for each slide of the boards (board_slides).
+ */
 async function handOver(win: Win, note: string, format: string): Promise<string> {
-  const dark = format !== 'pdf' && win.matchMedia('(prefers-color-scheme: dark)').matches;
+  const slides = format === 'slides';
+  const dark = !slides && format !== 'pdf' && win.matchMedia('(prefers-color-scheme: dark)').matches;
   const said: string[] = [];
   let count = 0;
   if (format === 'canvas' || format === 'excalidraw') {
@@ -72,7 +77,7 @@ async function handOver(win: Win, note: string, format: string): Promise<string>
     }
   } else {
     const pages: PdfPage[] = [];
-    for (const p of boardPicturesOf(note, dark ? 'dark' : 'light')) {
+    for (const p of slides ? slidePicturesOf(note, 'light') : boardPicturesOf(note, dark ? 'dark' : 'light')) {
       const pixels = pictureSize(p.width, p.height, PNG_PIXEL_LIMIT);
       const size = { ...pngSize(p.width, p.height), ...pixels };
       if (format === 'svg') download(win, `${p.name}.svg`, p.svg, 'image/svg+xml');
@@ -86,7 +91,9 @@ async function handOver(win: Win, note: string, format: string): Promise<string>
         });
       count++;
     }
-    if (pages.length) download(win, 'boards.pdf', picturesPdf(pages, word('page.boards')), 'application/pdf');
+    const pdf = slides ? 'slides.pdf' : 'boards.pdf';
+    if (pages.length) download(win, pdf, picturesPdf(pages, word('page.boards')), 'application/pdf');
+    if (slides) return count ? word('page.board-exchange.slides', { count }) : word('host.slides.none');
   }
   return count ? [word('page.board-exchange.done', { count }), ...new Set(said)].join(' ') : word('host.boards.none');
 }

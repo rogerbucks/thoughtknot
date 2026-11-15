@@ -52,6 +52,7 @@ export const HOST_SOURCE_WORDS = {
   'host.boards.as.svg': 'SVG pictures',
   'host.boards.as.png': 'PNG pictures',
   'host.boards.as.pdf': 'One PDF',
+  'host.boards.as.slides': 'Slides as one PDF',
   'host.not-converted': 'Not converted: {why}',
   'host.not-converted-meanwhile': 'Not converted: the note changed meanwhile, and {why}',
   'host.already-standard': 'This note is already standard GQL.',
