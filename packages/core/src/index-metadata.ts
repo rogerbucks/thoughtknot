@@ -6,7 +6,9 @@ export {
   placeThing,
   readLayout,
   renamePlace,
+  saveCard,
   writeLayout,
+  type CardSave as LayoutCard,
   type Layout,
   type Place as LayoutPlace,
 } from './layout-block.ts';
@@ -23,7 +25,7 @@ export {
 } from './ai-reviewers.ts';
 export type { AiPublic } from './settings-reach.ts';
 export { graphSpanOf, metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
-export { forgetInNote, placeInNote, savedPlaces } from './layout-places.ts';
+export { cardInNote, forgetInNote, placeInNote, savedCards, savedPlaces } from './layout-places.ts';
 export {
   aiBlockName,
   aiLevelsIn,

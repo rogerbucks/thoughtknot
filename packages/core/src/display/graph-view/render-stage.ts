@@ -55,7 +55,7 @@ export class RenderStage {
   private readonly mover: StageMover | undefined;
   /** Each item drawn as a card with its whole note, while Cards is on (render_cards). */
   readonly cardsOn = new CardsSwitch();
-  private readonly drawn: { drawing: GraphDrawing; g: Graph | undefined; draw: () => void; kind: StageKind };
+  private readonly drawn: { drawing: GraphDrawing; g?: Graph; draw: () => void; kind: StageKind; saves?: PlacesHost };
   private readonly focus = new StageFocus(() => this.draw());
   /** The room picked and the room open: the badge's way in, and its Back (render_room_folders). */
   readonly rooms: StageRooms;
@@ -81,7 +81,7 @@ export class RenderStage {
     kind: StageKind = 'network',
     seen?: Seen,
   ) {
-    [this.viewport, this.drawn] = [viewport, { drawing, g, draw: () => this.draw(), kind }];
+    [this.viewport, this.drawn] = [viewport, { drawing, g, draw: () => this.draw(), kind, saves: places }];
     ({ scene: this.scene, spots: this.spots, hands: this.hands } = laidOut(drawing, g, kind, hands, places?.saved));
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
     const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };
@@ -209,7 +209,8 @@ export class RenderStage {
       // seen from an angle, a drag with Shift or the right button turns and tips the camera; else it moves the drawing
       const turning = isTilted(this.view) && (e.shiftKey || e.button === 2),
         r = this.canvas.getBoundingClientRect();
-      const moving = !turning && !this.cardsOn.cards && !!this.mover?.grab(e.clientX - r.left, e.clientY - r.top);
+      const [x, y, cards] = [e.clientX - r.left, e.clientY - r.top, this.cardsOn.cards ? this.cardsOn : null];
+      const moving = !turning && (cards ? cards.grab(x, y, () => this.view) : !!this.mover?.grab(x, y));
       this.drag = { x: e.clientX, y: e.clientY, moved: false, turning, moving };
     }
   }
@@ -234,7 +235,7 @@ export class RenderStage {
     const d = this.drag;
     if (!d || (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < CLICK_PX)) return;
     const [dx, dy] = [e.clientX - d.x, e.clientY - d.y];
-    if (d.moving) this.mover?.drag(dx, dy);
+    if (d.moving) (this.cardsOn.cards ? this.cardsOn : this.mover)?.drag(dx, dy);
     else if (d.turning) this.view = turnedBy(this.view, dx, dy);
     else this.view = panView(this.view, ...groundShift(this.view, dx, dy));
     this.untouched = false;
@@ -248,7 +249,7 @@ export class RenderStage {
     if (this.fingers.size < 2) this.pinch = null;
     const d = this.drag;
     this.drag = null;
-    if (d?.moving) this.mover?.drop();
+    if (d?.moving) (this.cardsOn.cards ? this.cardsOn : this.mover)?.drop();
     if (!d || d.moved) return;
     const r = this.canvas.getBoundingClientRect();
     this.clicked(e.clientX - r.left, e.clientY - r.top);
