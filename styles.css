@@ -2705,6 +2705,40 @@ button.thoughtknot-stage-card-more {
   overflow: auto;
   pointer-events: auto;
 }
+/* each card sized by its reader (Roger, 15 Nov 2026): its name only, or all it holds, the cards round it making room */
+.thoughtknot-stage-card.is-title > :not(.thoughtknot-stage-card-head) {
+  display: none;
+}
+.thoughtknot-stage-card.is-full {
+  block-size: auto;
+  min-block-size: var(--thoughtknot-card-h);
+}
+.thoughtknot-stage-card.is-full > .thoughtknot-stage-card-body {
+  overflow: visible;
+}
+button.thoughtknot-stage-card-fit {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin: 0;
+  margin-inline-start: auto;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  pointer-events: auto;
+}
+button.thoughtknot-stage-card-fit:hover {
+  opacity: 1;
+}
+button.thoughtknot-stage-card-fit svg {
+  inline-size: 1em;
+  block-size: 1em;
+}
 /* far out a card shows only its name */
 .thoughtknot-stage-card.is-far > :not(.thoughtknot-stage-card-head) {
   visibility: hidden;

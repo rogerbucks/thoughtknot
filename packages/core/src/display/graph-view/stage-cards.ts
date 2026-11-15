@@ -6,7 +6,15 @@
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { valueText } from '../../inline-properties.ts';
-import { CARD_PROPS, CARD_W, type CardText, type CardsLaid } from '../../render/render-cards.ts';
+import {
+  CARD_HEAD,
+  CARD_PROPS,
+  CARD_W,
+  cardSizeOf,
+  type CardFit,
+  type CardText,
+  type CardsLaid,
+} from '../../render/render-cards.ts';
 import type { Mark, View } from '../../render/render-marks.ts';
 import type { Look } from '../../render/render-look.ts';
 import type { Spot } from '../../render/render-rooms.ts';
@@ -14,6 +22,7 @@ import { isTilted, onScreen } from '../../render/render-tilt.ts';
 import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { Lifecycle } from '../lifecycle.ts';
+import { markFit, nameOnly } from './stage-cards-fit.ts';
 
 /** Below this alpha a card is not shown. */
 const SHOWN = 0.05;
@@ -153,11 +162,13 @@ export class StageCards {
   /** What the host rendered into the cards is owned here, and unloaded with them. */
   private readonly owner = new Lifecycle();
   private readonly words: CardWords | undefined;
+  /** Told when the reader sizes a card: its name only, all it holds, or back to its first lines. */
+  private readonly onFit: ((key: string, fit: CardFit | undefined, tall?: number) => void) | undefined;
 
   /** Whether the cards have come to rest: their arrows wait until then. */
   settled = false;
 
-  readonly laid: CardsLaid;
+  laid: CardsLaid;
   /** The places the stage draws now, which the cards follow as they glide. */
   private readonly spots: ReadonlyMap<string, Spot>;
   /** The layout's own places, from before the cards spread them: where Cards off goes back to. */
@@ -170,8 +181,9 @@ export class StageCards {
     base: ReadonlyMap<string, Spot>,
     outer: readonly string[] = [],
     words?: CardWords,
+    onFit?: (key: string, fit: CardFit | undefined, tall?: number) => void,
   ) {
-    [this.laid, this.spots, this.base, this.words] = [laid, spots, base, words];
+    [this.laid, this.spots, this.base, this.words, this.onFit] = [laid, spots, base, words, onFit];
     this.owner.load();
     this.outer = new Set(outer);
     this.layer = viewport.createDiv({ cls: 'thoughtknot-stage-cards' });
@@ -186,8 +198,9 @@ export class StageCards {
       if (words.length || c.text.props?.length) {
         const body = el.createDiv({ cls: 'thoughtknot-stage-card-body' });
         this.bodies.set(c.key, { body, words });
-        if (c.more) body.addClass('is-cut');
-        if (c.more) this.showAll(el, body, c.more);
+        const more = cardSizeOf({ ...c.text, fit: undefined }).more;
+        if (more) this.showAll(el, body, more, c.key);
+        if (onFit) nameOnly(head, () => onFit(c.key, this.fitOf(c.key) === 'title' ? undefined : 'title'));
         if (c.text.props?.length) {
           const props = el.createDiv({ cls: 'thoughtknot-stage-card-props' });
           for (const [k, v] of c.text.props) props.createDiv({ text: `${k} ${v}` });
@@ -195,10 +208,23 @@ export class StageCards {
       }
       this.els.set(c.key, el);
     }
+    this.refit(laid);
   }
 
-  /** The card's Show all: it opens the card in place, above the cards round it, and nothing else moves. */
-  private showAll(el: HTMLElement, body: HTMLElement, more: number): void {
+  /** How card `key` is sized now. */
+  private fitOf = (key: string): CardFit | undefined => this.laid.cards.find((c) => c.key === key)?.text.fit;
+
+  /** The cards laid anew as `laid`, each as its reader sized it: the cards round a grown one make room. */
+  refit(laid: CardsLaid): void {
+    this.laid = laid;
+    for (const c of laid.cards) {
+      const el = this.els.get(c.key);
+      if (el) markFit(el, c, this.bodies.get(c.key)?.body, !!this.onFit);
+    }
+  }
+
+  /** The card's Show all: it grows the card to all it holds, and the cards round it make room. */
+  private showAll(el: HTMLElement, body: HTMLElement, more: number, key: string): void {
     const b = el.createEl('button', {
       cls: 'thoughtknot-stage-card-more',
       text: word('view.cards.more', { count: more }),
@@ -207,6 +233,15 @@ export class StageCards {
     });
     b.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (this.onFit) {
+        // with all it holds, the card is measured as it then stands, so it is laid at its true height
+        const full = this.fitOf(key) !== 'full';
+        if (full) {
+          this.fillIn(key);
+          el.addClass('is-full');
+        }
+        return this.onFit(key, full ? 'full' : undefined, full ? el.scrollHeight || undefined : undefined);
+      }
       const open = !el.hasClass('is-open');
       el.toggleClass('is-open', open);
       b.setAttribute('aria-expanded', String(open));
@@ -335,11 +370,12 @@ export class StageCards {
     c.restore();
   }
 
-  /** The item whose card is at `x`, `y` on the screen, the top card first; none off every card. */
-  pickAt(x: number, y: number): string | null {
+  /** The item whose card is at `x`, `y` on the screen, the top card first; none off every card. `head`: on its head. */
+  pickAt(x: number, y: number, head = false): string | null {
     for (let i = this.boxes.length - 1; i >= 0; i--) {
       const b = this.boxes[i] as (typeof this.boxes)[number];
-      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.key;
+      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h)
+        return !head || y <= b.y + CARD_HEAD * (b.w / CARD_W) ? b.key : null; // a card is moved by its head
     }
     return null;
   }
