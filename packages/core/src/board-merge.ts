@@ -138,6 +138,9 @@ export function mergeBoards(base: string, ours: string, theirs: string): Merged 
     items: out,
     connectors: [...links.values()],
   };
+  // layers (board_layers): every layer either side has is kept; where both have one, ours stays as it is
+  const layers = [...(o?.layers ?? []), ...(t?.layers ?? []).filter((l) => !o?.layers?.some((x) => x.id === l.id))];
+  if (layers.length) board.layers = layers;
   const said = clashes.length ? word('board.merge.clashes', { count: clashes.length }) : word('board.merge.clean');
   return { text: writeBoard(board), clashes, said };
 }

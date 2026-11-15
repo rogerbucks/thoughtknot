@@ -7,15 +7,14 @@ const chosen = new Map<string, Set<string>>();
 
 /** The items chosen on one board: added and taken out by a press, ringed when the board is drawn. */
 export class BoardSelection {
-  private ids = new Set<string>();
+  /** `changed` is told how many are chosen whenever that changes; `key` names the board in its host. */
+  constructor(private readonly on: { changed: (count: number) => void; key: () => string }) {}
 
-  /** `changed` is told how many are chosen whenever that changes. */
-  constructor(private readonly changed: (count: number) => void) {}
-
-  /** Takes up the items chosen on the board that `key` names, and shares what is chosen with a board drawn after. */
-  at(key: string): void {
-    this.ids = chosen.get(key) ?? this.ids;
-    chosen.set(key, this.ids);
+  /** The set chosen on this board, shared with a board drawn after by the same host key. */
+  private get ids(): Set<string> {
+    const set = chosen.get(this.on.key()) ?? new Set<string>();
+    chosen.set(this.on.key(), set);
+    return set;
   }
 
   /** The chosen items, in the order chosen. */
@@ -31,21 +30,21 @@ export class BoardSelection {
   /** An item added, or taken out when it is there. */
   toggle(id: string): void {
     if (!this.ids.delete(id)) this.ids.add(id);
-    this.changed(this.ids.size);
+    this.on.changed(this.ids.size);
   }
 
   /** These items chosen, and no others, as after a paste. */
   set(ids: readonly string[]): void {
     this.ids.clear();
     for (const id of ids) this.ids.add(id);
-    this.changed(this.ids.size);
+    this.on.changed(this.ids.size);
   }
 
   /** None chosen; whether any were. */
   clear(): boolean {
     const had = this.ids.size > 0;
     this.ids.clear();
-    if (had) this.changed(0);
+    if (had) this.on.changed(0);
     return had;
   }
 
@@ -55,6 +54,6 @@ export class BoardSelection {
     for (const id of [...this.ids]) if (!here.has(id)) this.ids.delete(id);
     for (const g of Array.from(svg.querySelectorAll('[data-item]')))
       g.toggleClass('is-chosen', this.ids.has(g.getAttribute('data-item') ?? ''));
-    this.changed(this.ids.size);
+    this.on.changed(this.ids.size);
   }
 }

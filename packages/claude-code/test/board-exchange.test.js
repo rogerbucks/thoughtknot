@@ -95,7 +95,7 @@ describe('whiteboard files on the browser editor’s page', () => {
       const got = kept(page);
       assert.deepEqual(
         [...bar(page).querySelectorAll('option')].map((o) => o.textContent),
-        ['JSON Canvas', 'Excalidraw', 'SVG pictures', 'PNG pictures', 'One PDF'],
+        ['JSON Canvas', 'Excalidraw', 'SVG pictures', 'PNG pictures', 'One PDF', 'Slides as one PDF'],
         'each format is named by a word of the catalogue',
       );
       exportAs(page, 'canvas');
@@ -114,6 +114,52 @@ describe('whiteboard files on the browser editor’s page', () => {
       assert.equal(page.file(), NOTE, 'the note is never written by an export');
     } finally {
       await page.stop();
+    }
+  });
+
+  // proves: board_slides
+  test('the slides are handed over as one PDF with a page for each, and a note with no slide says so', async () => {
+    const deck = NOTE.replace(
+      '(v:View {x: 0, y: 400})',
+      '(v:View {x: 0, y: 400}),\n(two:Frame {x: 0, y: 0, w: 400, h: 300, slide: 2}),\n(one:Frame {x: 900, y: 0, w: 400, h: 300, slide: 1})',
+    );
+    const page = await livePage(deck);
+    try {
+      await until(() => bar(page), 8000);
+      // a canvas and an image that stand in for the browser's: what is proved is what the page does with them
+      const win = page.window;
+      win.Image = class {
+        set src(_url) {
+          queueMicrotask(() => this.onload?.());
+        }
+      };
+      const make = win.document.createElement.bind(win.document);
+      const jpeg = { arrayBuffer: () => Promise.resolve(new Uint8Array([0xff, 0xd8, 0xff, 0xd9]).buffer) };
+      win.document.createElement = (tag) =>
+        tag === 'canvas'
+          ? { getContext: () => ({ fillRect() {}, drawImage() {} }), toBlob: (done) => done(jpeg) }
+          : make(tag);
+      const got = kept(page);
+      exportAs(page, 'slides');
+      await until(() => got.includes('slides.pdf'), 8000);
+      const pdf = String.fromCharCode(...got.find((g) => typeof g !== 'string'));
+      assert.ok(pdf.startsWith('%PDF-1.4'));
+      assert.match(pdf, /\/Count 2/);
+      assert.match(status(page), /Slides handed over as one PDF: 2\./);
+      assert.equal(page.file(), deck, 'the note is never written by an export');
+    } finally {
+      await page.stop();
+    }
+    const plain = await livePage(NOTE);
+    try {
+      await until(() => bar(plain), 8000);
+      const got = kept(plain);
+      exportAs(plain, 'slides');
+      await until(() => status(plain), 8000);
+      assert.match(status(plain), /This note holds no slide to export\./);
+      assert.deepEqual(got, []);
+    } finally {
+      await plain.stop();
     }
   });
 });

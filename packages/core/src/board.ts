@@ -48,6 +48,23 @@ export interface Connector {
   label?: string;
 }
 
+/**
+ * A named layer of a board (board_layers): `(notes:Layer {name: 'Notes', order: 1})`. An item is in it by its
+ * `in_layer` property. A layer holds no place, so every view can show it.
+ */
+export interface BoardLayer {
+  id: string;
+  name: string;
+  /** Which layers are drawn over which: higher is on top. Items in no layer are at 0. */
+  order: number;
+  hidden?: boolean;
+  locked?: boolean;
+  /** Shown over every view of the board's graph too, as drawings are (board_layers_over). */
+  over?: boolean;
+  /** Any other property, kept as written, in the order written. */
+  more: Record<string, Value>;
+}
+
 /** A board as read from its block. */
 export interface Board {
   name: string;
@@ -55,6 +72,8 @@ export interface Board {
   on: string | null;
   items: BoardItem[];
   connectors: Connector[];
+  /** Its named layers, in the order written; left out when it has none. */
+  layers?: BoardLayer[];
 }
 
 // the properties every item may have, in the order they are written
@@ -80,6 +99,7 @@ export function readBoard(text: string, things?: Set<string>, block = 0): { boar
     }),
     things,
     block,
+    true,
   );
 }
 
@@ -98,6 +118,7 @@ export function readItems(
   unknown: KindProblem,
   things?: Set<string>,
   block = 0,
+  layered = false,
 ): { board: Board; problems: Problem[] } {
   const board: Board = { name: line?.name ?? '', on: line?.on ?? null, items: [], connectors: [] };
   const read = readBlocks([text], [], REREAD_BUDGET, () => 'data');
@@ -114,6 +135,10 @@ export function readItems(
   const graph = gs.worldFromStore(read.store)[board.name];
   for (const [id, [labels, props]] of graph?.nodes ?? []) {
     const at = lineOf.get(id) ?? 1;
+    if (layered && labels.size === 1 && labels.has('Layer')) {
+      (board.layers ??= []).push(layerRead(id, props));
+      continue;
+    }
     const kind = [...labels].find((l) => kinds.has(l));
     if (!kind || labels.size !== 1) {
       const { code, message, fix } = unknown([...labels].join(':') || '(none)', id);
@@ -155,6 +180,28 @@ export function readItems(
   return { board, problems };
 }
 
+/** A layer as read from its thing: a name not written is its id, an order not written is 1. */
+function layerRead(id: string, props: Record<string, Value>): BoardLayer {
+  const layer: BoardLayer = { id, name: typeof props.name === 'string' ? props.name : id, order: 1, more: {} };
+  if (typeof props.order === 'number' && Number.isFinite(props.order)) layer.order = Math.round(props.order);
+  if (props.hidden === true) layer.hidden = true;
+  if (props.locked === true) layer.locked = true;
+  if (props.over === true) layer.over = true;
+  const own = new Set(['name', 'order', 'hidden', 'locked', 'over']);
+  for (const [key, v] of Object.entries(props)) if (!own.has(key) && !(key === 'id' && v === id)) layer.more[key] = v;
+  return layer;
+}
+
+/** One layer written as GQL, in the one fixed order. Showing and unlocked are not written. */
+export function layerGql(layer: BoardLayer): string {
+  const props = [`name: ${quoted(layer.name)}`, `order: ${layer.order}`];
+  if (layer.hidden) props.push(`hidden: ${layer.hidden}`);
+  if (layer.locked) props.push(`locked: ${layer.locked}`);
+  if (layer.over) props.push(`over: ${layer.over}`);
+  for (const [key, v] of Object.entries(layer.more)) props.push(`${key}: ${valueGql(v)}`);
+  return `(${layer.id}:Layer {${props.join(', ')}})`;
+}
+
 /** A place read as the nearest whole number; a place not written, or not a number, is 0. */
 const placeOf = (v: Value | undefined): number => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : 0);
 
@@ -184,10 +231,14 @@ export function itemGql(item: BoardItem): string {
   return `(${item.id}:${item.kind} {${props.join(', ')}})`;
 }
 
-/** A board written as its block, in the one fixed form: the board line, each item on a line, then each connector. */
+/**
+ * A board written as its block, in the one fixed form: the board line, each layer and each item on a line, then each
+ * connector.
+ */
 export function writeBoard(board: Board): string {
   const head = `// graph: ${board.name} · BOARD${board.on ? ` ON ${board.on}` : ''}`;
   const lines = [
+    ...(board.layers ?? []).map(layerGql),
     ...board.items.map(itemGql),
     ...board.connectors.map(
       (c) => `(${c.from})-[:CONNECTS${c.label !== undefined ? ` {label: ${quoted(c.label)}}` : ''}]->(${c.to})`,

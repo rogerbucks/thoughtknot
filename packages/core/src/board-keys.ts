@@ -17,6 +17,7 @@ import { writeBoard } from './board.ts';
 import type { Board, BoardItem } from './board.ts';
 import { boardEdit, MIN_SIDE, newItem } from './board-edit.ts';
 import type { BoardChange } from './board-edit.ts';
+import { lockedOn } from './board-layers.ts';
 import { boardOutline, itemBox, itemSaid } from './board-svg.ts';
 import { word } from './words.ts';
 
@@ -104,7 +105,7 @@ export function boardKey(
   }
   if (!focus) return null;
   if (arrow) {
-    if (focus.locked) return at(focus, word('board.edit.locked'));
+    if (lockedOn(board, focus)) return at(focus, word('board.edit.locked'));
     const step = press.shift ? BIG_STEP : STEP;
     if (press.alt) {
       const box = itemBox(focus);
@@ -134,7 +135,7 @@ export function boardKey(
       : step;
   }
   if (key === 'Delete' || key === 'Backspace') {
-    if (focus.locked) return at(focus, word('board.edit.locked'));
+    if (lockedOn(board, focus)) return at(focus, word('board.edit.locked'));
     const step = change(board, NO_CURSOR, { kind: 'remove', id: focus.id });
     return 'change' in step ? { ...step, said: word('board.taken-out', { item: said(focus) }) } : step;
   }
