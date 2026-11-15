@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layout-block.test.js",
+  "test": "a big arrangement is saved, put in use and saved again in one reading of the block, every other line kept",
+  "seen_failing_first": false,
+  "evidence": "It guards time, not a result. The old writer gave the same block, byte for byte, but read the whole block again for every card: putting 200 cards in use took 3 seconds and 1,000 took 2 minutes. The lines are now changed in one pass."
+}
