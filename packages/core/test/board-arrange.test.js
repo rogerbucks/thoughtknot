@@ -22,6 +22,8 @@ const BOARD = `// graph: ideas · BOARD ON team
 (d:Sticky {x: 500, y: 500, text: 'Free note'})`;
 const NOTE = `# Team\n\n\`\`\`gql\n${TEAM}\n\`\`\`\n\n\`\`\`gql\n${BOARD}\n\`\`\`\n`;
 const force = layoutById('force', 2);
+// the same board with the locked card well away, for what is about the arrangement alone
+const FAR = NOTE.replace("x: 20, y: 20, text: 'Cat'", "x: 3000, y: 3000, text: 'Cat'");
 const boardOf = (note) => readBoard(gqlBlocks(note).find((b) => b.text.includes('BOARD')).text).board;
 const rows = (b) => b.items.map((i) => [i.id, i.x, i.y]);
 
@@ -41,7 +43,7 @@ describe('a board arranged by the graph', () => {
   });
 
   test('the moved items keep their middle, and stand apart', () => {
-    const r = arrangeBoard(NOTE, 'ideas', force);
+    const r = arrangeBoard(FAR, 'ideas', force);
     const [a, b] = r.glide;
     const mid = (k) => (a.to[k] + b.to[k]) / 2;
     assert.ok(Math.abs(mid(0) - 5) <= 1 && Math.abs(mid(1) - 5) <= 1, 'the middle of 0,0 and 10,10');
@@ -49,8 +51,8 @@ describe('a board arranged by the graph', () => {
   });
 
   test('the same arrangement twice gives the same places, and nothing moves a second time', () => {
-    const once = arrangeBoard(NOTE, 'ideas', force);
-    assert.equal(arrangeBoard(NOTE, 'ideas', force).note, once.note);
+    const once = arrangeBoard(FAR, 'ideas', force);
+    assert.equal(arrangeBoard(FAR, 'ideas', force).note, once.note);
     const twice = arrangeBoard(once.note, 'ideas', force);
     assert.ok('refused' in twice, 'already as arranged');
   });
@@ -165,5 +167,33 @@ describe('only the items chosen are arranged', () => {
     assert.equal(r.how, 'tree');
     const one = arrangeBoard(NOTE, 'ideas', undefined, [], ['d']);
     assert.match(one.refused, /No item/, 'a free item cannot be moved by the graph');
+  });
+});
+
+describe('arranged cards keep clear of every other card', () => {
+  const lap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  // proves: board_arranged_by_graph
+  test('no arranged card lies over a card that stays, nor over another arranged card', () => {
+    const r = arrangeBoard(NOTE, 'ideas', undefined);
+    assert.ok(!('refused' in r), r.refused);
+    const items = boardOf(r.note).items;
+    const box = (i) => ({ x: i.x, y: i.y, w: i.w ?? 160, h: i.h ?? 160 });
+    for (const g of r.glide) {
+      const mine = items.find((i) => i.id === g.id);
+      for (const other of items)
+        if (other !== mine) assert.ok(!lap(box(mine), box(other)), `${g.id} clear of ${other.id}`);
+    }
+    const by = Object.fromEntries(items.map((i) => [i.id, i]));
+    assert.deepEqual([by.c.x, by.c.y, by.d.x, by.d.y], [20, 20, 500, 500], 'the cards that stay did not move');
+  });
+
+  test('big cards are spaced by their own size', () => {
+    const big = FAR.replace("text: 'Ann'", "w: 600, h: 400, text: 'Ann'");
+    const r = arrangeBoard(big, 'ideas', force);
+    const [a, b] = boardOf(r.note).items;
+    assert.ok(
+      a.x + 600 <= b.x || b.x + 160 <= a.x || a.y + 400 <= b.y || b.y + 160 <= a.y,
+      'the big card is clear of its neighbour',
+    );
   });
 });

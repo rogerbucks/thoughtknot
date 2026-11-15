@@ -8,6 +8,8 @@
 // Host-free and pure: the host writes the text and draws the glide.
 import { gqlBlocks } from './blocks.ts';
 import { moveItem, readBoard } from './board.ts';
+import { cleared, roomy } from './board-clear.ts';
+import { itemBox } from './board-svg.ts';
 import { readNote } from './drawing.ts';
 import { fittingLayout } from './layouts/arrange-fit.ts';
 import type { Fit } from './layouts/arrange-fit.ts';
@@ -74,15 +76,25 @@ export function arrangeBoard(
       const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
       if (d > 0) nearest = Math.min(nearest, d);
     }
-  const scale = Number.isFinite(nearest) ? GAP / nearest : 1;
+  const sizes = movable.map(itemBox);
+  const scale = roomy(at, sizes, Number.isFinite(nearest) ? GAP / nearest : 1);
   const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
   const now: [number, number] = [mean(movable.map((i) => i.x)), mean(movable.map((i) => i.y))];
   const mid: [number, number] = [mean(at.map((p) => p[0] * scale)), mean(at.map((p) => p[1] * scale))];
+  // where each goes with its middle kept, then clear of every card that stays (a frame holds cards, so it is no obstacle)
+  const goes = movable.map((_, n): [number, number] => {
+    const [px, py] = at[n] ?? [0, 0];
+    return [Math.round(px * scale - mid[0] + now[0]), Math.round(py * scale - mid[1] + now[1])];
+  });
+  const stay = items.filter((i) => !movable.includes(i) && i.kind !== 'Frame').map(itemBox);
+  const spots2 = cleared(
+    movable.map((_, n) => ({ w: sizes[n]?.w ?? 0, h: sizes[n]?.h ?? 0, to: goes[n] ?? [0, 0] })),
+    stay,
+  );
   let out = text;
   const glide: Glide[] = [];
   movable.forEach((item, n) => {
-    const [px, py] = at[n] ?? [0, 0];
-    const to: [number, number] = [Math.round(px * scale - mid[0] + now[0]), Math.round(py * scale - mid[1] + now[1])];
+    const to = spots2[n] ?? [item.x, item.y];
     if (to[0] === item.x && to[1] === item.y) return;
     out = moveItem(out, item.id, to[0], to[1]);
     glide.push({ id: item.id, from: [item.x, item.y], to });
