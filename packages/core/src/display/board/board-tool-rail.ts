@@ -38,6 +38,8 @@ const FRESH_MS = 3000;
 
 /** Whether each board's rail was left open, by its host's key, for when it is drawn again. */
 const opened = new Map<string, boolean>();
+/** The tool in use on each board, by its host's key: Connect stays for the next join when the board is drawn afresh. */
+const inUse = new Map<string, BoardTool>();
 
 /** The rail: which tool is in use, and the item a join started on. */
 export class ToolRail {
@@ -72,6 +74,8 @@ export class ToolRail {
       this.tools.set(tool, b);
     }
     rail.addEventListener('keydown', (e: KeyboardEvent) => this.arrows(e));
+    const was = inUse.get(key);
+    if (was && this.tools.has(was)) this.tool = was;
     this.open(opened.get(key) ?? false);
   }
 
@@ -84,6 +88,7 @@ export class ToolRail {
   pick(tool: BoardTool): void {
     this.tool = tool;
     this.from = null;
+    inUse.set(this.key, tool);
     this.paint();
     this.said(word('board.tool.picked', { tool: word(`board.tool.${tool}`) }));
   }
@@ -137,6 +142,7 @@ export class ToolRail {
   done(): void {
     this.tool = 'choose';
     this.from = null;
+    inUse.delete(this.key);
     this.paint();
   }
 

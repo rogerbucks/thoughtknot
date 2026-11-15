@@ -13,8 +13,8 @@ import { drawHandle } from './board-drag.ts';
 /** What draws a View item of a board: an SVG picture its own size, or why not, in words. */
 export type Viewer = (board: Board, id: string) => Promise<{ svg: string } | { refused: string }>;
 
-/** The last picture of each view, by its board's host key, its id and its size. */
-const last = new Map<string, string>();
+/** The last picture of each view, by its board's host key and its id; only the picture of its last size is kept. */
+const last = new Map<string, { size: string; svg: string }>();
 
 /** The picture `svg` nested in the view `id`'s frame, in place of any drawn before. */
 function nest(g: Element, board: Board, id: string, svg: string): void {
@@ -52,13 +52,14 @@ export function paintViews(svg: SVGSVGElement, board: Board, viewer: Viewer | un
     const item = board.items.find((i) => i.id === id);
     if (!item) continue;
     const box = itemBox(item);
-    const at = `${key}\n${id}\n${box.w}x${box.h}`;
-    const kept = last.get(at);
+    const [at, size] = [`${key}\n${id}`, `${box.w}x${box.h}`];
+    const was = last.get(at);
+    const kept = was?.size === size ? was.svg : undefined;
     if (kept) nest(g, board, id, kept);
     void viewer(board, id)
       .then((r) => {
         if ('svg' in r) {
-          last.set(at, r.svg);
+          last.set(at, { size, svg: r.svg });
           if (r.svg !== kept) nest(g, board, id, r.svg);
         } else said(g, box, r.refused);
       })
