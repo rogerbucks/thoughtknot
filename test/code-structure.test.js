@@ -151,3 +151,13 @@ describe('the structure graph', () => {
     );
   });
 });
+
+// A line that lists every file of a busy area is edited by every pull request that adds one, so they all conflict.
+// The whiteboard area names its files by pattern instead, as the pull requests of one week showed.
+describe('a busy area is named by pattern', () => {
+  test('the whiteboard area matches its board files by glob, not by a list that each new file edits', () => {
+    const line = ARCHITECTURE.split('\n').find((l) => l.startsWith('(core_board:Area'));
+    assert.match(line, /packages\/core\/src\/board-\*\.ts/);
+    assert.ok(line.length < 700, 'the line stays short, so two pull requests rarely change it together');
+  });
+});

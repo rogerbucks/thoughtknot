@@ -70,3 +70,4 @@ export type { KeptPresentation, Picked, PresentStep, StepLink } from './presenta
 export { answerForClaude, decisionItems, LABEL_MOST, OPTIONS_LEAST, OPTIONS_MOST } from './decision-recorded.ts';
 export { QUESTION_MOST, readAsk, readReason, REASON_MOST, recordDecision } from './decision-recorded.ts';
 export type { DecisionAnswer, DecisionAsk, DecisionOption, DecisionToRecord, Recorded } from './decision-recorded.ts';
+export * from './index-images.ts';

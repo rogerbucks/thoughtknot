@@ -95,6 +95,41 @@ describe('the drawings already in the note', () => {
     }
   });
 
+  // proves: board_layers_over
+  test('a board layer marked over is drawn on the graph’s card with the drawings, is hidden with them, and is never the tool’s to take', async () => {
+    const board = [
+      '// graph: ideas · BOARD ON team',
+      "(notes:Layer {name: 'Notes', order: 1, over: true}),",
+      "(a:Sticky {x: 0, y: 0, text: 'Ask Ann first', graph: 'ann', in_layer: 'notes'}),",
+      "(b:Sticky {x: 0, y: 200, text: 'Not shown'})",
+    ].join('\n');
+    const { env, el, vp } = await card(noteOf(TEAM, board));
+    try {
+      const drawn = () =>
+        layerOf(el)
+          ?.querySelectorAll('[data-sketch]')
+          .map((g) => g.getAttribute('data-sketch'));
+      assert.deepEqual(drawn(), ['ideas.a.words'], 'the layer’s item, pinned to Ann; the loose item is not shown');
+      assert.match(layerOf(el).textContent, /Ask Ann first/);
+      const before = env.state.files.get(PATH);
+      const words = layerOf(el).querySelector('[data-sketch]');
+      words.dispatch('pointerdown', mouse(1, vp, { x: 5, y: 5 }));
+      words.dispatch('pointerup', mouse(1, vp, { x: 5, y: 5 }));
+      assert.equal(
+        el.querySelector('.is-selected[data-sketch]'),
+        null,
+        'not selected: it is the board’s, not a drawing',
+      );
+      buttonOf(el, 'Hide drawings').click();
+      assert.equal(layerOf(el), null, 'hidden with the drawings');
+      buttonOf(el, 'Show drawings').click();
+      assert.deepEqual(drawn(), ['ideas.a.words']);
+      assert.equal(env.state.files.get(PATH), before, 'nothing is written');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: sketch_click_rule
   test('a first tap selects a drawing and says what it is; a second centres it; Delete takes it out', async () => {
     const { env, el, vp, at, placeOf } = await card(noteOf(TEAM, INKED));

@@ -21,6 +21,9 @@ export class BoardSpace {
   private readonly zoom: () => Zoom;
   private readonly frame: () => Box;
 
+  /** The board itself while it is shown over the whole screen, as a slide show is; then the view is as tall as it. */
+  full: HTMLElement | null = null;
+
   constructor(vp: HTMLElement, zoom: () => Zoom, frame: () => Box) {
     this.vp = vp;
     this.zoom = zoom;
@@ -31,7 +34,8 @@ export class BoardSpace {
   size() {
     const width = this.vp.getBoundingClientRect().width;
     if (width) lastWidth = width;
-    return { width: width || lastWidth, height: HEIGHT };
+    const height = this.full?.getBoundingClientRect().height || HEIGHT;
+    return { width: width || lastWidth, height };
   }
 
   /** A box of the board as a part of the whole board, as the zoom wants it. */

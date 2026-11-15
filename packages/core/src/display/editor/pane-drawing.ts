@@ -47,6 +47,7 @@ import { nothingYet } from './pane-empty';
 import { LAYOUT_WAIT, waitShown } from '../progress';
 import type { Chosen, PictureStatus, Stay, SwitchesShown, ViewOptions } from '../graph-view/view-options';
 import { namedFiltersOf, type NamedFilters } from '../../filter-named.ts';
+import type { SketchHost } from '../graph-view/sketch-tool';
 import type { StayedAt } from '../graph-view/type-place';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
@@ -72,6 +73,8 @@ export interface PaneHost {
   picture?: (graph: string) => PictureStatus;
   /** The store a block too large to read at once is read into (scale_parts_store_swap). Not set: kept in memory. */
   store?: () => PartsStore;
+  /** The drawings over a graph, with the board layers that lie over it (ES§70). Not set: none are drawn. */
+  sketching?: (graph: string) => SketchHost;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -111,7 +114,7 @@ function drawInPane(
   again?: () => void,
   picture?: PictureStatus,
   stay?: Stay,
-  saved: Pick<ViewOptions, 'exploring' | 'named'> = {},
+  saved: Pick<ViewOptions, 'exploring' | 'named' | 'sketching'> = {},
 ) {
   host.empty();
   if (!drawn) {
@@ -286,7 +289,7 @@ export class PaneDrawing extends Lifecycle {
             }),
           this.host.picture?.(s.graph),
           this.stay,
-          this.saved(s.graph, style),
+          { ...this.saved(s.graph, style), ...(this.host.sketching && { sketching: this.host.sketching(s.graph) }) },
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

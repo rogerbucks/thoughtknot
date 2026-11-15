@@ -13,14 +13,18 @@
 // A breaking change since the last release needs a new major version. The last release is the highest bare version tag
 // (such as 0.7.0, never a nightly) before the commit checked out. Its own copy of the file is the interface it shipped.
 //
+// public-api.json is no longer committed: it changed in every pull request and so conflicted in all of them. The
+// interface is read from the code. A release's interface is its own copy of the file. When it has none, it is read
+// from the code at its tag.
+//
 // Usage:
-//   node scripts/public-api.mjs            says whether public-api.json matches the code.
-//   node scripts/public-api.mjs --update   writes public-api.json from the code.
+//   node scripts/public-api.mjs --update   writes a local copy, public-api.json, from the code (git ignores it).
 //   node scripts/public-api.mjs --release  says whether the versions allow every break since the last release.
 //
-// Exits 1 when the file does not match, or a break comes without a major version.
+// Exits 1 when a break comes without a major version.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -219,6 +223,24 @@ export function declarationAt(tag, root = ROOT) {
   }
 }
 
+// The interface a tag shipped: its copy of the declaration, or else read from the code at the tag. Null when the tag
+// has neither, as in a scratch repository without the library.
+export function interfaceAt(tag, root = ROOT) {
+  const declared = declarationAt(tag, root);
+  if (declared) return declared;
+  const dir = mkdtempSync(join(tmpdir(), 'public-api-tag-'));
+  try {
+    const archive = execFileSync('git', ['archive', tag, 'packages'], { cwd: root, maxBuffer: 1 << 30, stdio: 'pipe' });
+    execFileSync('tar', ['-x', '-C', dir], { input: archive, stdio: ['pipe', 'ignore', 'pipe'] });
+    if (existsSync(join(root, 'node_modules'))) symlinkSync(join(root, 'node_modules'), join(dir, 'node_modules'));
+    return readInterface(dir);
+  } catch {
+    return null;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 // The breaks from `before` to `after` that the versions do not allow. There is one entry per package that breaks
 // without raising its major version. Empty when every break is allowed.
 export function unallowedBreaks(before, after) {
@@ -236,7 +258,7 @@ export function unallowedBreaks(before, after) {
 export function releaseCheck(root = ROOT) {
   const tag = lastRelease(root);
   if (!tag) return { tag: null, before: null, problems: [] };
-  const before = declarationAt(tag, root);
+  const before = interfaceAt(tag, root);
   if (!before) return { tag, before: null, problems: [] };
   return { tag, before, problems: unallowedBreaks(before, readInterface(root)) };
 }
@@ -258,20 +280,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv.includes(
     process.exitCode = 1;
   }
 } else if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const text = declarationText(readInterface());
-  const path = join(ROOT, DECLARATION);
   if (process.argv.includes('--update')) {
-    writeFileSync(path, text);
-    console.log(`public-api: wrote ${DECLARATION}`);
-  } else {
-    let committed = '';
-    try {
-      committed = readFileSync(path, 'utf8');
-    } catch {}
-    if (committed === text) console.log(`public-api: ${DECLARATION} matches the code`);
-    else {
-      console.log(`public-api: ${DECLARATION} differs from the code. Run node scripts/public-api.mjs --update`);
-      process.exitCode = 1;
-    }
-  }
+    writeFileSync(join(ROOT, DECLARATION), declarationText(readInterface()));
+    console.log(`public-api: wrote ${DECLARATION}, a local copy that git ignores`);
+  } else console.log('public-api: use --update to write a local copy, or --release to check the versions');
 }

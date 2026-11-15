@@ -59,6 +59,12 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.ai-public.off': 'Off: private reviewers only',
   'settings.ai-public.names': 'Names, kinds and links only',
   'settings.ai-public.note': 'Note text as well',
+  'settings.ai-images.name': 'Describe pictures with AI',
+  'settings.ai-images.sentence':
+    'A picture with no title and caption of its own gets a proposed title, what is seen in it and the topics it fits. A private reviewer only, unless you choose a public one. You keep or drop what it proposes.',
+  'settings.ai-images.private': 'Private reviewer only',
+  'settings.ai-images.off': 'Off: never describe pictures',
+  'settings.ai-images.public': 'A public reviewer too: it is sent the picture',
   // a time box and quiet hours for AI (settings-time-box.ts, ai_time_box)
   'settings.ai-time-box.name': 'Time box for AI',
   'settings.ai-time-box.sentence':

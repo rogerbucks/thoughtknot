@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/image-meta-xmp.test.js",
+  "test": "an XMP packet says what its image is > tags inside a title are left out, and no stray angle bracket remains",
+  "seen_failing_first": false,
+  "evidence": "The old pattern gave the same text for this input; the change only removes the incomplete-sanitisation pattern CodeQL flagged."
+}
