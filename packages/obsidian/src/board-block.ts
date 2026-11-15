@@ -7,6 +7,7 @@ import { readOnlyHere } from '@thoughtknot/core/display/graph-view/placement';
 import type { BlockContext } from './block-context';
 import type ThoughtKnotPlugin from './main';
 import { boardPictures } from './board-pictures';
+import { vaultOps } from './export/vault-write';
 import { changeVaultNote, noteText } from './storage/plugin-notes';
 
 /** Opens a board block as a board. False for any other block. */
@@ -37,7 +38,7 @@ export function renderBoardBlock(
       : undefined,
     arrange: writable ? arrangerOf(async () => (await noteText(plugin.app, path)) ?? '', line.name) : undefined,
     views: viewerOf(async () => (await noteText(plugin.app, path)) ?? ''),
-    images: boardPictures(plugin.app, path, writable),
+    images: boardPictures(plugin.app, path, writable ? (to, bytes) => vaultOps(plugin).write(to, bytes) : undefined),
   });
   return true;
 }
