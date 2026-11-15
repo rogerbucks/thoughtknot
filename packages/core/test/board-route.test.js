@@ -17,8 +17,13 @@ const TEXT = `// graph: ideas · BOARD
 (a)-[:CONNECTS]->(c),
 (a)-[:CONNECTS {label: 'then'}]->(d)`;
 
-const drawn = (text, key) =>
-  boardSvg(readBoard(text).board, PALETTE).match(new RegExp(`<g data-connector="${key}">[\\s\\S]*?</g>`))[0];
+/** The connector `key` as drawn: its group, cut out of the board's picture by plain search. */
+function drawn(text, key) {
+  const svg = boardSvg(readBoard(text).board, PALETTE);
+  const from = svg.indexOf(`<g data-connector="${key}">`);
+  assert.ok(from >= 0, `no connector ${key} is drawn`);
+  return svg.slice(from, svg.indexOf('</g>', from) + 4);
+}
 const routed = (set, links = [{ from: 'a', to: 'c' }]) => boardEdit(TEXT, { kind: 'routes', links, set }).text;
 
 /** The spots along a drawn cubic path, to see what it runs through. */
@@ -38,7 +43,7 @@ describe('how a connector of a board runs', () => {
   // proves: board_routes
   test('is straight while nothing is in its way, and bows round an item that is', () => {
     assert.match(drawn(TEXT, 'a-d'), /<line [^>]*marker-end="url\(#board-arrow\)"/, 'nothing in the way: a line');
-    const path = drawn(TEXT, 'a-c').match(/<path d="(M[^"]+C[^"]+)"/)[1];
+    const path = drawn(TEXT, 'a-c').match(/<path d="(M[^"C]+C[^"]+)"/)[1];
     const b = itemBox(readBoard(TEXT).board.items[1]);
     const inside = ([x, y]) => x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h;
     assert.ok(!along(path).some(inside), 'the curve clears the note between the two');
@@ -60,7 +65,7 @@ describe('how a connector of a board runs', () => {
     assert.match(drawn(down, 'a-d'), />then<\/text>/, 'its label is kept');
     assert.match(down, /\(a\)-\[:CONNECTS \{label: 'then', route: 'elbow'\}\]->\(d\)/);
     const curved = routed({ route: 'curved' }, [{ from: 'a', to: 'd' }]);
-    assert.match(drawn(curved, 'a-d'), /<path d="M[^"]+C/, 'curved even with nothing in its way');
+    assert.match(drawn(curved, 'a-d'), /<path d="M[^"C]+C/, 'curved even with nothing in its way');
     assert.equal(routed({ route: null }), TEXT, 'given back to the board, nothing is written');
     assert.equal(writeBoard(readBoard(elbow).board), elbow, 'read back as written');
     const over = { x: 0, y: 0, w: 100, h: 100 };
