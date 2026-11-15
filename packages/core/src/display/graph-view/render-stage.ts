@@ -252,7 +252,7 @@ export class RenderStage {
     if (d?.moving) (this.cardsOn.cards ? this.cardsOn : this.mover)?.drop();
     if (!d || d.moved) return;
     const r = this.canvas.getBoundingClientRect();
-    this.clicked(e.clientX - r.left, e.clientY - r.top);
+    if (!this.cardsOn.chose(e, r)) this.clicked(e.clientX - r.left, e.clientY - r.top);
   }
 
   /** A finger taken away without a tap, as when the system takes the touch. */
