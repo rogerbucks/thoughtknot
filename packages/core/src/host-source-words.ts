@@ -42,6 +42,7 @@ export const HOST_SOURCE_WORDS = {
   'host.command.boards-png': 'Export the boards of this note as PNG pictures',
   'host.command.boards-pdf': 'Export the boards of this note as a PDF',
   'host.command.slides-pdf': 'Export the slides of this note as a PDF',
+  'host.slides.done': 'Slides handed over as one PDF: {count}.',
   'host.slides.none': 'This note holds no slide to export. Draw a frame on a board to make one.',
   'host.boards.failed': 'The boards were not exported: {why}',
   'host.boards.none': 'This note holds no board to export.',

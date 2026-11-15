@@ -93,7 +93,7 @@ async function handOver(win: Win, note: string, format: string): Promise<string>
     }
     const pdf = slides ? 'slides.pdf' : 'boards.pdf';
     if (pages.length) download(win, pdf, picturesPdf(pages, word('page.boards')), 'application/pdf');
-    if (slides) return count ? word('page.board-exchange.slides', { count }) : word('host.slides.none');
+    if (slides) return count ? word('host.slides.done', { count }) : word('host.slides.none');
   }
   return count ? [word('page.board-exchange.done', { count }), ...new Set(said)].join(' ') : word('host.boards.none');
 }
