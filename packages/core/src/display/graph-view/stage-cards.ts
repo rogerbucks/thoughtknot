@@ -22,7 +22,7 @@ import { isTilted, onScreen } from '../../render/render-tilt.ts';
 import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { Lifecycle } from '../lifecycle.ts';
-import { markFit, nameOnly, tallOf } from './stage-cards-fit.ts';
+import { markFit, nameOnly, tallOf, unpinButton } from './stage-cards-fit.ts';
 
 /** Below this alpha a card is not shown. */
 const SHOWN = 0.05;
@@ -60,13 +60,6 @@ const CORNER_PX = 8;
 const HEAD_PX = 7;
 /** The properties a card never lists: those that say where it sits or what it is, already shown. */
 const UNLISTED = new Set(['name', 'id', 'subject', 'area', 'topic', 'text']);
-
-/** Whether Cards is on for each graph, by its name, while the plugin runs: a card drawn again keeps it. */
-const chosen = new Map<string, boolean>();
-/** Whether Cards is on for `graph`. */
-export const cardsChosen = (graph: string): boolean => chosen.get(graph) ?? false;
-/** Keeps whether Cards is on for `graph`. */
-export const chooseCards = (graph: string, on: boolean): void => void chosen.set(graph, on);
 
 /**
  * What the host gives the cards: Markdown rendered as a note is, made safe, and for a thing that is a note, that note
@@ -201,6 +194,7 @@ export class StageCards {
         const more = cardSizeOf({ ...c.text, fit: undefined }).more;
         if (more) this.showAll(el, body, more, c.key);
         if (onFit) nameOnly(head, () => onFit(c.key, this.fitOf(c.key) === 'title' ? undefined : 'title'));
+        if (onFit) unpinButton(head, () => this.onUnpin?.(c.key));
         if (c.text.props?.length) {
           const props = el.createDiv({ cls: 'thoughtknot-stage-card-props' });
           for (const [k, v] of c.text.props) props.createDiv({ text: `${k} ${v}` });
@@ -213,8 +207,11 @@ export class StageCards {
 
   /** Card `key`'s height with all it holds, measured as it then stands, so it is laid at its true height. */
   tall = (key: string): number | undefined => tallOf(this.els.get(key), () => this.fillIn(key));
-  /** Marks the cards `keys` chosen together, which the chosen bar sizes at once. */
-  choose = (keys: ReadonlySet<string>): void => this.els.forEach((el, k) => el.toggleClass('is-chosen', keys.has(k)));
+  /** Marks the cards `keys` with `cls`: `is-chosen` for the cards chosen together, `is-pinned` for those put by hand. */
+  mark = (cls: string, keys: ReadonlySet<string>): void =>
+    this.els.forEach((el, k) => el.toggleClass(cls, keys.has(k)));
+  /** Told when the reader unpins a card by its pin, to give it back to the layout. */
+  onUnpin?: (key: string) => void;
 
   /** How card `key` is sized now. */
   private fitOf = (key: string): CardFit | undefined => this.laid.cards.find((c) => c.key === key)?.text.fit;

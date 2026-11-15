@@ -1,5 +1,6 @@
 // The bar over the cards chosen together (render_cards). Shift-click or Cmd-click a card to choose it, and again to let
-// it go. The bar sizes them all at once: name only, first lines, or all they hold. It can choose every card, or none.
+// it go. The bar sizes them all at once: name only, first lines, or all they hold. It pins them where they are, or
+// gives them back to the layout. It can choose every card, or none.
 import type { CardStep } from '../../card-choice.ts';
 import { word, type WordKey } from '../../words.ts';
 import { button } from '../button.ts';
@@ -8,6 +9,8 @@ import { button } from '../button.ts';
 export interface ChoiceActions {
   size: (step: CardStep) => void;
   every: () => void;
+  pin: () => void;
+  unpin: () => void;
   clear: () => void;
 }
 
@@ -37,6 +40,8 @@ export function choiceBar(
     const b = button(bar, word(w), icon, () => on.size(s));
     b.setAttribute('aria-pressed', String(step === s));
   }
+  button(bar, word('view.cards.pin'), 'pin', on.pin);
+  button(bar, word('view.cards.unpin-all'), 'pin-off', on.unpin);
   button(bar, word('view.cards.every'), 'check-square', on.every);
   button(bar, word('view.cards.none'), 'x', on.clear);
   // compact: each button names itself in its tooltip (Roger, 6 Nov 2026)

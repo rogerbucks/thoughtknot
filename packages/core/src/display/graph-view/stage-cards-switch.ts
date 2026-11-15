@@ -1,135 +1,21 @@
-// Cards on and off for the new rendering's stage (ES§73, render_cards). Here are the dock's Cards button and the glide.
-// The glide spreads the drawing to make room for the cards, or draws it back. The cards are in stage-cards.ts.
-import type { Graph } from '@thoughtknot/graph-spec';
-import type { GraphDrawing, NoteReading } from '../../note-reading.ts';
+// Cards on and off for the new rendering's stage (ES§73, render_cards): the dock's Cards button, and the cards' sizes,
+// places, pins and choice. stage-cards-lay.ts lays them and glides them on and off; stage-cards.ts draws them.
+import type { NoteReading } from '../../note-reading.ts';
 import { noteOf } from '../../links.ts';
 import type { LinkHost } from '../link-host.ts';
-import {
-  CARD_ON_CHOICE,
-  cardSizeOf,
-  cardsInPlace,
-  cardsLaid,
-  type CardFit,
-  type CardsLaid,
-} from '../../render/render-cards.ts';
+import { cardSizeOf, type CardFit } from '../../render/render-cards.ts';
 import type { View } from '../../render/render-marks.ts';
-import { MORPH_MS, morphed } from '../../render/render-morph.ts';
 import { roomSizes } from '../../render/render-detail.ts';
 import type { Spot } from '../../render/render-rooms.ts';
-import type { Scene } from '../../render/render-scene.ts';
 import { word } from '../../words.ts';
 import { button } from '../button.ts';
-import { StageCards, cardTexts, cardsChosen, chooseCards, type CardWords } from './stage-cards.ts';
-import { fitsOf, glide, placesOf, withFits } from './stage-cards-fit.ts';
+import { StageCards, type CardWords } from './stage-cards.ts';
+import { cardsChosen, chooseCards, fitsOf, glide, placesOf } from './stage-cards-fit.ts';
 import { MoveUndo } from './move-undo.ts';
-import type { PlacesHost } from './stage-places.ts';
 import { groundShift } from '../../render/render-tilt.ts';
 import { CardChoice, fitOfStep, sharedStep, type CardStep } from '../../card-choice.ts';
 import { choiceBar } from './stage-cards-choice.ts';
-
-/** What switching Cards needs of the stage: its card, scene, places and room sizes (both changed in place), and view. */
-export interface CardsHost {
-  viewport: HTMLElement;
-  scene: Scene;
-  spots: Map<string, Spot>;
-  sizes: number[];
-  drawing: GraphDrawing;
-  g?: Graph;
-  view: View;
-  /** What the host gives the cards to show; none, plain text. */
-  words?: CardWords;
-  /** What the drawing is drawn as: a type whose places mean something opens only the chosen card. */
-  kind?: string;
-  /** How each card was sized by its reader; and told when the reader sizes one. */
-  fits?: ReadonlyMap<string, { fit: CardFit; tall?: number }>;
-  onFit?: (key: string, fit: CardFit | undefined, tall?: number) => void;
-  /** Where the reader put cards by hand, in the layout's own places. */
-  places?: ReadonlyMap<string, { x: number; y: number }>;
-  /** Where the cards' sizes and places are saved: the note's layout block (render_cards, layout_block). */
-  saves?: PlacesHost;
-}
-
-/**
- * The cards of `h` laid at `spots`, each sized as its reader chose. As a card is resized, the cards keep the spread
- * they have (`keep`) and that card stays put (`pinned`).
- */
-function layCards(
-  h: CardsHost,
-  spots: ReadonlyMap<string, Spot>,
-  keep?: number,
-  pinned?: ReadonlySet<string>,
-): CardsLaid {
-  const texts = withFits(cardTexts(h.drawing, h.g, h.words), h.fits ?? new Map());
-  return h.kind && CARD_ON_CHOICE.has(h.kind)
-    ? cardsInPlace(h.scene, spots, texts) // where a place means something, nothing spreads
-    : cardsLaid(h.scene, spots, texts, h.drawing.links, 1, keep, pinned);
-}
-
-/** `laid` with each card the reader put by hand at its place, pinned there; the cards round them make room. */
-function withHands(h: CardsHost, laid: CardsLaid): CardsLaid {
-  if (laid.only || !h.places?.size) return laid;
-  const spots = new Map(laid.spots);
-  for (const [k, p] of h.places) {
-    const s = spots.get(k);
-    if (s)
-      spots.set(k, { ...s, x: laid.cx + (p.x - laid.cx) * laid.spread, y: laid.cy + (p.y - laid.cy) * laid.spread });
-  }
-  return { ...layCards(h, spots, 1, new Set(h.places.keys())), spread: laid.spread, cx: laid.cx, cy: laid.cy };
-}
-
-/** `spots` spread by `f` from (`cx`, `cy`), each in place: what was drawn under a view, spread so. */
-function spreadBy(spots: Map<string, Spot>, f: number, cx: number, cy: number): Map<string, { x: number; y: number }> {
-  for (const [k, s] of spots) spots.set(k, { x: cx + (s.x - cx) * f, y: cy + (s.y - cy) * f, r: s.r * f });
-  return new Map([...spots].map(([k, s]) => [k, { x: s.x, y: s.y }]));
-}
-
-/**
- * Turns Cards on or off for the stage `h`, whose cards are `was`. Every place, and the view, are first spread (or drawn
- * back) together, so the screen shows just what it did. Then each place glides the rest of the way, drawing each
- * frame, and `done` is told once all are at rest. `atOnce`, as when a card is drawn again, there is no glide.
- */
-export function switchCards(
-  h: CardsHost,
-  was: StageCards | null,
-  on: boolean,
-  draw: () => void,
-  done: () => void,
-  atOnce = false,
-): { cards: StageCards | null; view: View; stop: () => void } {
-  const laid = on ? withHands(h, layCards(h, h.spots)) : was?.laid;
-  if (!laid || (on ? false : !was)) return { cards: was, view: h.view, stop: () => {} };
-  const base = on ? new Map(h.spots) : (was as StageCards).base;
-  const to = on ? laid.spots : base;
-  const f = on ? laid.spread : 1 / laid.spread;
-  const from = spreadBy(h.spots, f, laid.cx, laid.cy);
-  const v = h.view;
-  const view = { ...v, x: laid.cx + (v.x - laid.cx) * f, y: laid.cy + (v.y - laid.cy) * f, scale: v.scale / f };
-  h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, to as Map<string, Spot>));
-  was?.remove();
-  const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots, h.words, h.onFit) : null;
-  const frame = typeof requestAnimationFrame === 'undefined' || atOnce ? null : requestAnimationFrame;
-  let over = false;
-  // stopped, the places go straight to where they glide: a switch after, or an unload, starts from rest
-  const stop = (): void => {
-    if (over) return;
-    over = true;
-    for (const [k, s] of to) h.spots.set(k, s);
-    if (cards) cards.settled = true;
-  };
-  const end = (): void => void (!over && (stop(), done()));
-  if (!frame) return (end(), { cards, view, stop });
-  const start = performance.now();
-  const step = (now: number): void => {
-    if (over) return;
-    const t = (now - start) / MORPH_MS;
-    if (t >= 1) return end();
-    for (const [k, s] of morphed(from, to, t)) h.spots.set(k, s);
-    draw();
-    frame(step);
-  };
-  frame(step);
-  return { cards, view, stop };
-}
+import { layCards, switchCards, withHands, type CardsHost } from './stage-cards-lay.ts';
 
 /**
  * The dock's Cards button in `root`, for `stage`, on graph `graph`: pressed, each item shows as a card with its whole
@@ -209,6 +95,8 @@ export class CardsSwitch {
     this.host = { ...h, words: this.words, fits, places, onFit: (k, f, tall) => this.fit(k, f, tall) };
     const next = switchCards(this.host, this.cards, on, h.draw, done, atOnce);
     [this.cards, this.stop] = [next.cards, next.stop];
+    if (this.cards) this.cards.onUnpin = (k) => this.unpin([k]);
+    this.markPins();
     return next.view;
   }
 
@@ -260,7 +148,7 @@ export class CardsSwitch {
   private choose(keys: readonly string[]): void {
     if (!keys.length && !this.chosen.size && !this.bar) return;
     this.chosen.set(keys);
-    this.cards?.choose(this.chosen.all());
+    this.cards?.mark('is-chosen', this.chosen.all());
     const viewport = this.host?.viewport;
     const step = sharedStep(fitsOf(this.graph), this.chosen.list());
     this.bar?.remove();
@@ -268,6 +156,8 @@ export class CardsSwitch {
       ? choiceBar(viewport, this.chosen.size, step, {
           size: (s) => this.sizeChosen(s),
           every: () => this.choose(this.cards?.laid.cards.map((c) => c.key) ?? []),
+          pin: () => this.pin(this.chosen.list()),
+          unpin: () => this.unpin(this.chosen.list()),
           clear: () => this.choose([]),
         })
       : null;
@@ -289,6 +179,7 @@ export class CardsSwitch {
       pinned = new Set([...keys, ...placesOf(this.graph).keys()]);
     const laid = { ...layCards(h, spots, 1, pinned), spread: was.spread, cx: was.cx, cy: was.cy };
     cards.refit(laid);
+    this.markPins();
     cards.settled = false; // the arrows wait for the cards to come to rest
     h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, laid.spots));
     this.stop = glide(h.spots, laid.spots, h.draw, () => ((cards.settled = true), h.draw()));
@@ -341,25 +232,103 @@ export class CardsSwitch {
     this.held = null;
     const to = held?.moved ? h?.spots.get(held.key) : undefined;
     if (!h || !held || !cards || !to) return;
-    const places = placesOf(this.graph),
-      had = places.get(held.key);
-    const { spread, cx, cy } = cards.laid;
-    const at = (s: Spot) => ({ x: cx + (s.x - cx) / spread, y: cy + (s.y - cy) / spread });
-    const put = (p: { x: number; y: number } | undefined, s: Spot): void => {
-      if (p) places.set(held.key, p);
-      else places.delete(held.key);
-      this.save(held.key);
-      this.stop();
-      this.relay([held.key], new Map([...(this.cards?.laid.spots ?? []), [held.key, s]]));
-    };
-    put(at(to), to);
+    const had = placesOf(this.graph).get(held.key);
+    const at = this.baseOf(to);
+    const put = (p: { x: number; y: number } | undefined, s: Spot) => this.put(new Map([[held.key, { p, s }]]));
+    put(at, to);
     const name = h.scene.nodes.get(held.key)?.name ?? held.key;
-    this.undoes ??= new MoveUndo(h.viewport, this.graph);
-    this.undoes.offer(
+    this.offer(
       word('layout.placed', { thing: name }),
       () => put(had, held.from),
-      () => put(at(to), to),
+      () => put(at, to),
     );
+  }
+
+  /** Where `s`, a place as the cards are laid, lies in the layout's own places, before spreading. */
+  private baseOf(s: { x: number; y: number }): { x: number; y: number } {
+    const { spread, cx, cy } = this.cards?.laid ?? { spread: 1, cx: 0, cy: 0 };
+    return { x: cx + (s.x - cx) / spread, y: cy + (s.y - cy) / spread };
+  }
+
+  /**
+   * Puts each card of `to` at its place `s`, pinned there by hand at `p`, or given back to the layout with none. Each is
+   * saved, and the cards round them make room.
+   */
+  private put(to: ReadonlyMap<string, { p: { x: number; y: number } | undefined; s: Spot }>): void {
+    const places = placesOf(this.graph);
+    for (const [k, { p }] of to) {
+      if (p) places.set(k, p);
+      else places.delete(k);
+      this.save(k);
+    }
+    this.stop();
+    const spots = new Map(this.cards?.laid.spots ?? []);
+    for (const [k, { s }] of to) spots.set(k, s);
+    this.relay([...to.keys()], spots);
+  }
+
+  /** Offers the undo of a move, said as `said`; the undo shares the history of the dots' moves. */
+  private offer(said: string, undo: () => void, redo: () => void): void {
+    const h = this.host;
+    if (!h) return;
+    this.undoes ??= new MoveUndo(h.viewport, this.graph);
+    this.undoes.offer(said, undo, redo);
+  }
+
+  /** Marks each card put by hand with its pin. */
+  private markPins(): void {
+    this.cards?.mark('is-pinned', new Set(placesOf(this.graph).keys()));
+  }
+
+  /** Pins each card of `keys` where it is now, so laying the cards again never moves it. */
+  pin(keys: readonly string[]): void {
+    const cards = this.cards;
+    if (!cards || cards.laid.only) return;
+    const places = placesOf(this.graph);
+    const fresh = keys.filter((k) => !places.has(k) && cards.laid.spots.has(k));
+    for (const k of fresh) {
+      places.set(k, this.baseOf(cards.laid.spots.get(k) as Spot));
+      this.save(k);
+    }
+    this.markPins();
+    if (fresh.length)
+      this.offer(
+        word('view.cards.pinned', { count: fresh.length }),
+        () => this.unpinNow(fresh),
+        () => this.pin(fresh),
+      );
+  }
+
+  /** Gives each card of `keys` back to the layout: it glides to where the layout puts it, and the move undoes. */
+  unpin(keys: readonly string[]): void {
+    const places = placesOf(this.graph),
+      was = keys.filter((k) => places.has(k)).map((k) => [k, places.get(k), this.cards?.laid.spots.get(k)] as const);
+    if (!was.length || !this.unpinNow(keys)) return;
+    const back = new Map(was.flatMap(([k, p, s]) => (s ? [[k, { p, s: { ...s } }] as const] : [])));
+    this.offer(
+      word('view.cards.unpinned', { count: was.length }),
+      () => this.put(back),
+      () => this.unpinNow(keys),
+    );
+  }
+
+  /** Gives the cards `keys` back to the layout, with no undo offered; says whether any was pinned. */
+  private unpinNow(keys: readonly string[]): boolean {
+    const [h, cards, places] = [this.host, this.cards, placesOf(this.graph)];
+    if (!h || !cards) return false;
+    // where the layout lays each card now, round the cards still put by hand; only these cards go there
+    const rest = new Map([...places].filter(([k]) => !keys.includes(k)));
+    const fresh = withHands({ ...h, places: rest }, layCards(h, cards.base));
+    const { spread, cx, cy } = cards.laid;
+    const home = new Map<string, { p: undefined; s: Spot }>();
+    for (const k of keys) {
+      const f = fresh.spots.get(k);
+      if (!places.has(k) || !f) continue;
+      const [bx, by] = [fresh.cx + (f.x - fresh.cx) / fresh.spread, fresh.cy + (f.y - fresh.cy) / fresh.spread];
+      home.set(k, { p: undefined, s: { ...f, x: cx + (bx - cx) * spread, y: cy + (by - cy) * spread } });
+    }
+    if (home.size) this.put(home);
+    return home.size > 0;
   }
 
   /** Stops a glide under way and takes the cards away, as the stage goes. */

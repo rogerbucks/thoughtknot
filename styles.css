@@ -2746,7 +2746,8 @@ button.thoughtknot-stage-card-more {
 .thoughtknot-stage-card.is-full > .thoughtknot-stage-card-body {
   overflow: visible;
 }
-button.thoughtknot-stage-card-fit {
+button.thoughtknot-stage-card-fit,
+button.thoughtknot-stage-card-pin {
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -2762,12 +2763,23 @@ button.thoughtknot-stage-card-fit {
   cursor: pointer;
   pointer-events: auto;
 }
-button.thoughtknot-stage-card-fit:hover {
+button.thoughtknot-stage-card-fit:hover,
+button.thoughtknot-stage-card-pin:hover {
   opacity: 1;
 }
-button.thoughtknot-stage-card-fit svg {
+button.thoughtknot-stage-card-fit svg,
+button.thoughtknot-stage-card-pin svg {
   inline-size: 1em;
   block-size: 1em;
+}
+/* a card put by hand shows its pin; pressed, the card goes back to the layout */
+button.thoughtknot-stage-card-pin {
+  margin-inline-start: 0;
+  color: var(--thoughtknot-card-colour);
+  opacity: 1;
+}
+.thoughtknot-stage-card:not(.is-pinned) button.thoughtknot-stage-card-pin {
+  display: none;
 }
 /* far out a card shows only its name */
 .thoughtknot-stage-card.is-far > :not(.thoughtknot-stage-card-head) {

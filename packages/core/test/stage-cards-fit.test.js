@@ -311,3 +311,68 @@ test('cards chosen together with Shift take one step at once: name only, first l
     uninstall();
   }
 });
+
+// proves: render_cards
+test('a card put by hand shows its pin, stays put, and its pin gives it back to the layout; the bar pins and unpins', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { installHost } = await import('../src/display/host.ts');
+    installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { cardsControl } = await import('../src/display/graph-view/stage-cards-switch.ts');
+    const { MoveUndo } = await import('../src/display/graph-view/move-undo.ts');
+    const { drawing, g, keys } = drawingAndGraph();
+    const root = doc.createElement('div');
+    doc.body.appendChild(root);
+    const dock = root.createDiv({ cls: 'thoughtknot-view-dock' }).createDiv({ cls: 'thoughtknot-dock-body' });
+    const viewport = root.createDiv();
+    const stage = new RenderStage(viewport, drawing, g, { open: () => {}, clear: () => {}, selected: () => null });
+    cardsControl(root, stage, 'pin-plan');
+    dock.querySelector('button').click();
+    const w0 = stage.spots.get('W0');
+    stage.view = { ...stage.view, scale: 1, x: w0.x - 400, y: w0.y - 300 };
+    stage.draw();
+    const sw = stage.cardsOn;
+    const laidAt = boxesOf(stage).get('W0');
+    const el = cardEl(viewport, 'Work 0');
+    assert.ok(!el.hasClass('is-pinned'), 'laid by the layout: no pin');
+    const [x, y] = ['x', 'y'].map((a) => parseFloat(el.cssProps[`--thoughtknot-card-${a}`]));
+    // dragged far off, it is pinned there and shows its pin
+    assert.ok(sw.grab(x + 20, y + 10, () => stage.view));
+    sw.drag(900, 0);
+    sw.drop();
+    assert.ok(el.hasClass('is-pinned'), 'put by hand: pinned');
+    const put = boxesOf(stage).get('W0');
+    // its pin gives it back to the layout, where it was laid; the undo puts it back where it was put
+    el.querySelector('button.thoughtknot-stage-card-pin').click();
+    let now = boxesOf(stage).get('W0');
+    assert.ok(Math.abs(now.x - laidAt.x) < 1e-6 && Math.abs(now.y - laidAt.y) < 1e-6, 'back where the layout laid it');
+    assert.ok(!el.hasClass('is-pinned'));
+    assert.ok(new MoveUndo(viewport, 'pin-plan').undo());
+    for (let i = 0; i < 3; i++) await Promise.resolve(); // the undo's toast says so before the page goes
+    now = boxesOf(stage).get('W0');
+    assert.ok(Math.abs(now.x - put.x) < 1e-6 && Math.abs(now.y - put.y) < 1e-6, 'undone: where it was put');
+    assert.ok(el.hasClass('is-pinned'));
+    // the bar pins the chosen cards where they are, and gives them all back to the layout
+    const bar = () => viewport.querySelector('.thoughtknot-stage-cards-chosen');
+    const press = (label) =>
+      bar()
+        .querySelectorAll('button')
+        .find((b) => b.getAttribute('aria-label') === label)
+        .click();
+    const name = (k) => `${k[0] === 'W' ? 'Work' : 'Home'} ${k[1]}`;
+    sw.choose(['H0', 'W1']);
+    const before = boxesOf(stage);
+    press('Pin where they are');
+    assert.ok(cardEl(viewport, 'Home 0').hasClass('is-pinned') && cardEl(viewport, 'Work 1').hasClass('is-pinned'));
+    for (const k of keys) assert.equal(boxesOf(stage).get(k).x, before.get(k).x, `${k} does not move as it is pinned`);
+    sw.choose(['H0', 'W1', 'W0']);
+    press('Unpin: back to the layout');
+    for (const k of keys) assert.ok(!cardEl(viewport, name(k)).hasClass('is-pinned'), `${k} unpinned`);
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});
