@@ -755,6 +755,7 @@
       "board_item_plugins",
       "board_tools",
       "board_handles",
+      "board_layers",
       "board_view_items",
       "board_main_screen"
     ]
