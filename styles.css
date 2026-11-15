@@ -5489,8 +5489,9 @@ img.thoughtknot-picture-hidden,
     display: none;
   }
   /* A panel's head is its name and its fold (panels_compact). The head drags it, and dropped near a side it docks
-     there. So the grip and the dock buttons wait out of sight, taking no room. A key that brings focus shows them. */
-  .thoughtknot-dock-head:not(:focus-within) :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
+     there. So the grip and the dock buttons wait out of sight, taking no room. A key that brings focus shows them.
+     A press of the mouse does not: they would push the fold out from under the pointer, and the press would miss. */
+  .thoughtknot-dock-head:not(:has(:focus-visible)) :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
     position: absolute;
     opacity: 0;
     pointer-events: none;
