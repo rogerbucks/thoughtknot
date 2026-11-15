@@ -14,6 +14,8 @@
 // Usage:
 //   node scripts/ios-prepare.mjs             do steps 1 and 2, and print the build number.
 //   node scripts/ios-prepare.mjs --build     also run `cargo tauri ios build` for app-store-connect with that number.
+//   add --root DIR                           to work on another checkout of the repo, such as the main one from a
+//                                            worktree, since only the checkout that ran `ios init` has gen/.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -21,11 +23,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const TAURI = join(ROOT, 'packages', 'app', 'src-tauri');
-const APPLE = join(TAURI, 'gen', 'apple');
-const ICON_SOURCE = join(ROOT, 'site', 'icon.svg');
-const PRIVACY = join(TAURI, 'ios', 'PrivacyInfo.xcprivacy');
+const HERE = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** The purple behind the site's icon, as [r, g, b]. */
 export const ICON_BACKGROUND = [0x4b, 0x32, 0xc3];
@@ -133,15 +131,24 @@ export function flattenPng(file, background = ICON_BACKGROUND) {
 }
 
 /** The build number for this checkout: the number of commits on HEAD, as a string. */
-export function buildNumber(cwd = ROOT) {
+export function buildNumber(cwd = HERE) {
   return execFileSync('git', ['rev-list', '--count', 'HEAD'], { cwd, encoding: 'utf8' }).trim();
 }
 
-function prepareIcons() {
-  const appIcons = join(APPLE, 'Assets.xcassets', 'AppIcon.appiconset');
+function paths(root) {
+  const tauri = join(root, 'packages', 'app', 'src-tauri');
+  return {
+    apple: join(tauri, 'gen', 'apple'),
+    iconSource: join(root, 'site', 'icon.svg'),
+    privacy: join(tauri, 'ios', 'PrivacyInfo.xcprivacy'),
+  };
+}
+
+function prepareIcons(apple, iconSource) {
+  const appIcons = join(apple, 'Assets.xcassets', 'AppIcon.appiconset');
   const out = mkdtempSync(join(tmpdir(), 'ios-icons-'));
   try {
-    execFileSync('cargo', ['tauri', 'icon', ICON_SOURCE, '-o', out, '--ios-color', '#4b32c3'], { stdio: 'ignore' });
+    execFileSync('cargo', ['tauri', 'icon', iconSource, '-o', out, '--ios-color', '#4b32c3'], { stdio: 'ignore' });
     const made = readdirSync(join(out, 'ios')).filter((name) => name.endsWith('.png'));
     for (const name of made) writeFileSync(join(appIcons, name), flattenPng(readFileSync(join(out, 'ios', name))));
     return made.length;
@@ -151,15 +158,18 @@ function prepareIcons() {
 }
 
 function main(args) {
-  if (!existsSync(APPLE)) throw new Error(`no iPhone project at ${APPLE}: run \`cargo tauri ios init\` first`);
-  const icons = prepareIcons();
-  copyFileSync(PRIVACY, join(APPLE, 'thoughtknot-app_iOS', 'PrivacyInfo.xcprivacy'));
-  const build = buildNumber();
+  const rootAt = args.indexOf('--root');
+  const root = rootAt === -1 ? HERE : args[rootAt + 1];
+  const { apple, iconSource, privacy } = paths(root);
+  if (!existsSync(apple)) throw new Error(`no iPhone project at ${apple}: run \`cargo tauri ios init\` first`);
+  const icons = prepareIcons(apple, iconSource);
+  copyFileSync(privacy, join(apple, 'thoughtknot-app_iOS', 'PrivacyInfo.xcprivacy'));
+  const build = buildNumber(root);
   console.log(`ios-prepare: ${icons} icons with no alpha, privacy manifest copied, build number ${build}`);
   if (args.includes('--build')) {
     const config = JSON.stringify({ bundle: { iOS: { bundleVersion: build } } });
     execFileSync('cargo', ['tauri', 'ios', 'build', '--export-method', 'app-store-connect', '--config', config], {
-      cwd: join(ROOT, 'packages', 'app'),
+      cwd: join(root, 'packages', 'app'),
       stdio: 'inherit',
     });
   }
