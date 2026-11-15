@@ -123,15 +123,30 @@ export function parseValue(s: string, from: number, depth = 0): [PdfValue, numbe
   return [{ op: token }, j];
 }
 
-/** What a PDF holds: its text, each object by number, and where each stream's raw bytes are in the text. */
+/**
+ * What a PDF holds: its text, each object by number, and where each stream's raw bytes are in the text. `spent` is
+ * the count of characters its streams have given so far, each time one was read, and `most` is the most they may give.
+ */
 export interface PdfFile {
   text: string;
   objects: Map<number, PdfValue>;
   streams: Map<number, [number, number]>;
+  spent?: number;
+  most?: number;
 }
 
-/** The most a PDF may hold before it is refused: its bytes, its objects, what one stream inflates to, and its pages. */
-export const PDF_LIMITS = { bytes: 32 * 1024 * 1024, objects: 500_000, stream: 64 * 1024 * 1024, pages: 5000 };
+/**
+ * The most a PDF may hold before it is refused: its bytes, its objects, what one stream inflates to, and its pages.
+ * `total` is the most all its streams may give together, counting a stream again each time it is read. So a small
+ * file that names one stream many times cannot make the reader work without end.
+ */
+export const PDF_LIMITS = {
+  bytes: 32 * 1024 * 1024,
+  objects: 500_000,
+  stream: 64 * 1024 * 1024,
+  pages: 5000,
+  total: 64 * 1024 * 1024,
+};
 
 /** The Latin-1 text of the bytes, made a piece at a time. */
 export function latin1(b: Uint8Array): string {
@@ -168,7 +183,17 @@ export const numOf = (f: PdfFile, v: PdfValue | undefined, fallback = 0): number
   return typeof r === 'number' ? r : fallback;
 };
 
-/** The text of the stream of object `num`, inflated; null when it is in a form this reader does not read. */
+/** The stream's text, counted against the most all streams may give together; past that the file is too big. */
+function counted(f: PdfFile, text: string): string {
+  f.spent = (f.spent ?? 0) + text.length;
+  if (f.spent > (f.most ?? PDF_LIMITS.total)) throw new TooBig();
+  return text;
+}
+
+/**
+ * The text of the stream of object `num`, inflated; null when it is in a form this reader does not read. Each read
+ * counts against `PDF_LIMITS.total`, and a file that passes it is refused as too big.
+ */
 export function streamText(f: PdfFile, num: number, limit = PDF_LIMITS.stream): string | null {
   const at = f.streams.get(num);
   const dict = dictOf(f, f.objects.get(num));
@@ -182,20 +207,23 @@ export function streamText(f: PdfFile, num: number, limit = PDF_LIMITS.stream): 
   }
   const raw = new Uint8Array(at[1] - at[0]);
   for (let i = 0; i < raw.length; i++) raw[i] = f.text.charCodeAt(at[0] + i) & 255;
-  if (names.length === 0) return latin1(raw);
+  if (names.length === 0) return raw.length > limit ? null : counted(f, latin1(raw));
   try {
-    return latin1(inflateZlib(raw, 0, raw.length, limit));
+    return counted(f, latin1(inflateZlib(raw, 0, raw.length, limit)));
   } catch (e) {
     if (e instanceof Damaged) return null;
     throw e;
   }
 }
 
-/** Every object of the file, found by scanning; the stream objects' contents are unpacked into more. */
-export function readObjects(bytes: Uint8Array): PdfFile {
+/**
+ * Every object of the file, found by scanning; the stream objects' contents are unpacked into more. `total` is the
+ * most its streams may give together.
+ */
+export function readObjects(bytes: Uint8Array, total = PDF_LIMITS.total): PdfFile {
   if (bytes.length > PDF_LIMITS.bytes) throw new TooBig();
   const text = latin1(bytes);
-  const f: PdfFile = { text, objects: new Map(), streams: new Map() };
+  const f: PdfFile = { text, objects: new Map(), streams: new Map(), spent: 0, most: total };
   const found = /(\d{1,10})\s+\d{1,5}\s+obj\b/g;
   for (let m = found.exec(text); m; m = found.exec(text)) {
     if (f.objects.size >= PDF_LIMITS.objects) throw new TooBig();
@@ -224,11 +252,18 @@ export function readObjects(bytes: Uint8Array): PdfFile {
     const [count, first] = [numOf(f, v.get('N')), numOf(f, v.get('First'))];
     if (count > PDF_LIMITS.objects) throw new TooBig();
     const head = body.slice(0, first).split(/\s+/).filter(Boolean).map(Number);
+    // Each object starts after the one before it ends, as the format says. So the body is read once, however many
+    // numbers the head gives to one place.
+    let end = 0;
     for (let k = 0; k < count; k++) {
       const [id, off] = [head[2 * k], head[2 * k + 1]];
       if (id === undefined || off === undefined || Number.isNaN(id + off) || f.objects.has(id)) continue;
+      if (first + off < end) continue;
+      if (f.objects.size >= PDF_LIMITS.objects) throw new TooBig();
       const inner = parseValue(body, first + off);
-      if (inner) f.objects.set(id, inner[0]);
+      if (!inner) continue;
+      f.objects.set(id, inner[0]);
+      end = inner[1];
     }
   }
   return f;
