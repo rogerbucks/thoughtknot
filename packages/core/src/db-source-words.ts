@@ -3,8 +3,9 @@
 
 /** The import dialog's words, by key, in UK English. */
 export const DB_SOURCE_WORDS = {
-  'db.none': 'No database file is in the vault: Import reads a .sqlite, .sqlite3, .db or .xlsx file kept there.',
-  'import.title': 'Import from a database or workbook',
+  'db.none':
+    'No database, workbook or document is in the vault: Import reads a .sqlite, .sqlite3, .db, .xlsx, .docx or .pdf file kept there.',
+  'import.title': 'Import from a database, workbook or document',
   'import.file': 'Database file',
   'import.file.sentence':
     'A SQLite file in this vault. Choosing it lists its tables, read on this device; nothing is sent anywhere.',
@@ -29,6 +30,11 @@ export const DB_SOURCE_WORDS = {
   'import.unread': 'Not offered: {why}',
   'import.copy': 'The rows are written into this note as text. Nothing stays linked to the database.',
   'import.run': 'Import',
+  'import.document.copy':
+    'The document stays linked: its text is read each time the note is drawn, and nothing is written to the file. Use Propose a graph on the block to turn its text into a proposal.',
+  'import.document.run': 'Add to note',
+  'import.document.done': 'Added {graph}, drawn from {file}, to {note}.',
+  'import.document.not-document': '{file} is not a Word document or a PDF, so no block was written.',
   'import.cancel': 'Cancel',
   'import.done': 'Imported {graph} from {file} into {note}.',
   'import.failed': 'The import from {file} failed, so nothing was written: {why}',

@@ -138,7 +138,7 @@ describe('Import offers the SQLite files of the vault, with nothing to set up (s
       env.state.activeView = new env.obsidian.MarkdownView(env.app.vault.getAbstractFileByPath(PATH), NOTE, 'source');
       await command(env).callback();
       assert.equal(env.state.modals.length, 0);
-      assert.match(env.state.notices.at(-1), /No database file is in the vault/);
+      assert.match(env.state.notices.at(-1), /No database, workbook or document is in the vault/);
     } finally {
       env.uninstall();
     }
