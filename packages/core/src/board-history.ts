@@ -112,9 +112,9 @@ function rest(item: BoardItem): string {
 }
 
 /**
- * The edits that put an item back as it `was`. Where only its place, size, text, layer, lock, style or group changed,
- * each is set back by itself, so the item's own text alone is written and the rest of the block stays as written.
- * Anything else, or a property that was not there before, puts the whole item back.
+ * The edits that put an item back as it `was`. Its place, size, text, layer, lock, style and group are each set back
+ * by itself. So the item's own text alone is written, and the rest of the block stays as written. Anything else that
+ * changed, or a property that was not there before, puts the whole item back.
  */
 function itemBack(now: BoardItem, was: BoardItem): BoardChange[] {
   const { id } = was;
