@@ -408,3 +408,11 @@ textarea:focus-visible,
 .gn-presets input[type='file'] {
   max-inline-size: 100%;
 }
+/* the board as the main screen (board_main_screen): the line about the change, and the button to turn the page round */
+.gn-board-first {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.gn-board-turn {
+  float: right;
+}
