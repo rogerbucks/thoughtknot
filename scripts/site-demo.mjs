@@ -87,8 +87,7 @@ export async function buildDemo(out) {
     legalComments: 'eof',
     metafile: true,
     alias: { obsidian: join(HARNESS, 'demo-shim.js') },
-    // the SQLite engine of Import is held inside the bundle, as the plugin's build holds it (spec §20)
-    loader: { '.md': 'text', '.wasm': 'binary' },
+    loader: { '.md': 'text' },
     plugins: [
       layoutWorker,
       pluginWorker,
