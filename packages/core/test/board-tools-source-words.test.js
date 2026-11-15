@@ -9,7 +9,9 @@ describe('the words of a board’s tools, layers and slides', () => {
   test('every key is a board key, lower-case and dotted, and every wording is a sentence or a name', () => {
     for (const [key, said] of Object.entries(WORDS)) {
       assert.match(key, /^board(\.[a-z0-9-]+)+$/, key);
-      assert.ok(said.trim().length > 1 && !said.includes('  '), `${key} is worded`);
+      // a word that counts has a form for one and a form for many
+      for (const form of typeof said === 'string' ? [said] : Object.values(said))
+        assert.ok(form.trim().length > 1 && !form.includes('  '), `${key} is worded`);
     }
   });
 
