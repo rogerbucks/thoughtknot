@@ -8,7 +8,7 @@ import type { PngSize } from '@thoughtknot/core';
 export const PNG_PIXEL_LIMIT = 16_777_216;
 
 /** The SVG with its own width and height set to `size`, so the image is read at the size it is drawn. */
-const sized = (svg: string, size: PngSize) =>
+const sized = (svg: string, size: Pick<PngSize, 'width' | 'height'>) =>
   svg.replace(/<svg\b[^>]*>/, (tag) =>
     tag
       .replace(/\swidth="[^"]*"/, '')
@@ -16,8 +16,11 @@ const sized = (svg: string, size: PngSize) =>
       .replace('<svg', `<svg width="${size.width}" height="${size.height}"`),
   );
 
-/** The PNG's bytes: the SVG drawn on a canvas of `size`; rejects, saying why, whatever stops it — never hangs. */
-export function rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
+/**
+ * The PNG's bytes: the SVG drawn on a canvas of `size`; rejects, saying why, whatever stops it — never hangs.
+ * With `paper` a JPEG is made instead, drawn on that colour. A JPEG holds no clear pixels, and a PDF holds one as it is.
+ */
+export function rasterise(svg: string, size: Pick<PngSize, 'width' | 'height'>, paper?: string): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const doc = activeDocument;
     const url = URL.createObjectURL(new Blob([sized(svg, size)], { type: 'image/svg+xml' }));
@@ -31,13 +34,21 @@ export function rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
         canvas.height = size.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error(word('exporting.png-too-large'));
+        if (paper) {
+          ctx.fillStyle = paper;
+          ctx.fillRect(0, 0, size.width, size.height);
+        }
         ctx.drawImage(img, 0, 0, size.width, size.height);
-        canvas.toBlob((blob) => {
-          // the canvas let go at once, PNG or none, so page after page of a large image holds one canvas at a time
-          canvas.width = canvas.height = 0;
-          if (!blob) return reject(new Error(word('exporting.png-too-large')));
-          blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
-        }, 'image/png');
+        canvas.toBlob(
+          (blob) => {
+            // the canvas let go at once, PNG or none, so page after page of a large image holds one canvas at a time
+            canvas.width = canvas.height = 0;
+            if (!blob) return reject(new Error(word('exporting.png-too-large')));
+            blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
+          },
+          paper ? 'image/jpeg' : 'image/png',
+          0.92,
+        );
       } catch (e) {
         reject(e instanceof Error ? e : new Error(word('exporting.png-failed')));
       }
