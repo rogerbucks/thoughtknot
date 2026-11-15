@@ -30,16 +30,26 @@ export const CANVAS_LIMITS = { chars: 16 * 1024 * 1024, items: 20_000, text: 100
 const PRESETS = ['red', 'orange', 'yellow', 'green', 'cyan', 'purple'];
 const IMAGE = /\.(png|jpe?g|gif|svg|webp|bmp|avif)$/i;
 
-type Json = Record<string, unknown>;
-const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
-const text = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
-const whole = (v: unknown): number | undefined =>
+/** A JSON object read from a file: nothing in it is trusted. */
+export type Json = Record<string, unknown>;
+/** Whether a value read from a file is an object, not a list. */
+export const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
+/** A value read from a file as text, or nothing when it is not text. */
+export const text = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+/** A value read from a file as the nearest whole number, or nothing when it is no number. */
+export const whole = (v: unknown): number | undefined =>
   typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : undefined;
 
-/** A name the board block can hold, made from a canvas id: a name starting with a digit gets `n_` before it. */
-function nameOf(id: string): string {
+/**
+ * A name the board block can hold, made from a file's id and not among `taken`. A name starting with a digit gets
+ * `n_` before it, any other mark becomes `_`, and a name already taken gets a number after it.
+ */
+export function freeName(id: string, taken: ReadonlySet<string>): string {
   const plain = id.replace(/[^A-Za-z0-9_]/g, '_');
-  return /^[A-Za-z_]/.test(plain) ? plain : `n_${plain}`;
+  const stem = /^[A-Za-z_]/.test(plain) ? plain : `n_${plain}`;
+  let name = stem;
+  for (let n = 2; taken.has(name); n++) name = `${stem}_${n}`;
+  return name;
 }
 
 /** The canvas id a board name is written as: the `n_` put before a digit is taken off again. */
@@ -77,6 +87,7 @@ class TextTooLong extends Error {}
 /** The items of the nodes, the board name of each canvas id, and how many nodes were left out. */
 function itemsOf(nodes: unknown[], limits: typeof CANVAS_LIMITS) {
   const names = new Map<string, string>();
+  const taken = new Set<string>();
   const items: BoardItem[] = [];
   let [skipped, look] = [0, false];
   for (const node of nodes) {
@@ -88,8 +99,8 @@ function itemsOf(nodes: unknown[], limits: typeof CANVAS_LIMITS) {
       continue;
     }
     if ((kind.text ?? '').length + (text(kind.more.body) ?? '').length > limits.text) throw new TextTooLong();
-    let name = nameOf(id);
-    for (let n = 2; [...names.values()].includes(name); n++) name = `${nameOf(id)}_${n}`;
+    const name = freeName(id, taken);
+    taken.add(name);
     names.set(id, name);
     const item: BoardItem = { id: name, kind: kind.kind, x, y, more: kind.more };
     const [w, h] = [whole(node.width), whole(node.height)];
