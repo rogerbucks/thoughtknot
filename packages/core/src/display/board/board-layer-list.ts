@@ -1,5 +1,5 @@
 // The Layers list of a board (editor spec §45, board_layers; panels start small). One button beside the tools opens
-// a short list of the board's layers, top layer first, with the items in no layer as a row at their place.
+// a short list of the board's layers, top layer first. The items in no layer are a row at their place among them.
 //
 // Each layer is shown or hidden, locked or opened, stepped up or down, renamed and taken out from its row. A press on
 // a row's name makes it the layer new items go into. The buttons under the list put the chosen items into that

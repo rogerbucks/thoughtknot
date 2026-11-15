@@ -1,6 +1,6 @@
 // The Layers list above a board (editor spec ES§45, board_layers). It starts folded to one button. Open, it lists the
 // layers top first with the loose items among them. Each row shows, hides, locks, steps, renames or takes out its
-// layer, and the buttons under the list put the chosen items into the layer picked.
+// layer. The buttons under the list put the chosen items into the layer picked.
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
