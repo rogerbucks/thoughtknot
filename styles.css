@@ -2966,7 +2966,8 @@ button.thoughtknot-stage-card-pin {
   border: 1px solid var(--gn-text-muted);
   border-radius: var(--gn-space-1);
 }
-.thoughtknot-board-layers-list ul {
+.thoughtknot-board-layers-list ul,
+.thoughtknot-board-layers-list ol {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -3001,6 +3002,7 @@ button.thoughtknot-stage-card-pin {
 /* The slide show: the Present button in the row above the board; while it plays, the board alone fills the screen. */
 .thoughtknot-board-present {
   display: inline-block;
+  position: relative;
   vertical-align: top;
   margin-inline-start: var(--gn-space-2);
 }

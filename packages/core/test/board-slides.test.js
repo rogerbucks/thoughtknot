@@ -4,7 +4,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../src/board.ts';
 import { boardEdit } from '../src/board-edit.ts';
-import { slideAt, slidePlace, slideSaid, slidesOf } from '../src/board-slides.ts';
+import { slideAt, slidePlace, slideRows, slideSaid, slideSvgs, slidesOf } from '../src/board-slides.ts';
+import { PALETTES } from '../src/palette.ts';
 import { boardFrame, itemBox } from '../src/board-svg.ts';
 
 const TEXT = `// graph: talk · BOARD
@@ -91,5 +92,25 @@ describe('the slides of a board', () => {
     const slides = slidesOf(readBoard(TEXT).board);
     assert.equal(slideAt(slides, [1000, 100]), 1);
     assert.equal(slideAt(slides, [5000, 5000]), 0);
+  });
+
+  // proves: board_slides
+  test('list the slides in the order they play, then the frames left out, each by its title or its name', () => {
+    const out = edit(TEXT, { kind: 'slide-skip', id: 'intro', skip: true });
+    assert.deepEqual(slideRows(readBoard(out).board), [
+      { id: 'plan', title: 'plan', n: 1 },
+      { id: 'end', title: 'Thanks', n: 2 },
+      { id: 'intro', title: 'Why trains', n: null },
+    ]);
+  });
+
+  // proves: board_slides
+  test('give each slide as a picture of its own frame, with what is in it and nothing from the other slides', () => {
+    const svgs = slideSvgs(readBoard(TEXT).board, PALETTES.light);
+    assert.equal(svgs.length, 3);
+    assert.match(svgs[0], /viewBox="0 0 800 600"/);
+    assert.ok(svgs[0].includes('data-item="a"') && svgs[0].includes('data-item="intro"'));
+    assert.ok(!svgs[0].includes('data-item="plan"'));
+    assert.match(svgs[1], /viewBox="900 0 800 600"/);
   });
 });

@@ -7,7 +7,8 @@
 import { itemGql } from './board.ts';
 import type { Board, BoardItem } from './board.ts';
 import { seenBoard } from './board-layers.ts';
-import { itemBox, type Box } from './board-svg.ts';
+import { boardSvg, itemBox, type Box } from './board-svg.ts';
+import type { Palette } from './palette.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 import { MAX_SCALE } from './zoom-fit.ts';
@@ -48,6 +49,31 @@ export function slidesOf(board: Board): BoardItem[] {
     ...numbered.sort((a, b) => (numberOf(a) as number) - (numberOf(b) as number) || reading(a, b)),
     ...rest.sort(reading),
   ];
+}
+
+/** One row of the Slides list: a frame, its title, and its place in the show from 1, or null when it is left out. */
+export interface SlideRow {
+  id: string;
+  title: string;
+  n: number | null;
+}
+
+/** The Slides list: the slides in the order they play, then the frames left out. Hidden layers' frames are not listed. */
+export function slideRows(board: Board): SlideRow[] {
+  const title = (f: BoardItem) => f.text?.trim() || f.id;
+  const out = seenBoard(board).items.filter((i) => i.kind === 'Frame' && skipped(i));
+  return [
+    ...slidesOf(board).map((f, i) => ({ id: f.id, title: title(f), n: i + 1 })),
+    ...out.map((f) => ({ id: f.id, title: title(f), n: null })),
+  ];
+}
+
+/**
+ * Each slide as a picture of its own, in the order they play. A picture is the part of the board its frame holds,
+ * drawn as the board is. An export writes these as its pages.
+ */
+export function slideSvgs(board: Board, palette: Palette): string[] {
+  return slidesOf(board).map((f) => boardSvg(board, palette, itemBox(f)));
 }
 
 /** What is said of slide `at` (from 0) of the show: its place in it, and the frame's title when it has one. */

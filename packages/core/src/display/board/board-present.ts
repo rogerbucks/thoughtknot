@@ -7,10 +7,12 @@
 import { glideAt, MOVE_MS, word, type Zoom } from '@thoughtknot/core';
 
 import type { Board, BoardItem } from '../../board.ts';
+import type { BoardChange } from '../../board-edit.ts';
 import { slideAt, slidePlace, slideSaid, slidesOf, type SlidePlace } from '../../board-slides.ts';
 import { boardFrame, itemBox } from '../../board-svg.ts';
 import { button } from '../button.ts';
 import { reducedMotion } from '../graph-view/details-nav.ts';
+import { SlideList } from './board-slide-list.ts';
 import type { BoardSpace } from './board-space.ts';
 
 /** What the show needs of its board. */
@@ -19,6 +21,11 @@ export interface PresentBoard {
   say: (words: string) => void;
   /** The middle of the view, in board units: the show starts from the slide there. */
   centre: () => [number, number];
+  /** Writes a change and draws what was written: the Slides list orders the show by it. */
+  write?: (change: BoardChange) => Promise<void>;
+  /** Brings an item into view and puts the keyboard on it. */
+  choose?: (id: string) => void;
+  readOnly?: boolean;
 }
 
 /** How far a finger goes across, in pixels, to count as a swipe and not a press. */
@@ -56,6 +63,13 @@ export class Presenter {
     vp.parentElement?.insertBefore(row, vp); // above the board
     this.go = button(row, word('board.present'), 'play', () => this.start());
     this.go.setAttribute('title', word('board.present.tip'));
+    const { write, choose } = h;
+    const reveal = (id: string) => {
+      choose?.(id);
+      const frame = h.board().items.find((i) => i.id === id);
+      if (frame) zoom.reveal(space.unit(itemBox(frame))); // into view, at the zoom the person chose
+    };
+    if (write && choose && !h.readOnly) new SlideList(row, { ...h, write, choose: reveal });
     this.bar = root.createDiv({
       cls: 'thoughtknot-board-present-bar',
       attr: { role: 'toolbar', 'aria-label': word('board.present.bar') },
