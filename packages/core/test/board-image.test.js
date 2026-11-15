@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { itemGql, readBoard } from '../src/board.ts';
 import {
   IMAGE_MOST,
+  LINK_MOST,
   imageItem,
   imageSrc,
   isLocalSrc,
@@ -60,6 +61,15 @@ describe('pictures on a board', () => {
     assert.equal(noteLinkOf('[[Paris#Hotels]]'), 'Paris');
     assert.equal(noteLinkOf('Trips/Paris.md'), 'Trips/Paris.md');
     assert.equal(noteLinkOf('obsidian://open?vault=Home&file=Trips%2FParis'), 'Trips/Paris');
+    assert.equal(noteLinkOf('![[Paris]]'), 'Paris', 'an embed names the note too');
+    assert.equal(noteLinkOf('[[a]b]]'), null);
+    // a very long text is never read as a link, and an odd one is read character by character, by no pattern
+    assert.equal(noteLinkOf(`[[${'a'.repeat(LINK_MOST)}]]`), null);
+    for (const odd of ['[['.repeat(400), `${'a.'.repeat(400)}!`, `obsidian://open?${'&file='.repeat(150)}`]) {
+      assert.equal(noteLinkOf(odd), null);
+      assert.ok(nameOf(odd.repeat(50)).length > 0);
+      assert.equal(typeof isLocalSrc(odd.repeat(50)), 'boolean');
+    }
     for (const not of ['', 'Just some words', 'two\n[[lines]]', 'https://x.org/a.md', 'obsidian://open?vault=Home'])
       assert.equal(noteLinkOf(not), null, JSON.stringify(not));
     const card = noteCard('card1', 'Trips/Paris.md', [300, 200]);

@@ -20,13 +20,41 @@ export const imageSrc = (item: BoardItem): string | null =>
  * is shown. Anything else, such as a link to the web or data written into the link, is left as its name.
  */
 export function isLocalSrc(src: string): boolean {
-  return !/^[a-z][a-z0-9+.-]*:/i.test(src) && !src.startsWith('//') && !/[<>"\n\r\t]/.test(src);
+  return !hasScheme(src) && !src.startsWith('//') && !UNSAFE.some((c) => src.includes(c));
+}
+
+/** The marks a link kept in a board may not hold: they would break out of the picture it is drawn into. */
+const UNSAFE = ['<', '>', '"', '\n', '\r', '\t'];
+
+/** Whether the one character `c`, in lower case, is a letter of the alphabet. */
+const isLetter = (c: string): boolean => c >= 'a' && c <= 'z';
+/** Whether the one character `c`, in lower case, is a letter or a digit. */
+const isLetterOrDigit = (c: string): boolean => isLetter(c) || (c >= '0' && c <= '9');
+
+/** Whether every character of `text` is a letter or a digit, and there is at least one. Read character by character. */
+function isAlnum(text: string): boolean {
+  if (!text) return false;
+  for (const c of text.toLowerCase()) if (!isLetterOrDigit(c)) return false;
+  return true;
+}
+
+/** Whether `src` starts with a scheme, as `https:` or `data:` does: a letter, then letters, digits, `+`, `.` or `-`. */
+function hasScheme(src: string): boolean {
+  const low = src.toLowerCase();
+  if (!isLetter(low.charAt(0))) return false;
+  for (let i = 1; i < low.length; i++) {
+    const c = low.charAt(i);
+    if (c === ':') return true;
+    if (!isLetterOrDigit(c) && c !== '+' && c !== '.' && c !== '-') return false;
+  }
+  return false;
 }
 
 /** The last part of a path, without its ending: the name a picture or a note is said by. */
 export function nameOf(path: string): string {
-  const last = path.split(/[\\/]/).pop() ?? path;
-  return last.replace(/\.[a-z0-9]+$/i, '') || last;
+  const last = path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
+  const dot = last.lastIndexOf('.');
+  return (dot >= 0 && isAlnum(last.slice(dot + 1)) ? last.slice(0, dot) : last) || last;
 }
 
 /**
@@ -51,11 +79,14 @@ export function imageItem(
 /** A new Card item as `id`, its middle at the spot `at`, that names the note at `path` and links to it. */
 export function noteCard(id: string, path: string, at: [number, number]): BoardItem {
   const [w, h] = [200, 120];
-  const link = path.replace(/\.md$/i, '');
+  const link = path.toLowerCase().endsWith('.md') ? path.slice(0, -3) : path;
   const x = Math.round(at[0] - w / 2),
     y = Math.round(at[1] - h / 2);
   return { id, kind: 'Card', x, y, text: nameOf(path), more: { links: link } };
 }
+
+/** The most characters a dropped or pasted text may hold and still be read as the link to a note. */
+export const LINK_MOST = 1024;
 
 /**
  * The note a dropped or pasted text names, or null when it names none. It reads a wiki link `[[Note]]`, a path that
@@ -63,18 +94,25 @@ export function noteCard(id: string, path: string, at: [number, number]): BoardI
  */
 export function noteLinkOf(text: string): string | null {
   const t = text.trim();
-  if (!t || t.includes('\n')) return null;
-  const wiki = /^!?\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]$/.exec(t);
-  if (wiki?.[1]) return wiki[1].trim() || null;
-  if (/^obsidian:\/\/open\?/i.test(t)) {
-    const file = /[?&]file=([^&]+)/.exec(t)?.[1];
+  if (!t || t.length > LINK_MOST || t.includes('\n')) return null;
+  const inner = t.startsWith('!') ? t.slice(1) : t;
+  if (inner.startsWith('[[') && inner.endsWith(']]') && !inner.slice(2, -2).includes(']')) {
+    // the note's own name: what comes before a `|` (its shown words) or a `#` (a heading in it)
+    const name = inner.slice(2, -2).split('|')[0]?.split('#')[0] ?? '';
+    if (name) return name.trim() || null;
+  }
+  if (t.toLowerCase().startsWith('obsidian://open?')) {
+    const file = t
+      .slice(t.indexOf('?') + 1)
+      .split('&')
+      .find((part) => part.startsWith('file=') && part.length > 'file='.length);
     try {
-      return file ? decodeURIComponent(file) : null;
+      return file ? decodeURIComponent(file.slice('file='.length)) : null;
     } catch {
       return null;
     }
   }
-  return isLocalSrc(t) && /\.md$/i.test(t) ? t : null;
+  return isLocalSrc(t) && t.toLowerCase().endsWith('.md') ? t : null;
 }
 
 /** Whether a file is a picture a board shows, by its type: a drawing or a photo, never a document. */
