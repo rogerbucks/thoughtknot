@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pdf-objects.test.js",
+  "test": "pdf_objects_values > reads arrays, dictionaries and references, and skips comments",
+  "seen_failing_first": false,
+  "evidence": "The module pdf-objects.ts came in an earlier commit of this PR; this test was added after it to meet the module-test rule (CODE-7)."
+}

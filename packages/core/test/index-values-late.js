@@ -482,6 +482,9 @@ export const VALUES_LATE = [
   'storeOver',
   'contractCases',
   'partsStoreContract',
+  // a Word document or a PDF named after FROM, read as text for a proposal (connector_text_proposed), 15 Nov 2026
+  'DOCUMENT_LIMITS',
+  'isDocumentPlace',
   // a sheet of an Excel workbook named after FROM, `book.xlsx#Sheet1` (connector_files_to_gql), 12 Nov 2026
   'workbookPlace',
   'workbookSheets',
