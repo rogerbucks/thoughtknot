@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readBoard } from '../src/board.ts';
 import { boardSvg } from '../src/board-svg.ts';
 import { PALETTES } from '../src/palette.ts';
-import { drawBoardView, viewerOf, viewGraphOf, viewTypeOf } from '../src/board-views.ts';
+import { drawBoardView, viewerOf, viewGraphOf, viewTypeOf } from '../src/view-types/board-views.ts';
 
 const BOARD = `// graph: ideas · BOARD ON trip
 (v:View {x: 0, y: 0, w: 400, h: 300}),

@@ -3,14 +3,14 @@
 // it never goes stale. It shows the board's own graph unless its `of` names another. Its `view` names the type; with
 // none it is force. It only shows the graph: nothing on the board or in the graph moves when it is drawn.
 // Host-free and pure: the host gives the note, and nests the picture in the item.
-import { gqlBlocks } from './blocks.ts';
-import type { Board, BoardItem } from './board.ts';
-import { itemBox, type Box } from './board-svg.ts';
-import { readNote } from './drawing.ts';
-import { diagramDrawing } from './plugin-diagrams.ts';
-import { shapeOf } from './types-shape.ts';
-import { VIEW_DRAWERS, VIEW_TYPES, type ViewType } from './view-types/view-types.ts';
-import { word } from './words.ts';
+import { gqlBlocks } from '../blocks.ts';
+import type { Board, BoardItem } from '../board.ts';
+import { itemBox, type Box } from '../board-svg.ts';
+import { readNote } from '../drawing.ts';
+import { diagramDrawing } from '../plugin-diagrams.ts';
+import { shapeOf } from '../types-shape.ts';
+import { VIEW_DRAWERS, VIEW_TYPES, type ViewType } from './view-types.ts';
+import { word } from '../words.ts';
 
 /** The view type an item shows: its own `view` where it names one, else force. */
 export function viewTypeOf(item: BoardItem): ViewType {

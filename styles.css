@@ -2900,7 +2900,7 @@ button.thoughtknot-stage-card-fit svg {
 }
 .thoughtknot-board .thoughtknot-board-view-refused {
   fill: var(--gn-text-muted);
-  font-size: 12px;
+  font-size: var(--gn-font-size-xs);
 }
 .thoughtknot-board-help,
 .thoughtknot-board-said {

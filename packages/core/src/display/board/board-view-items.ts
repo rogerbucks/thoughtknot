@@ -6,7 +6,7 @@ import type { Drawn } from '@thoughtknot/core';
 
 import type { Board } from '../../board.ts';
 import { itemBox } from '../../board-svg.ts';
-import { viewSpace } from '../../board-views.ts';
+import { viewSpace } from '../../view-types/board-views.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 import { drawHandle } from './board-drag.ts';
 
