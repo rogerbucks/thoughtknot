@@ -225,7 +225,7 @@ test('each card is drawn as saved in the layout block, and its size and place ar
     const { spread, cy } = stage.cardsOn.cards.laid;
     assert.ok(Math.abs(c.y - (cy + (w0.y + 500 - cy) / spread)) < 1e-6, 'in the layout own places, before spreading');
     assert.equal(places.saved.size, 0, 'no dot place is saved');
-    await new Promise((r) => setTimeout(r, 0));
+    for (let i = 0; i < 3; i++) await Promise.resolve(); // the undo's toast says so before the page goes
     stage.unload();
   } finally {
     uninstall();
