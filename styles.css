@@ -2829,6 +2829,18 @@ button.thoughtknot-stage-card-more {
   gap: 0.5em;
   margin-bottom: 0.4em;
 }
+.thoughtknot-board-tools {
+  display: flex;
+  gap: var(--gn-space-1);
+  margin-bottom: var(--gn-space-1);
+}
+.thoughtknot-board-tools button[aria-pressed='true'] {
+  outline: 2px solid var(--gn-text-normal);
+  outline-offset: -2px;
+}
+.thoughtknot-board-tools-fold[aria-expanded='true'] {
+  border-inline-end: 1px solid var(--gn-text-muted);
+}
 .thoughtknot-board-help,
 .thoughtknot-board-said {
   margin: var(--gn-space-1) 0;

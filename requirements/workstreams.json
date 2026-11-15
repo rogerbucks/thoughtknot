@@ -752,7 +752,8 @@
       "board_speed",
       "board_exchange",
       "board_look_and_direction",
-      "board_item_plugins"
+      "board_item_plugins",
+      "board_tools"
     ]
   },
   "B2": {

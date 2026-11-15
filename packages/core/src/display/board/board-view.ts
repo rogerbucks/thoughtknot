@@ -16,14 +16,14 @@ import { boardKey, NO_CURSOR, type BoardCursor } from '../../board-keys.ts';
 import { boardFrame, boardOutline, boardSvg, itemBox } from '../../board-svg.ts';
 import type { Box } from '../../board-svg.ts';
 import { BoardPeople } from './board-people.ts';
-import { openCapture, openEditor } from './board-fields.ts';
-import type { FieldsHost } from './board-fields.ts';
+import { openCapture, openEditor, type FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
-import { BoardSpace, HEIGHT } from './board-space.ts';
+import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
 import { bindWheel, outlined } from './board-wheel.ts';
+import { ToolRail } from './board-tool-rail.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -47,8 +47,6 @@ const kept = new Map<string, { place: View; cursor: BoardCursor; focused: boolea
 const SLOP = 4;
 let boardsShown = 0;
 
-type Point = { x: number; y: number };
-
 /** The board in `source` opened in `el`. */
 export function showBoard(el: HTMLElement, source: string, host: BoardHost): void {
   new BoardView(el, source, host);
@@ -66,6 +64,7 @@ class BoardView {
   /** The others at a shared board, and the clashes to settle. */
   private readonly people: BoardPeople | null;
   private readonly bar: ArrangeBar | null = null;
+  private readonly rail: ToolRail;
   private readonly sel = new BoardSelection((n) => this.bar?.chosen(n));
   /** The text of the shared board as last read, to tell when someone else has changed it. */
   private seen = '';
@@ -107,6 +106,7 @@ class BoardView {
     );
     const text = word(this.readOnly ? 'board.help-read' : 'board.help');
     root.createEl('p', { cls: 'thoughtknot-board-help', text, attr: { id: helpId } });
+    this.rail = new ToolRail(root, this.vp, host.key, (w) => this.say(w), this.readOnly);
     if (host.arrange && !this.readOnly)
       this.bar = new ArrangeBar(root, this.vp, host.arrange, this.arranging(), host.key);
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
@@ -124,6 +124,7 @@ class BoardView {
     if (was) this.zoom.restore(was.place.scale, was.place.x, was.place.y);
     if (was?.focused) this.vp.focus({ preventScroll: true });
     this.bind();
+    this.rail.held((id) => openEditor(this.fields(), id)); // a sticky just made, its board drawn afresh
   }
 
   private say(words?: string) {
@@ -224,8 +225,8 @@ class BoardView {
     return true;
   }
 
-  /** Writes an edit, then draws what was written; a refusal is said and changes nothing. */
-  private async write(change: BoardChange): Promise<void> {
+  /** Writes an edit (also for the tool rail), then draws what was written; a refusal is said and changes nothing. */
+  async write(change: BoardChange): Promise<void> {
     this.bar?.forget();
     const t = this.host.together;
     if (t) {
@@ -264,7 +265,7 @@ class BoardView {
   /** A key: the board's own first (board-keys.ts), else the zoom's. */
   private key(e: KeyboardEvent): void {
     if (e.target !== this.vp) return;
-    if (e.key === 'Escape' && this.sel.clear()) return void this.draw();
+    if (e.key === 'Escape' && (this.rail.cancel() || this.sel.clear())) return void this.draw();
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     if (isGroupKey(e) && !this.readOnly)
       return void groupNotes(
@@ -305,7 +306,9 @@ class BoardView {
   /** A press: a mouse or pen on an item starts to drag it; anything else pans, zooms and pinches, as on a drawing. */
   private down(e: PointerEvent): void {
     const id = (e.target as Element | null)?.closest?.('[data-item]')?.getAttribute('data-item') ?? null;
-    const item = this.board.items.find((i) => i.id === id);
+    const how = e.button ? 'pass' : this.rail.press(this.board, id, this.space.onBoard(this.space.point(e)), this);
+    if (how === 'done') return void e.preventDefault();
+    const item = how === 'pan' ? undefined : this.board.items.find((i) => i.id === id);
     if (item && BoardSelection.is(e) && e.button === 0) {
       e.preventDefault();
       this.sel.toggle(item.id);
@@ -367,6 +370,12 @@ class BoardView {
     }
     if (e.type === 'pointercancel') this.zoom.handle({ kind: 'cancel', id: e.pointerId });
     else if (this.zoom.handle({ kind: 'up', id: e.pointerId, ...p, time: e.timeStamp })) e.preventDefault();
+  }
+
+  /** The keyboard put on an item a tool made or joined, its text opened when `edit` (ToolRail). */
+  focus(id: string, edit: boolean): void {
+    this.choose(id);
+    if (edit) openEditor(this.fields(), id);
   }
 
   /** A tap on an item puts the keyboard on it and says it, as Tab to it would. */
