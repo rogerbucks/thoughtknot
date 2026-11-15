@@ -89,14 +89,22 @@ describe('board_excalidraw', () => {
   });
 
   // proves: board_exchange
-  test('reads the drawing inside an Obsidian Excalidraw note, and refuses a compressed one with what to do', () => {
+  test('reads the drawing inside an Obsidian Excalidraw note, compressed or not', () => {
     const note = (fence, body) =>
       `---\nexcalidraw-plugin: parsed\n---\n# Text Elements\nGo ^t1\n\n## Drawing\n\`\`\`${fence}\n${body}\n\`\`\`\n%%`;
     const got = excalidrawBoard(note('json', JSON.stringify(DRAWING)), 'trip');
     assert.equal(got.board.items.length, 8);
-    const packed = excalidrawBoard(note('compressed-json', 'N4KAkARALgngDgUwgLgAQQ'), 'trip');
-    assert.equal(packed.why, 'compressed');
-    assert.match(packed.refused, /Decompress/);
+    // a rectangle with the text 'Café → 東京' bound to it, packed by the LZ-String library as the plugin packs it
+    const packed =
+      'N4IgLgngDgpiBcIYA8DGBDANgSwCYCd0B3EAGhADcZ8BnbAewDsEAmcmTGAWxkbBoQBtUHgQh8ZcNDiJ8MVGHSMA5p0nIEABnIQt5InjAALBAEZN2kEZjZlRsAgCslgEb0Aro1wBRTjz4C8MJSsGJgKA7koogOAL4AurGkIrhhkpChMRHqTjq5IAa4xk6W1rb2rI7k4cgOiADC6ABmAJcABIBJhG2AjuaANXKSqEyK2IzUAJKpsiAJsUA===';
+    const lines = packed.replace(/(.{64})/g, '$1\n\n');
+    const unpacked = excalidrawBoard(note('compressed-json', lines), 'trip');
+    assert.deepEqual(unpacked.board.items, [
+      { id: 'r', kind: 'Shape', x: 0, y: 0, w: 100, h: 50, text: 'Café → 東京', more: { shape: 'box' } },
+    ]);
+    const damaged = excalidrawBoard(note('compressed-json', 'N4KAkARALgngDgUwgLgAQQ'), 'trip');
+    assert.equal(damaged.why, 'compressed');
+    assert.match(damaged.refused, /Decompress/);
   });
 
   // proves: board_exchange
