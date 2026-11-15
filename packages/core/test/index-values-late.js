@@ -518,4 +518,8 @@ export const VALUES_LATE = [
   'placeProblem',
   // the Arrange by graph button of a board (ES§45, board_arranged_by_graph), 15 Nov 2026
   'arrangerOf',
+  // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
+  'cardInNote',
+  'saveCard',
+  'savedCards',
 ];

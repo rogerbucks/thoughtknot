@@ -492,4 +492,6 @@ export const TYPES_LATE = [
   'DataSetAccess',
   'Fetched',
   'HostFetch',
+  // a card's saved line in the layout block, 15 Nov 2026
+  'LayoutCard',
 ];
