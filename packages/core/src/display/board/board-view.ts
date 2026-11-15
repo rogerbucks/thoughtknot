@@ -20,7 +20,8 @@ import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
 import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
-import { bindWheel, outlined } from './board-wheel.ts';
+import { outlined } from './board-wheel.ts';
+import { bindNest, kept, type NestHost } from './board-nest.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver, type Viewer } from './board-view-items.ts';
@@ -42,10 +43,10 @@ export interface BoardHost {
   arrange?: ArrangeHooks['arrange'];
   /** Draws each View item's graph live from the note; without it a view shows only its frame. */
   views?: Viewer;
+  /** Goes into the boards on this one, and back out; without it a view of a board is only a picture. */
+  nest?: NestHost;
 }
 
-/** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
-const kept = new Map<string, { place: View; cursor: BoardCursor; focused: boolean }>();
 let boardsShown = 0;
 
 /** The board in `source` opened in `el`. */
@@ -268,12 +269,18 @@ class BoardView {
 
   private bind(): void {
     const { vp, zoom } = this;
+    bindNest(
+      vp,
+      zoom,
+      this.space,
+      () => ({ board: this.board, frame: this.frame, focus: this.cursor.focus }),
+      this.host,
+    );
     vp.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
     vp.addEventListener('pointerdown', (e: PointerEvent) => this.down(e));
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
     vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
-    bindWheel(vp, zoom, (e) => this.space.point(e));
     new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
 

@@ -35,7 +35,7 @@ export function renderBoardBlock(
         }
       : undefined,
     arrange: writable ? arrangerOf(async () => (await noteText(plugin.app, path)) ?? '', line.name) : undefined,
-    views: viewerOf(async () => (await noteText(plugin.app, path)) ?? ''),
+    views: viewerOf(async () => (await noteText(plugin.app, path)) ?? '', PALETTES.obsidian),
   });
   return true;
 }

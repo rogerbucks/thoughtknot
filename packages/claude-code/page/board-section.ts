@@ -6,7 +6,10 @@ import type { Together } from '@thoughtknot/core';
 import {
   boardInFront,
   boardListChanged,
+  boardTrail,
+  enterBoard,
   glideIn,
+  leaveBoard,
   putInFront,
   showBoardList,
 } from '@thoughtknot/core/display/board/board-list';
@@ -107,7 +110,21 @@ export function boardSection(
       return w.ok ? { text: r.text } : { refused: w.why };
     },
     arrange: starter ? undefined : arrangerOf(() => note.text, name),
-    views: viewerOf(() => note.text),
+    views: viewerOf(() => note.text, own.palette),
+    // zooming in on a view of a board goes into it, and zooming out comes back (board_nested)
+    nest: {
+      depth: boardTrail(key).length,
+      text: (inner) => boards[names.indexOf(inner)]?.text,
+      keyOf: (inner) => `${key}\n${inner}`,
+      enter: (inner) => {
+        enterBoard(key, name, inner);
+        again?.();
+      },
+      leave: () => {
+        leaveBoard(key);
+        again?.();
+      },
+    },
   });
   return section;
 }

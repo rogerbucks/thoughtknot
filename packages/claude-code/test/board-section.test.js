@@ -453,3 +453,61 @@ describe('a note with many boards on the browser editor’s page', () => {
     }
   });
 });
+
+const NESTED = [
+  '# Ideas',
+  '```gql',
+  '// graph: ideas · BOARD',
+  "(v:View {x: 0, y: 0, w: 400, h: 300, board: 'plan'})",
+  '```',
+  '',
+  '```gql',
+  '// graph: plan · BOARD',
+  "(b:Sticky {x: 10, y: 20, text: 'Book it'})",
+  '```',
+  '',
+].join('\n');
+
+describe('a board inside a board on the browser editor’s page', () => {
+  // proves: board_nested
+  test('is entered by zooming in on its view, left by zooming out, and the trail is a way back', async () => {
+    const page = await livePage(NESTED);
+    try {
+      const boards = () => page.doc.querySelector('.gn-boards');
+      const vp = () => boards().querySelector('.thoughtknot-viewport');
+      const on = (id) =>
+        boards()?.querySelector(`.thoughtknot-board > .thoughtknot-viewport > svg > [data-item="${id}"]`);
+      const wheel = (deltaY) =>
+        vp().dispatchEvent(
+          new page.window.WheelEvent('wheel', { deltaY, clientX: 150, clientY: 120, bubbles: true, cancelable: true }),
+        );
+      const trail = () => boards().querySelector('.thoughtknot-board-trail');
+      await until(() => on('v'), 8000);
+      await until(() => on('v')?.querySelector('.thoughtknot-board-view-picture [data-item="b"]'), 8000);
+      assert.equal(trail(), null, 'no trail on a board opened from the list');
+      wheel(100);
+      assert.ok(on('v'), 'zooming out of the outermost board stays on it');
+
+      for (let i = 0; i < 8 && on('v'); i++) wheel(-100);
+      await until(() => !on('v') && boards().querySelector('.thoughtknot-board [data-item="b"]'), 8000);
+      assert.equal(trail().querySelector('button').textContent, 'ideas');
+      assert.equal(trail().querySelector('[aria-current="true"]').textContent, 'plan');
+      assert.equal(page.file(), NESTED, 'going in writes nothing');
+
+      // out until the whole inner board is in view, then once more
+      for (let i = 0; i < 12 && !on('v'); i++) wheel(100);
+      await until(() => on('v'), 8000);
+      assert.equal(trail(), null, 'back out on the board it sits on');
+
+      vp().focus();
+      vp().dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+      vp().dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      await until(() => !on('v') && trail(), 8000);
+      trail().querySelector('button').click();
+      await until(() => on('v'), 8000);
+      assert.equal(page.file(), NESTED);
+    } finally {
+      await page.stop();
+    }
+  });
+});

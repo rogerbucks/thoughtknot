@@ -2,6 +2,8 @@
 // person makes, each its own block. This names them, and adds, renames, copies and removes one. Each change touches
 // only that board's block: every other byte of the note is kept. Host-free and pure.
 import { boardOf, gqlBlocks } from './blocks.ts';
+import { readBoard } from './board.ts';
+import { boardEditInNote, newItem } from './board-edit.ts';
 import { gqlSpans } from './fences.ts';
 import { replaceSpan } from './store.ts';
 import { word } from './words.ts';
@@ -80,13 +82,35 @@ export function boardRemoved(note: string, name: string): BoardListChange {
 }
 
 /** What the person asks of the list: a new board, or the board in front renamed, copied or removed. */
-export type BoardListAsk = { kind: 'add' } | { kind: 'copy' } | { kind: 'remove' } | { kind: 'rename'; to: string };
+export type BoardListAsk =
+  | { kind: 'add' }
+  | { kind: 'copy' }
+  | { kind: 'remove' }
+  | { kind: 'rename'; to: string }
+  /** A new board made, with a view of it put on the board in front. */
+  | { kind: 'nest' };
+
+/**
+ * The note with a new, empty board made, and a view of it put on the board `current` in free room (board_nested). The
+ * board in front stays `current`: the new one is entered by zooming in on its view.
+ */
+export function boardNested(note: string, current: string): BoardListChange {
+  const span = gqlSpans(note).find((s) => boardOf(s.text)?.name === current);
+  const was = span && boardOf(span.text);
+  if (!span || !was) return { refused: word('board.edit.board-gone', { name: current }) };
+  const made = boardAdded(note, was.on);
+  const board = readBoard(span.text).board;
+  const item = newItem(board, 'View', board.items[board.items.length - 1] ?? null, [200, 150]);
+  const r = boardEditInNote(made.note, current, { kind: 'add', item: { ...item, more: { board: made.name } } });
+  return 'refused' in r ? r : { note: r.note, name: current };
+}
 
 /** The note with `ask` done to its board `current`, and the board then in front. A new board is on the same graph. */
 export function boardListChanged(note: string, current: string, ask: BoardListAsk): BoardListChange {
   if (ask.kind === 'rename') return boardRenamed(note, current, ask.to);
   if (ask.kind === 'copy') return boardCopied(note, current);
   if (ask.kind === 'remove') return boardRemoved(note, current);
+  if (ask.kind === 'nest') return boardNested(note, current);
   const span = gqlSpans(note).find((s) => boardOf(s.text)?.name === current);
   return boardAdded(note, (span && boardOf(span.text)?.on) ?? null);
 }

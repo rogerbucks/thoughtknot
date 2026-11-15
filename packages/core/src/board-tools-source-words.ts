@@ -51,4 +51,8 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.list.bad-name': 'A board name is one word of letters, numbers and underscores: {name} is not.',
   'board.list.taken': 'The note already has something named {name}.',
   'board.list.said': 'Board {name}.',
+  'board.list.nest': 'New board inside this one',
+  'board.nest.said': 'Board {name}',
+  'board.trail': 'Where this board sits',
+  'board.trail.back': 'Back out to the board {name}',
 } as const;

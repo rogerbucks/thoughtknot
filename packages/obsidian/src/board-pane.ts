@@ -11,7 +11,10 @@ import {
   boardInFront,
   boardListChanged,
   boardNames,
+  boardTrail,
+  enterBoard,
   glideIn,
+  leaveBoard,
   putInFront,
   showBoardList,
 } from '@thoughtknot/core/display/board/board-list';
@@ -146,7 +149,21 @@ export class BoardPane extends ItemView {
         return out;
       },
       arrange: board.starter ? undefined : arrangerOf(async () => (await noteText(app, path)) ?? '', board.name),
-      views: viewerOf(async () => (await noteText(app, path)) ?? ''),
+      views: viewerOf(async () => (await noteText(app, path)) ?? '', PALETTES.obsidian),
+      // zooming in on a view of a board goes into it, and zooming out comes back (board_nested)
+      nest: {
+        depth: boardTrail(path).length,
+        text: (inner) => boards.find((b) => b.name === inner)?.text,
+        keyOf: (inner) => `${path}\n${inner}`,
+        enter: (inner) => {
+          enterBoard(path, board.name, inner);
+          void this.draw();
+        },
+        leave: () => {
+          leaveBoard(path);
+          void this.draw();
+        },
+      },
     });
   }
 }

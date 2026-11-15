@@ -115,3 +115,43 @@ describe('a note with many boards opened in Obsidian', () => {
     }
   });
 });
+
+const NESTED = [
+  '# Ideas',
+  '```gql',
+  '// graph: ideas · BOARD',
+  "(v:View {x: 0, y: 0, w: 400, h: 300, board: 'plan'})",
+  '```',
+  '',
+  '```gql',
+  '// graph: plan · BOARD',
+  "(b:Sticky {x: 10, y: 20, text: 'Book it'})",
+  '```',
+  '',
+].join('\n');
+
+describe('a board inside a board opened in Obsidian', () => {
+  // proves: board_nested
+  test('is entered by Enter on its view, and the trail above is the way back out', async () => {
+    const env = await load({ files: { [MANY_PATH]: NESTED } });
+    try {
+      env.state.active = MANY_PATH;
+      env.app.workspace.tell('file-open', env.app.workspace.getActiveFile());
+      const item = (id) => manyPane(env)?.querySelector(`[data-item="${id}"]`);
+      await until(() => !!item('v'), 8000);
+      const vp = manyPane(env).querySelector('.thoughtknot-viewport');
+      vp.focus();
+      vp.dispatch('keydown', { key: 'Tab', target: vp });
+      vp.dispatch('keydown', { key: 'Enter', target: vp });
+      await until(() => !item('v') && !!item('b'), 8000);
+      const back = manyPane(env).querySelector('.thoughtknot-board-trail button');
+      assert.equal(back.textContent, 'ideas');
+      back.click();
+      await until(() => !!item('v'), 8000);
+      assert.equal(manyPane(env).querySelector('.thoughtknot-board-trail'), null);
+      assert.equal(env.state.files.get(MANY_PATH), NESTED, 'going in and out writes nothing');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
