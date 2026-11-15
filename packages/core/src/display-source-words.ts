@@ -3,12 +3,14 @@
 // packages/core/test/words-in-code.test.js checks that the layer's code says none itself.
 import { BOARD_GLYPH_SOURCE_WORDS } from './board-glyph-source-words.ts';
 import { BOARD_SLICE_SOURCE_WORDS } from './board-slice-source-words.ts';
+import { BOARD_TOOLS_SOURCE_WORDS } from './board-tools-source-words.ts';
 import { FILTER_SOURCE_WORDS } from './filter-source-words.ts';
 
 /** The words of the display layer, by key, in UK English. */
 export const DISPLAY_SOURCE_WORDS = {
   ...BOARD_GLYPH_SOURCE_WORDS,
   ...BOARD_SLICE_SOURCE_WORDS,
+  ...BOARD_TOOLS_SOURCE_WORDS,
   ...FILTER_SOURCE_WORDS,
   'pane.no-block': 'This note has no graph block to edit.',
   'table.row': 'Row',

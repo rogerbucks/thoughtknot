@@ -75,6 +75,92 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_tools
+  test('has a tool rail, folded at first, that makes a sticky where pressed, pans with Hand and joins two items', async () => {
+    const page = await livePage(NOTE);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="a"]'), 8000);
+      const rail = () => board().querySelector('.thoughtknot-board-tools');
+      const tool = (name) => rail().querySelector(`[data-tool="${name}"]:not(.thoughtknot-board-tools-fold)`);
+      const fold = () => rail().querySelector('.thoughtknot-board-tools-fold');
+      assert.equal(rail().getAttribute('role'), 'toolbar');
+      assert.equal(fold().getAttribute('aria-expanded'), 'false', 'folded at first');
+      assert.ok(tool('sticky').hidden, 'only the fold button shows');
+      assert.match(fold().getAttribute('aria-label'), /Tool in use: Choose/);
+      fold().click();
+      assert.ok(!tool('sticky').hidden, 'a press opens the rest');
+      assert.match(tool('sticky').getAttribute('title'), /press where it goes/);
+      const press = (target, more = {}) =>
+        target.dispatchEvent(
+          new page.window.PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, ...more }),
+        );
+      const lift = (target) =>
+        target.dispatchEvent(new page.window.PointerEvent('pointerup', { bubbles: true, cancelable: true, button: 0 }));
+
+      // a sticky is made where pressed, its text opened, and the tool goes back to Choose
+      tool('sticky').click();
+      assert.equal(tool('sticky').getAttribute('aria-pressed'), 'true');
+      press(vp(), { clientX: 200, clientY: 300 });
+      await until(() => /\(sticky1:Sticky \{x: -?\d+, y: -?\d+\}\)/.test(page.file()), 8000);
+      assert.ok(page.file().includes("(a:Sticky {x: 10, y: 20, text: 'Go by train'})"), 'a stays put');
+      await until(() => board().querySelector('.thoughtknot-board-edit textarea'), 8000);
+      assert.equal(tool('choose').getAttribute('aria-pressed'), 'true', 'back to Choose');
+
+      // Hand pans: a drag on an item moves the view, never the item
+      tool('hand').click();
+      press(vp().querySelector('[data-item="a"]'), { clientX: 20, clientY: 30 });
+      lift(vp());
+      assert.ok(page.file().includes("(a:Sticky {x: 10, y: 20, text: 'Go by train'})"), 'Hand moves nothing');
+
+      // Connect joins the first item pressed to the second
+      tool('connect').click();
+      press(vp().querySelector('[data-item="b"]'));
+      assert.match(board().querySelector('.thoughtknot-board-said').textContent, /Joining from b/);
+      press(vp().querySelector('[data-item="a"]'));
+      await until(() => page.file().includes('(b)-[:CONNECTS]->(a)'), 8000);
+      vp().dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      assert.equal(tool('choose').getAttribute('aria-pressed'), 'true', 'Escape lets go of the tool');
+    } finally {
+      await page.stop();
+    }
+  });
+
+  // proves: board_handles
+  test('sizes the item in focus by its handle, and duplicates it by Ctrl+D as one new item', async () => {
+    const page = await livePage(NOTE);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="b"]'), 8000);
+      const fire = (target, type, more = {}) =>
+        target.dispatchEvent(
+          new page.window.PointerEvent(type, { bubbles: true, cancelable: true, button: 0, pointerId: 1, ...more }),
+        );
+      // a tap on the card puts the keyboard on it, and its handle is drawn
+      fire(vp().querySelector('[data-item="b"]'), 'pointerdown', { clientX: 10, clientY: 10 });
+      fire(vp(), 'pointerup', { clientX: 10, clientY: 10 });
+      await until(() => vp().querySelector('[data-handle="b"]'), 8000);
+      assert.equal(vp().querySelectorAll('[data-handle]').length, 1, 'on the item in focus only');
+      // a drag by the handle sizes it, and nothing else changes
+      fire(vp().querySelector('[data-handle="b"]'), 'pointerdown', { clientX: 100, clientY: 100 });
+      fire(vp(), 'pointermove', { clientX: 140, clientY: 120 });
+      fire(vp(), 'pointerup', { clientX: 140, clientY: 120 });
+      await until(() => !page.file().includes('w: 160, h: 90'), 8000);
+      assert.match(page.file(), /\(b:Card \{x: 300, y: 20, w: \d+, h: \d+, text: 'Paris'\}\)/, 'stays where it was');
+      assert.ok(page.file().includes("(a:Sticky {x: 10, y: 20, text: 'Go by train'})"), 'a stays put');
+      // Ctrl+D duplicates the card beside it
+      vp().dispatchEvent(
+        new page.window.KeyboardEvent('keydown', { key: 'd', ctrlKey: true, bubbles: true, cancelable: true }),
+      );
+      await until(() => /\(card1:Card \{/.test(page.file()), 8000);
+      assert.match(page.file(), /\(b:Card \{x: 300, y: 20,/, 'the card copied stays put');
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_view, board_keyboard
   test('opens as a board that zooms by keys, and an item moved by keys is written to the note', async () => {
     const page = await livePage(NOTE);
