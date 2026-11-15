@@ -272,6 +272,10 @@ describe('editing by keyboard, written to the note', () => {
       assert.doesNotMatch(noteNow(), /CONNECTS\]->\(b\)|\(b\)-\[/);
       await settled();
       assert.match(said(), /Took out Card: Paris/);
+      const after = noteNow();
+      press('Delete'); // no item is in focus now, so nothing else goes
+      await settled();
+      assert.equal(noteNow(), after);
     } finally {
       env.uninstall();
     }

@@ -7,7 +7,8 @@
 // - N makes a sticky note beside the item in focus, or in the middle of the view, and opens its text.
 // - Enter opens the text of the item in focus.
 // - C starts a connector from the item in focus; C again on another item joins the two. Escape stops it.
-// - Delete or Backspace takes the item in focus out, with its connectors.
+// - Delete or Backspace takes the item in focus out, with its connectors. No item is in focus after it, so a second
+//   press takes nothing else out.
 // - G puts notes that share a tag or a word into frames (the host does it, board-cluster.ts).
 // - Escape lets go of the item in focus, and the next Tab then leaves the board.
 import { writeBoard } from './board.ts';
@@ -132,9 +133,7 @@ export function boardKey(
   }
   if (key === 'Delete' || key === 'Backspace') {
     if (focus.locked) return at(focus, word('board.edit.locked'));
-    const order = boardOutline(board).map((l) => l.id);
-    const next = order[order.indexOf(focus.id) + 1] ?? order[order.indexOf(focus.id) - 1] ?? null;
-    const step = change(board, { focus: next, linking: null }, { kind: 'remove', id: focus.id });
+    const step = change(board, NO_CURSOR, { kind: 'remove', id: focus.id });
     return 'change' in step ? { ...step, said: word('board.taken-out', { item: said(focus) }) } : step;
   }
   return null;

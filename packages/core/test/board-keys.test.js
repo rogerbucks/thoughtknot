@@ -138,10 +138,11 @@ describe('changing items', () => {
     assert.match(step.said, /already joined/);
   });
 
-  test('Delete takes the item in focus out and moves focus to the next', () => {
+  test('Delete takes the item in focus out and leaves no item in focus, so a second Delete takes nothing out', () => {
     const step = key(on('a'), 'Delete');
     assert.deepEqual(step.change, { kind: 'remove', id: 'a' });
-    assert.equal(step.cursor.focus, 'b');
+    assert.equal(step.cursor.focus, null);
     assert.match(step.said, /Took out Sticky note: Go by train/);
+    assert.equal(key(step.cursor, 'Delete'), null);
   });
 });
