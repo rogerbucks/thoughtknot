@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stage-cards-lay.test.js",
+  "test": "with no card put by hand, or cards that keep their places, the cards are laid as they were",
+  "seen_failing_first": false,
+  "evidence": "A new test of code moved, not changed: withHands came from stage-cards-switch.ts as it was"
+}

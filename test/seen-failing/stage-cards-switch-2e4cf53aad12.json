@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stage-cards-switch.test.js",
+  "test": "Cards on spreads the drawing and lays a card over each item; a click picks it; off draws it back",
+  "seen_failing_first": false,
+  "evidence": "Only its import moved: cardsChosen now comes from stage-cards-fit.ts; the behaviour it proves is unchanged"
+}
