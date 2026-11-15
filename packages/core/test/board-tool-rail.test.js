@@ -15,7 +15,7 @@ const BOARD = readBoard(`// graph: ideas · BOARD
 let keys = 0;
 
 /** A rail in a page with the DOM helpers Obsidian adds, and what it said and asked the board to do. */
-function rail(readOnly = false) {
+function rail(readOnly = false, key = `board ${(keys += 1)}`) {
   const { window } = new JSDOM('<body><div id="root"><div class="vp"></div></div></body>');
   window.Element.prototype.createEl = function (tag, o = {}) {
     const el = this.ownerDocument.createElement(tag);
@@ -37,7 +37,7 @@ function rail(readOnly = false) {
   const root = window.document.getElementById('root');
   const vp = root.querySelector('.vp');
   const done = { said: [], writes: [], focused: [] };
-  const r = new ToolRail(root, vp, `board ${(keys += 1)}`, (w) => done.said.push(w), readOnly);
+  const r = new ToolRail(root, vp, key, (w) => done.said.push(w), readOnly);
   const to = {
     write: async (c) => void done.writes.push(c),
     focus: (id, edit) => done.focused.push([id, edit]),
@@ -119,6 +119,19 @@ describe('the tool rail', () => {
   });
 
   // proves: board_tools
+  test('a board drawn afresh after a join is still on Connect, and one drawn after a tool made its item is on Choose', async () => {
+    const first = rail(false, 'the same board');
+    first.r.pick('connect');
+    first.r.press(BOARD, 'a', [0, 0], first.to);
+    first.r.press(BOARD, 'b', [0, 0], first.to);
+    const again = rail(false, 'the same board'); // as a host draws it after the join is written
+    assert.equal(again.r.tool, 'connect');
+    assert.equal(again.fold.getAttribute('data-tool'), 'connect');
+    again.r.pick('sticky');
+    again.r.press(BOARD, null, [500, 500], again.to);
+    assert.equal(rail(false, 'the same board').r.tool, 'choose');
+  });
+
   test('offers only Choose and Pan on a board that may only be looked at, and Pan pans', () => {
     const { r, tool, to } = rail(true);
     assert.equal(tool('sticky'), null);

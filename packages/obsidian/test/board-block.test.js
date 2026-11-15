@@ -65,9 +65,53 @@ describe('a board opened in a note', () => {
 });
 
 describe('pan and zoom, as a drawing', () => {
+  /** How big the board's text is on screen, in pixels, and where a spot of the board is across the viewport. */
+  const textPx = (el, place) =>
+    (Number(el.querySelector('[data-item="a"] text').getAttribute('font-size')) * place().w) /
+    Number(el.querySelector('svg.thoughtknot-svg').getAttribute('viewBox').split(' ')[2]);
+  const across = (el, place, at) => {
+    const [fx, , fw] = el.querySelector('svg.thoughtknot-svg').getAttribute('viewBox').split(' ').map(Number);
+    return place().x + ((at - fx) * place().w) / fw;
+  };
+
+  test('a board too big to read when fitted opens with readable text on its first item; a small one opens fitted', async () => {
+    const { env, el, press, place } = await board();
+    try {
+      assert.ok(textPx(el, place) >= 11 - 1e-6, `text is ${textPx(el, place)} px at open`);
+      const a = across(el, place, 10);
+      assert.ok(a >= 0 && a < 600, 'the first item is in view');
+      const open = place().w;
+      press('0');
+      assert.ok(place().w < open && place().w <= 600, '0 still fits the whole board');
+    } finally {
+      env.uninstall();
+    }
+    const small = await board(NOTE.replace('x: 1600, y: 1200', 'x: 300, y: 200'));
+    try {
+      const open = small.place();
+      small.press('0');
+      assert.deepEqual(small.place(), open, 'it was fitted already');
+    } finally {
+      small.env.uninstall();
+    }
+  });
+
+  test('a big board with frames opens on the top left of its first frame', async () => {
+    const framed = NOTE.replace('(a)-[', "(f:Frame {x: 900, y: 700, w: 900, h: 700, text: 'Plan'}),\n(a)-[");
+    const { env, el, place } = await board(framed);
+    try {
+      assert.ok(textPx(el, place) >= 11 - 1e-6);
+      const x = across(el, place, 900);
+      assert.ok(x >= 0 && x < 300, `the frame's left edge is in the left half of the view, at ${x}`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('the keys + and - zoom in and out, and 0 fits the whole board again', async () => {
     const { env, press, place } = await board();
     try {
+      press('0'); // a board this big opens zoomed in to be read
       const fit = place().w;
       press('+');
       assert.ok(place().w > fit, 'zoomed in');
@@ -164,6 +208,7 @@ describe('a host that draws the board afresh as soon as the note is written', ()
         return r;
       };
       vp.focus();
+      press('0'); // the whole board in view, so the view has no cause to follow the item moved
       press('Tab');
       const was = onScreen(el, 300);
       press('ArrowLeft', { shiftKey: true }); // a goes left of the board's corner, so the corner moves
@@ -181,6 +226,97 @@ describe('a host that draws the board afresh as soon as the note is written', ()
       await settled();
       assert.ok(Math.abs(onScreen(fresh, 300) - was) < 0.01, 'b is still on the same spot');
       assert.equal(env.doc.activeElement, fresh.querySelector('.thoughtknot-board .thoughtknot-viewport'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Ctrl and Z still takes back a change made before the board was drawn afresh', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      press('Tab');
+      press('ArrowDown', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 70/.test(noteNow()) && fresh);
+      await settled();
+      const now = fresh.querySelector('.thoughtknot-board .thoughtknot-viewport');
+      now.dispatch('keydown', { key: 'z', target: now, ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(fresh.querySelector('.thoughtknot-board-said').text, /Undone/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the items chosen stay chosen on a board drawn afresh, and Esc on the new board lets them go', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      const b = el.querySelector('[data-item="b"]');
+      vp.dispatch('pointerdown', mouse(1, b, { clientX: 300, clientY: 300, shiftKey: true }));
+      assert.ok(el.querySelector('[data-item="b"]').classList.contains('is-chosen'));
+      press('Tab'); // a
+      press('ArrowDown', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 70/.test(noteNow()) && fresh);
+      await settled();
+      assert.ok(fresh.querySelector('[data-item="b"]').classList.contains('is-chosen'), 'b is still ringed');
+      assert.ok(!fresh.querySelector('[data-item="a"]').classList.contains('is-chosen'));
+      const now = fresh.querySelector('.thoughtknot-board .thoughtknot-viewport');
+      now.dispatch('keydown', { key: 'Escape', target: now });
+      assert.ok(!fresh.querySelector('[data-item="b"]').classList.contains('is-chosen'), 'Esc lets it go');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('ideas are caught one after another: the field opens again on the board drawn afresh, with the keyboard in it', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      press('q'); // a letter on an empty spot starts catching ideas
+      const first = el.querySelector('.thoughtknot-board-edit textarea');
+      first.value = 'First idea';
+      first.dispatch('keydown', { key: 'Enter' });
+      await until(() => /First idea/.test(noteNow()) && fresh);
+      await settled();
+      const next = fresh.querySelector('.thoughtknot-board-edit textarea');
+      assert.ok(next, 'the field is open on the board now on screen');
+      assert.equal(fresh.querySelector('.thoughtknot-board-edit').hidden, false);
+      assert.equal(env.doc.activeElement, next, 'and the keyboard is in it');
+      const before = fresh;
+      next.value = 'Second idea';
+      next.dispatch('keydown', { key: 'Enter' });
+      await until(() => /Second idea/.test(noteNow()) && fresh !== before);
+      await settled();
+      assert.equal(env.doc.activeElement, fresh.querySelector('.thoughtknot-board-edit textarea'));
     } finally {
       env.uninstall();
     }
@@ -272,6 +408,95 @@ describe('editing by keyboard, written to the note', () => {
       assert.doesNotMatch(noteNow(), /CONNECTS\]->\(b\)|\(b\)-\[/);
       await settled();
       assert.match(said(), /Took out Card: Paris/);
+      const after = noteNow();
+      press('Delete'); // no item is in focus now, so nothing else goes
+      await settled();
+      assert.equal(noteNow(), after);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Ctrl or Cmd and Z takes back the last change made on the board, and says so', async () => {
+    const { env, press, said, noteNow } = await board();
+    try {
+      press('Tab'); // a
+      press('ArrowRight', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      press('z', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(said(), /Undone/);
+      // an item taken out comes back with its connectors
+      press('Delete');
+      await until(() => !/\(a:Sticky/.test(noteNow()));
+      await settled();
+      press('Z', { metaKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(noteNow(), /\(a\)-\[:CONNECTS[^\]]*\]->\(b\)/);
+      assert.match(said(), /Undone/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Ctrl or Cmd, Shift and Z makes again the change just undone, and a new change ends that', async () => {
+    const { env, press, said, noteNow } = await board();
+    try {
+      press('Z', { ctrlKey: true, shiftKey: true });
+      await settled();
+      assert.match(said(), /nothing to redo/);
+      press('Tab'); // a
+      press('ArrowRight', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      press('z', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      press('Z', { ctrlKey: true, shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(said(), /Redone/);
+      // what was made again can be undone again, and Ctrl with Y redoes too
+      press('z', { metaKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      press('y', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      // a new change after an undo leaves nothing to redo
+      press('z', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      press('ArrowDown', { shiftKey: true });
+      await until(() => !/\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      const after = noteNow();
+      press('Z', { ctrlKey: true, shiftKey: true });
+      await settled();
+      assert.equal(noteNow(), after);
+      assert.match(said(), /nothing to redo/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('copy, paste and duplicate say how many items, one as "1 item", and the count is what stays said', async () => {
+    const { env, press, said, noteNow } = await board();
+    try {
+      press('Tab'); // a
+      press('c', { ctrlKey: true });
+      assert.equal(said(), 'Copied 1 item.');
+      press('v', { ctrlKey: true });
+      await until(() => (noteNow().match(/Go by train/g) ?? []).length === 2);
+      await settled();
+      assert.equal(said(), 'Pasted 1 item in the middle of the view.');
+      press('d', { ctrlKey: true });
+      await until(() => (noteNow().match(/Go by train/g) ?? []).length === 3);
+      await settled();
+      assert.equal(said(), 'Duplicated 1 item, just to the right.');
     } finally {
       env.uninstall();
     }
