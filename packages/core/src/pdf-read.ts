@@ -1,7 +1,7 @@
 // A PDF read as pages of text, in plain JavaScript (ES§63 connector_files_to_gql, ES§67 format_untrusted_files).
 // No library, no WebAssembly and no network. The objects are read by pdf-objects.ts; this finds the pages and their text.
-// - Text only. It follows the page tree, then each page's content stream: the text-showing operators, with a new
-//   line where the text moves down, and a space where a gap is wide. Nothing in the file is ever run.
+// - Text only. It follows the page tree, then each page's content stream. It reads the text-showing operators,
+//   with a new line where the text moves down. A wide gap gives a space. Nothing in the file is ever run.
 // - Fonts: a font's own `ToUnicode` map is used; a simple font with none is read as Latin-1. A font with no way to
 //   decode it gives nothing for its text.
 // - Loss stated: scanned pictures, text inside form objects, tables as grids, reading order in columns, and
@@ -35,7 +35,7 @@ class TooMany extends Error {
 /** The most text kept from one page. */
 const PAGE_TEXT = 1_000_000;
 
-/** A font as far as text goes: the codes it maps to text, how wide a code is, and whether it can be read at all. */
+/** A font as far as text goes. It holds the text each code maps to and how wide a code is. It says if it can be read. */
 interface Font {
   map: Map<number, string> | null;
   width: number;

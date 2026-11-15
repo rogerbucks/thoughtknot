@@ -20,9 +20,9 @@ function content(lines, { font = 'F1', twoByte = false } = {}) {
 const CMAP = `/CIDInit begin begincmap 1 begincodespacerange <0000> <FFFF> endcodespacerange 1 beginbfrange <0001> <00E0> <0020> endbfrange endcmap`;
 
 /**
- * A PDF of `pages` (each an array of lines). `flate` deflates the streams, `objstm` packs the catalog, page tree and
- * pages into an object stream, `twoByte` uses a two-byte font with a ToUnicode map, `encrypt` adds an /Encrypt entry,
- * `scanned` gives pages with no text.
+ * A PDF of `pages`, each an array of lines. Options: `flate` deflates the streams. `objstm` packs the catalog, page
+ * tree and pages into an object stream. `twoByte` uses a two-byte font with a ToUnicode map. `encrypt` adds an
+ * /Encrypt entry. `scanned` gives pages with no text.
  */
 export function pdf(pages, { flate = true, objstm = false, twoByte = false, encrypt = false, scanned = false } = {}) {
   const objs = [];
