@@ -68,7 +68,8 @@ export const PAGE_SOURCE_WORDS = {
   'page.no-proposal': 'the note holds no proposal {id}',
   'page.no-graph': 'No graph in this note.',
   'page.boards': 'Whiteboards',
-  'page.board-first': 'Your notes now open on a board, with each graph as a view on it. Nothing in the note has changed.',
+  'page.board-first':
+    'Your notes now open on a board, with each graph as a view on it. Nothing in the note has changed.',
   'page.board-first.back': 'Show the graph first, as before',
   'page.board-first.graph': 'Show the graph first',
   'page.board-first.board': 'Show the board first',
