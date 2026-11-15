@@ -35,6 +35,10 @@ export const DB_SOURCE_WORDS = {
   'import.document.run': 'Add to note',
   'import.document.done': 'Added {graph}, drawn from {file}, to {note}.',
   'import.document.not-document': '{file} is not a Word document or a PDF, so no block was written.',
+  'import.board.copy':
+    'The board is copied into this note as text. Nothing stays linked to the file, and the file is never written.',
+  'import.board.done': 'Added the board {graph}, copied from {file}, to {note}.',
+  'import.board.not-board': '{file} is not a JSON Canvas file or an Excalidraw drawing, so no board was written.',
   'import.cancel': 'Cancel',
   'import.done': 'Imported {graph} from {file} into {note}.',
   'import.failed': 'The import from {file} failed, so nothing was written: {why}',
