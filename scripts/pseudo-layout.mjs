@@ -46,6 +46,8 @@ export const MEASURE = `(() => {
     if (el.closest('svg, script, style, textarea, .cm-editor, [aria-hidden="true"], [hidden]')) continue;
     const style = getComputedStyle(el);
     if (style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) === 0) continue;
+    // words in a folded part are not drawn, yet the browser still gives them the boxes they would have
+    if (el.closest('details:not([open]) > :not(summary)')) continue;
     const range = document.createRange();
     range.selectNodeContents(node);
     const rects = [...range.getClientRects()].filter((r) => r.width > 1 && r.height > 1).map(box);

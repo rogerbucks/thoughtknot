@@ -100,8 +100,11 @@ describe('in a real browser, every view of every host, in each test language', (
       const planted = [
         `document.querySelector('#note').prepend(Object.assign(document.createElement('div'), { textContent: 'Too long for its box', style: 'width:40px;overflow:hidden;white-space:nowrap' }))`,
         `document.querySelector('#note').prepend(Object.assign(document.createElement('div'), { innerHTML: '<span>First words</span><span style="margin-left:-50px">Second words</span>' }))`,
+        // a folded part's words are not drawn: they are no fault, though they would lie over the words after them
+        `document.querySelector('#note').prepend(Object.assign(document.createElement('div'), { innerHTML: '<details><summary>Fold</summary><span>Folded words</span></details><span style="display:block;margin-top:-4px">Words under the fold</span>' }))`,
       ];
       const found = await checkHarness(built, { chrome, views: [{ name: 'planted', steps: planted }] });
+      assert.ok(!found.some((f) => f.includes('Folded words')), found.join('\n'));
       for (const language of ['en-XA', 'ar-XB']) {
         assert.ok(
           found.includes(`planted, ${language}: "Too long for its box" is cut off by its box`),
