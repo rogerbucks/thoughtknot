@@ -6,7 +6,7 @@
 // size and weight. Each var() and color-mix() becomes one rgb colour. Classes, ids, names for a screen reader and other
 // markup that paints nothing are left out. Each number is rounded to a hundredth, so a picture changes only when what
 // is drawn does.
-import { parseColour, withVariables } from './wcag.js';
+import { parseColour, themeRoot, withVariables } from './wcag.js';
 
 /** The SVG elements that paint, or group what does. */
 const DRAWN = new Set([
@@ -102,7 +102,7 @@ export function withChannels(variables) {
 /** A computed value with its variables and colour mixes worked out, and each colour written as rgb(). */
 const paintOf = (value, variables) =>
   round(
-    withVariables(value, variables).replace(/#[0-9a-f]{3,8}\b|(?:rgba?|hsla?)\([^)]*\)/gi, (c) =>
+    withVariables(value, variables).replace(/#[0-9a-f]{3,8}\b|(?:rgba?|hsla?)\([^)]*\)|color\(srgb [^)]*\)/gi, (c) =>
       parseColour(c) ? rgb(parseColour(c)) : c,
     ),
   );
@@ -116,6 +116,14 @@ const escape = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').repla
  */
 export function pictureOf(window, svg, themeVariables) {
   const variables = withChannels(themeVariables);
+  // jsdom from 31 works each var() out itself, so the page must declare the theme's variables: once, after its sheets
+  const { document } = window;
+  if (!document.querySelector('style[data-theme-root]')) {
+    const root = document.createElement('style');
+    root.setAttribute('data-theme-root', '');
+    root.textContent = themeRoot(themeVariables);
+    document.head.append(root);
+  }
   const ids = new Map();
   const idOf = (id) => {
     if (!ids.has(id)) ids.set(id, `p${ids.size + 1}`);
