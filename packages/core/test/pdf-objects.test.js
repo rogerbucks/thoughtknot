@@ -36,6 +36,15 @@ describe('pdf_objects_values', () => {
 });
 
 describe('pdf_objects_file', () => {
+  test('an object stream is read once: a number given a place already read gets no object', () => {
+    const body = '10 0 11 0 12 11 << /A 1 >> << /B 2 >>';
+    const file = `%PDF-1.7\n1 0 obj\n<< /Type /ObjStm /N 3 /First 16 /Length ${body.length} >>\nstream\n${body}\nendstream\nendobj\n`;
+    const f = readObjects(new Uint8Array(Buffer.from(file, 'latin1')));
+    assert.equal(f.objects.get(10).get('A'), 1);
+    assert.equal(f.objects.has(11), false);
+    assert.equal(f.objects.get(12).get('B'), 2);
+  });
+
   test('finds every object by scanning, and unpacks an object stream', () => {
     const f = readObjects(pdf([['a']], { objstm: true }));
     const root = [...f.objects.values()].find((v) => v instanceof Map && v.get('Type')?.n === 'Catalog');

@@ -1,8 +1,15 @@
 // The note's whiteboards on the browser editor's page (editor spec §45, board_view). It is the page VS Code's tab, the
-// desktop app and the phone app run too. Each board block opens as the display layer's board, to pan, zoom and edit
-// by pointer, touch and keyboard, offline. Each edit goes through the page's own version-checked write.
+// desktop app and the phone app run too. The board in front opens as the display layer's board, to pan, zoom and edit
+// by pointer, touch and keyboard, offline. The list above it switches between the note's boards (board_many). Each edit goes through the page's own version-checked write.
 import { arrangerOf, gqlBlocks, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
+import {
+  boardInFront,
+  boardListChanged,
+  glideIn,
+  putInFront,
+  showBoardList,
+} from '@thoughtknot/core/display/board/board-list';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
 import { boardFirst, chooseFirst, firstLine, firstTimeLine, keptIn, starterBoard, withStarter } from './board-first.ts';
 
@@ -37,8 +44,9 @@ export function whenSeatsReady(win: Window, then: () => void): void {
 }
 
 /**
- * A section with each board of the note opened, or null when the note holds none. `key` names the note. A board with
- * a seat is edited together with the others there, and the others are drawn on it.
+ * A section with the note's board in front opened, under the list of its boards, or null when the note holds none.
+ * `key` names the note. A board with a seat is edited together with the others there, and the others are drawn on it.
+ * `again` draws the section afresh, after another board is put in front.
  */
 export function boardSection(
   doc: Document,
@@ -46,43 +54,61 @@ export function boardSection(
   key: string,
   dark: boolean,
   seatFor?: SeatFor,
+  again?: () => void,
 ): HTMLElement | null {
   const written = gqlBlocks(note.text).filter((b) => boardOf(b.text));
   // a note with graphs and no board opens on a starter board, written to the note only once it is changed
   const starter = written.length ? null : starterBoard(note.text, (t) => !!boardOf(t));
   const boards = starter ? [{ text: starter.text }] : written;
-  if (!boards.length) return null;
+  const names = boards.map((b) => boardOf(b.text)?.name ?? '');
+  const name = boardInFront(key, names);
+  const b = boards[names.indexOf(name ?? '')];
+  if (name === undefined || !b) return null;
   const section = doc.createElement('section');
   section.setAttribute('class', 'gn-boards');
   section.setAttribute('aria-label', word('page.boards'));
-  for (const b of boards) {
-    const name = boardOf(b.text)?.name ?? '';
-    const holder = section.appendChild(doc.createElement('div'));
-    const seat = seatFor?.(name);
-    const own = {
-      palette: dark ? PALETTES.dark : PALETTES.light,
-      key: `${key}\n${name}`,
-    };
-    if (seat) {
-      showBoard(holder, seat.text(), { ...own, together: seat });
-      continue;
-    }
-    showBoard(holder, b.text, {
-      ...own,
-      write: async (change) => {
-        const now =
-          starter && !gqlBlocks(note.text).some((x) => boardOf(x.text))
-            ? withStarter(note.text, starter.text)
-            : note.text;
-        const r = boardEditInNote(now, name, change);
-        if ('refused' in r) return r;
-        const w = await note.writeWhole(r.note);
-        return w.ok ? { text: r.text } : { refused: w.why };
-      },
-      arrange: starter ? undefined : arrangerOf(() => note.text, name),
-      views: viewerOf(() => note.text),
-    });
+  // the note as a change is made to: with its starter board written first, when that is the board shown
+  const base = () =>
+    starter && !gqlBlocks(note.text).some((x) => boardOf(x.text)) ? withStarter(note.text, starter.text) : note.text;
+  const seat = seatFor?.(name);
+  showBoardList(section, {
+    key,
+    names,
+    current: name,
+    open: () => again?.(),
+    change: seat
+      ? undefined
+      : async (ask) => {
+          const r = boardListChanged(base(), name, ask);
+          if ('refused' in r) return r.refused;
+          const w = await note.writeWhole(r.note);
+          if (!w.ok) return w.why;
+          putInFront(key, r.name);
+          again?.();
+          return null;
+        },
+  });
+  const holder = section.appendChild(doc.createElement('div'));
+  glideIn(holder, key);
+  const own = {
+    palette: dark ? PALETTES.dark : PALETTES.light,
+    key: `${key}\n${name}`,
+  };
+  if (seat) {
+    showBoard(holder, seat.text(), { ...own, together: seat });
+    return section;
   }
+  showBoard(holder, b.text, {
+    ...own,
+    write: async (change) => {
+      const r = boardEditInNote(base(), name, change);
+      if ('refused' in r) return r;
+      const w = await note.writeWhole(r.note);
+      return w.ok ? { text: r.text } : { refused: w.why };
+    },
+    arrange: starter ? undefined : arrangerOf(() => note.text, name),
+    views: viewerOf(() => note.text),
+  });
   return section;
 }
 
@@ -108,7 +134,7 @@ export function boardsKept(
   const kept = keptIn(parent.ownerDocument.defaultView);
   const draw = () => {
     boards?.remove();
-    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor);
+    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw);
     if (!boards) return;
     // the board is the main screen: it comes first, unless this person chose the graph first (board_main_screen)
     const first = boardFirst(kept);
