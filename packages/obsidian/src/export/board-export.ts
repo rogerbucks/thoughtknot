@@ -7,19 +7,20 @@ import { MarkdownView, Notice } from 'obsidian';
 import { boardFilesOf, word } from '@thoughtknot/core';
 import type { BoardFormat, PluginCommand } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
-import { freePath } from './vault-write';
+import { noteText } from '../storage/plugin-notes';
+import { freePath, vaultOps } from './vault-write';
 
 /** Writes each board of the note in front as a file of `format` beside the note; or says why nothing was written. */
 async function exportBoards(plugin: ThoughtKnotPlugin, format: BoardFormat): Promise<void> {
-  const { vault, workspace } = plugin.app;
+  const { workspace } = plugin.app;
   const note = workspace.getActiveViewOfType(MarkdownView)?.file;
   if (!note) return void new Notice(word('host.boards.no-note'));
-  const files = boardFilesOf(await vault.cachedRead(note), format);
+  const files = boardFilesOf((await noteText(plugin.app, note.path)) ?? '', format);
   if (!files.length) return void new Notice(word('host.boards.none'));
   const folder = note.path.split('/').slice(0, -1).join('/');
   for (const file of files) {
     const path = freePath(plugin, `${folder ? `${folder}/` : ''}${note.basename} ${file.name}`);
-    await vault.create(path, file.text);
+    await vaultOps(plugin).write(path, file.text);
     new Notice([word('host.boards.done', { file: path }), ...file.notes].join(' '));
   }
 }
