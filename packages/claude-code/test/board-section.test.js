@@ -127,6 +127,40 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_handles
+  test('sizes the item in focus by its handle, and duplicates it by Ctrl+D as one new item', async () => {
+    const page = await livePage(NOTE);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="b"]'), 8000);
+      const fire = (target, type, more = {}) =>
+        target.dispatchEvent(
+          new page.window.PointerEvent(type, { bubbles: true, cancelable: true, button: 0, pointerId: 1, ...more }),
+        );
+      // a tap on the card puts the keyboard on it, and its handle is drawn
+      fire(vp().querySelector('[data-item="b"]'), 'pointerdown', { clientX: 10, clientY: 10 });
+      fire(vp(), 'pointerup', { clientX: 10, clientY: 10 });
+      await until(() => vp().querySelector('[data-handle="b"]'), 8000);
+      assert.equal(vp().querySelectorAll('[data-handle]').length, 1, 'on the item in focus only');
+      // a drag by the handle sizes it, and nothing else changes
+      fire(vp().querySelector('[data-handle="b"]'), 'pointerdown', { clientX: 100, clientY: 100 });
+      fire(vp(), 'pointermove', { clientX: 140, clientY: 120 });
+      fire(vp(), 'pointerup', { clientX: 140, clientY: 120 });
+      await until(() => !page.file().includes('w: 160, h: 90'), 8000);
+      assert.match(page.file(), /\(b:Card \{x: 300, y: 20, w: \d+, h: \d+, text: 'Paris'\}\)/, 'stays where it was');
+      assert.ok(page.file().includes("(a:Sticky {x: 10, y: 20, text: 'Go by train'})"), 'a stays put');
+      // Ctrl+D duplicates the card beside it
+      vp().dispatchEvent(
+        new page.window.KeyboardEvent('keydown', { key: 'd', ctrlKey: true, bubbles: true, cancelable: true }),
+      );
+      await until(() => /\(card1:Card \{/.test(page.file()), 8000);
+      assert.match(page.file(), /\(b:Card \{x: 300, y: 20,/, 'the card copied stays put');
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_view, board_keyboard
   test('opens as a board that zooms by keys, and an item moved by keys is written to the note', async () => {
     const page = await livePage(NOTE);

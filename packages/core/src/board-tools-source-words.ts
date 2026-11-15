@@ -1,5 +1,5 @@
-// The words of a board's tool rail, in UK English (editor spec §45, board_tools). display-source-words.ts keeps them
-// with the rest.
+// The words of a board's tool rail, handles and copying, in UK English (editor spec §45, board_tools and
+// board_handles). display-source-words.ts keeps them with the rest.
 
 /** The words of the tool rail, by key, in UK English. */
 export const BOARD_TOOLS_SOURCE_WORDS = {
@@ -23,4 +23,7 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.tool.picked': '{tool} tool.',
   'board.tool.from': 'Joining from {id}: press the item to join it to.',
   'board.tool.stopped': 'Stopped joining.',
+  'board.copied': 'Copied {count} items.',
+  'board.pasted': 'Pasted {count} items in the middle of the view.',
+  'board.duplicated': 'Duplicated {count} items, just to the right.',
 } as const;
