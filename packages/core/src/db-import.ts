@@ -126,6 +126,18 @@ export function importedBlock(
   return { block: `\`\`\`gql\n${written.join('\n')}\`\`\`` };
 }
 
+/**
+ * The block that draws a document from its file: fenced as a note holds it, naming the graph and the file after FROM. It
+ * is a live link, unlike a database import: the document is read again whenever the note is drawn. Refused: a graph name
+ * that is no name. Refused too: a file that is no Word document or PDF, or one whose place a line cannot hold.
+ */
+export function documentBlock(graph: string, file: string): DbImported {
+  if (!NAME.test(graph)) return { refused: word('import.not-graph-name', { graph }) };
+  if (!/\.(docx|pdf)$/i.test(file) || /[\n\r·]/.test(file))
+    return { refused: word('import.document.not-document', { file }) };
+  return { block: `\`\`\`gql\n// graph: ${graph} · FROM ${file}\n\`\`\`` };
+}
+
 /** Note `note` with `block` added at its end, after a blank line. */
 export function withImport(note: string, block: string): string {
   // the blank lines at its end are counted back from the end, one pass: never a search that could start at each one

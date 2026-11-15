@@ -3,7 +3,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
-import { importedBlock, isDbFile, pickedLinks, pickedThings, withImport } from '../src/db-import.ts';
+import { documentBlock, importedBlock, isDbFile, pickedLinks, pickedThings, withImport } from '../src/db-import.ts';
+import { sourceOf } from '../src/sources.ts';
 
 const INFO = { file: 'Sales', date: '2026-10-20' };
 
@@ -114,5 +115,23 @@ describe('rows of the tables picked, never guessed (db_import_on_request)', () =
       INFO,
     );
     assert.match(block.block, /\(a1\)-\[:KNOWS \{since: 2020\}\]->\(b2\)/);
+  });
+});
+
+describe('a document is added as a linked block (connector_text_proposed)', () => {
+  test('the block names the graph and the file after FROM, and is read back as a document place', () => {
+    const made = documentBlock('plan', 'Data/Q1 plan.docx');
+    assert.equal(made.block, '```gql\n// graph: plan · FROM Data/Q1 plan.docx\n```');
+    const source = sourceOf(made.block.split('\n')[1]);
+    assert.equal(source.kind, 'document');
+    assert.equal(source.target, 'Data/Q1 plan.docx');
+    assert.equal(withImport('# Plan\n', made.block), `# Plan\n\n${made.block}\n`);
+  });
+
+  test('a graph name that is no name, a file that is no document, or a place a line cannot hold is refused', () => {
+    assert.match(documentBlock('two words', 'a.pdf').refused, /two words/);
+    assert.match(documentBlock('plan', 'a.xlsx').refused, /not a Word document or a PDF/);
+    assert.match(documentBlock('plan', 'a · b.pdf').refused, /not a Word document or a PDF/);
+    assert.match(documentBlock('plan', 'a\nb.pdf').refused, /not a Word document or a PDF/);
   });
 });

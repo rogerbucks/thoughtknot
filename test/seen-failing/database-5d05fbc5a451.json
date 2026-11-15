@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/database.test.js",
+  "test": "Import offers the SQLite files of the vault, with nothing to set up (settings_db_connections) > with no database file in the vault, Import says so and opens nothing",
+  "seen_failing_first": false,
+  "evidence": "The code that says it was reworded in the commit before; this commit only brings the test's expected wording in step."
+}

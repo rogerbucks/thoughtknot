@@ -346,7 +346,7 @@ export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
 export type { SwitchSetting } from './settings.ts';
 export { tallestOf, EASIER_READING_CLASS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
-export { importedBlock, isDbFile, withImport } from './db-import.ts';
+export { documentBlock, importedBlock, isDbFile, withImport } from './db-import.ts';
 export { VISITS_KEPT, visitsFrom, withVisit, type RecentVisit } from './recent.ts';
 export { historyFrom, historyMoved, withVersion, type NoteHistory, type NoteVersion } from './note-history.ts';
 export type { DbImported, DbRow } from './db-import.ts';
