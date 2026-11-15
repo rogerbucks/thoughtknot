@@ -22,6 +22,7 @@ import { button } from '../button.ts';
 import { StageCards, cardTexts, cardsChosen, chooseCards, type CardWords } from './stage-cards.ts';
 import { fitsOf, glide, placesOf, withFits } from './stage-cards-fit.ts';
 import { MoveUndo } from './move-undo.ts';
+import type { PlacesHost } from './stage-places.ts';
 import { groundShift } from '../../render/render-tilt.ts';
 
 /** What switching Cards needs of the stage: its card, scene, places and room sizes (both changed in place), and view. */
@@ -42,6 +43,8 @@ export interface CardsHost {
   onFit?: (key: string, fit: CardFit | undefined, tall?: number) => void;
   /** Where the reader put cards by hand, in the layout's own places. */
   places?: ReadonlyMap<string, { x: number; y: number }>;
+  /** Where the cards' sizes and places are saved: the note's layout block (render_cards, layout_block). */
+  saves?: PlacesHost;
 }
 
 /**
@@ -190,8 +193,16 @@ export class CardsSwitch {
   turn(h: Omit<CardsHost, 'words'> & { draw: () => void }, on: boolean, done: () => void, atOnce = false): View {
     if (on === !!this.cards) return h.view;
     this.stop(); // a press mid-glide starts from where that glide was going
-    const fits = fitsOf(this.graph);
-    const places = placesOf(this.graph);
+    const [fits, places] = [fitsOf(this.graph), placesOf(this.graph)];
+    // as saved in the note, when it is: the layout block is the truth, and the card drawn again reads it anew
+    if (h.saves?.cards) {
+      fits.clear();
+      places.clear();
+    }
+    for (const [k, c] of h.saves?.cards ?? []) {
+      if (c.fit) fits.set(k, { fit: c.fit, ...(c.h && { tall: c.h }) });
+      if (c.placed) places.set(k, { x: c.x, y: c.y });
+    }
     this.host = { ...h, words: this.words, fits, places, onFit: (k, f, tall) => this.fit(k, f, tall) };
     const next = switchCards(this.host, this.cards, on, h.draw, done, atOnce);
     [this.cards, this.stop] = [next.cards, next.stop];
@@ -209,6 +220,7 @@ export class CardsSwitch {
     const fits = fitsOf(this.graph);
     if (fit) fits.set(key, { fit, ...(tall ? { tall } : {}) });
     else fits.delete(key);
+    this.save(key);
     // laid from where the cards are now: the card keeps its top edge, and only cards it now covers move aside
     const was = cards.laid,
       spots = new Map(was.spots),
@@ -229,6 +241,22 @@ export class CardsSwitch {
     cards.settled = false; // the arrows wait for the cards to come to rest
     h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, laid.spots));
     this.stop = glide(h.spots, laid.spots, h.draw, () => ((cards.settled = true), h.draw()));
+  }
+
+  /**
+   * Saves card `key` as its reader sized and put it, in the layout's own places; one sized and put as laid is forgotten.
+   * Where nothing is saved, as with a block another plugin draws, it is kept while the plugin runs.
+   */
+  private save(key: string): void {
+    const [h, cards] = [this.host, this.cards];
+    const [f, p] = [fitsOf(this.graph).get(key), placesOf(this.graph).get(key)];
+    const at = cards?.laid.cards.find((c) => c.key === key);
+    if (!h?.saves?.card || !cards || !at) return;
+    const { spread, cx, cy } = cards.laid;
+    const here = p ?? { x: cx + (at.x - cx) / spread, y: cy + (at.y - cy) / spread };
+    const c =
+      f || p ? { ...here, ...(p && { placed: true }), ...(f && { fit: f.fit }), ...(f?.tall && { h: f.tall }) } : null;
+    void h.saves.card(key, c);
   }
 
   /** The card held by its head, where it was, whether it has moved, and the view it is dragged under. */
@@ -269,6 +297,7 @@ export class CardsSwitch {
     const put = (p: { x: number; y: number } | undefined, s: Spot): void => {
       if (p) places.set(held.key, p);
       else places.delete(held.key);
+      this.save(held.key);
       this.stop();
       this.relay(held.key, new Map([...(this.cards?.laid.spots ?? []), [held.key, s]]));
     };

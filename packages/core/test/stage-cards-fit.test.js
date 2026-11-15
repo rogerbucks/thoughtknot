@@ -178,3 +178,56 @@ test('a card dragged by its head stays where it is put, the cards it lands on mo
     uninstall();
   }
 });
+
+// proves: render_cards
+test('each card is drawn as saved in the layout block, and its size and place are saved there, apart from its dot', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { installHost } = await import('../src/display/host.ts');
+    installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { cardsControl } = await import('../src/display/graph-view/stage-cards-switch.ts');
+    const { CARD_HEAD } = await import('../src/render/render-cards.ts');
+    const { drawing, g } = drawingAndGraph();
+    const written = [];
+    const places = {
+      saved: new Map(),
+      place: () => {},
+      cards: new Map([['H2', { x: 0, y: 0, fit: 'title' }]]),
+      card: (key, c) => void written.push([key, c]),
+      graph: 'saved-plan',
+    };
+    const root = doc.createElement('div');
+    doc.body.appendChild(root);
+    const dock = root.createDiv({ cls: 'thoughtknot-view-dock' }).createDiv({ cls: 'thoughtknot-dock-body' });
+    const viewport = root.createDiv();
+    const stage = new RenderStage(viewport, drawing, g, undefined, 'always', places);
+    cardsControl(root, stage, 'saved-plan');
+    dock.querySelector('button').click();
+    assert.equal(boxesOf(stage).get('H2').h, CARD_HEAD, 'drawn as saved: its name only');
+    // sized again, it is saved: shown whole, its line is forgotten
+    cardEl(viewport, 'Home 2').querySelector('button.thoughtknot-stage-card-fit').click();
+    assert.deepEqual(written.at(-1), ['H2', null]);
+    // put by hand, it is saved there, placed, in the layout's own places; the dot's place is never written
+    const w0 = stage.spots.get('W0');
+    stage.view = { ...stage.view, scale: 1, x: w0.x - 400, y: w0.y - 300 };
+    stage.draw();
+    const el = cardEl(viewport, 'Work 0');
+    const [x, y] = ['x', 'y'].map((a) => parseFloat(el.cssProps[`--thoughtknot-card-${a}`]));
+    assert.ok(stage.cardsOn.grab(x + 20, y + 10, () => stage.view));
+    stage.cardsOn.drag(0, 500);
+    stage.cardsOn.drop();
+    const [key, c] = written.at(-1);
+    assert.equal(key, 'W0');
+    assert.equal(c.placed, true);
+    const { spread, cy } = stage.cardsOn.cards.laid;
+    assert.ok(Math.abs(c.y - (cy + (w0.y + 500 - cy) / spread)) < 1e-6, 'in the layout own places, before spreading');
+    assert.equal(places.saved.size, 0, 'no dot place is saved');
+    for (let i = 0; i < 3; i++) await Promise.resolve(); // the undo's toast says so before the page goes
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

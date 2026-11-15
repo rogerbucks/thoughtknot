@@ -352,6 +352,9 @@
         "CAPTION_MOST": [
           "value: 200"
         ],
+        "cardInNote": [
+          "value: (note: string, graph: string, shown: string, thing: string, c: CardSave | null) => { text: string; } | { refused: string; }"
+        ],
         "Catalogue": [
           "type = { [x: string]: Words; }"
         ],
@@ -2259,6 +2262,7 @@
         ],
         "Layout": [
           "interface",
+          "cards?: Map<string, CardSave> | undefined",
           "name: string",
           "on: string",
           "places: Map<string, Place>"
@@ -2268,6 +2272,14 @@
         ],
         "LAYOUT_OPTION_RANGE": [
           "value: Readonly<Record<LayoutShare, readonly [number, number]>>"
+        ],
+        "LayoutCard": [
+          "interface",
+          "fit?: 'full' | 'title' | undefined",
+          "h?: number | undefined",
+          "placed?: boolean | undefined",
+          "x: number",
+          "y: number"
         ],
         "layoutContract": [
           "value: (l: PluginLayout, pluginId: string) => StorageCheck[]"
@@ -4905,6 +4917,12 @@
         ],
         "saveAiReview": [
           "value: (note: string, shown: string, review: AiReview) => { text: string; } | { refused: string; }"
+        ],
+        "saveCard": [
+          "value: (text: string | null, graph: string, thing: string, c: CardSave | null) => string | null"
+        ],
+        "savedCards": [
+          "value: (note: string, graph: string, things?: Set<string>) => Map<string, CardSave>"
         ],
         "SavedExplore": [
           "interface",

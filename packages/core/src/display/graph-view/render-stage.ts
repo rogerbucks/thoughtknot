@@ -55,7 +55,7 @@ export class RenderStage {
   private readonly mover: StageMover | undefined;
   /** Each item drawn as a card with its whole note, while Cards is on (render_cards). */
   readonly cardsOn = new CardsSwitch();
-  private readonly drawn: { drawing: GraphDrawing; g: Graph | undefined; draw: () => void; kind: StageKind };
+  private readonly drawn: { drawing: GraphDrawing; g?: Graph; draw: () => void; kind: StageKind; saves?: PlacesHost };
   private readonly focus = new StageFocus(() => this.draw());
   /** The room picked and the room open: the badge's way in, and its Back (render_room_folders). */
   readonly rooms: StageRooms;
@@ -81,7 +81,7 @@ export class RenderStage {
     kind: StageKind = 'network',
     seen?: Seen,
   ) {
-    [this.viewport, this.drawn] = [viewport, { drawing, g, draw: () => this.draw(), kind }];
+    [this.viewport, this.drawn] = [viewport, { drawing, g, draw: () => this.draw(), kind, saves: places }];
     ({ scene: this.scene, spots: this.spots, hands: this.hands } = laidOut(drawing, g, kind, hands, places?.saved));
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
     const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };

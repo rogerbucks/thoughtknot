@@ -516,4 +516,8 @@ export const VALUES_LATE = [
   // an outside data set fetched only when asked, from picked sources (data_set_access), 12 Nov 2026
   'fetchDataSet',
   'placeProblem',
+  // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
+  'cardInNote',
+  'saveCard',
+  'savedCards',
 ];
