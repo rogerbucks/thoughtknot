@@ -3,8 +3,8 @@
 // A mouse or pen drags an item to move it. The keyboard does everything else (board-keys.ts), and each step is said in
 // a live region. The outline under it lists the whole board as text.
 //
-// Every edit goes to the host as a change to the board block, and the board is drawn again from what was written, the
-// view and every item not changed staying put (nodes stay put, never disorient). A host that draws the block afresh
+// Every edit goes to the host as a change to the board block. The board is drawn again from what was written, and
+// the view and every item not changed stay put (nodes stay put, never disorient). A host that draws the block afresh
 // after a write gets the same view and focus back, kept by its `key`.
 import { word, Zoom, type Drawn, type Palette, type View } from '@thoughtknot/core';
 

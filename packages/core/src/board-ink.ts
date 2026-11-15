@@ -1,9 +1,8 @@
-// Pen and highlighter strokes on a board (editor spec ES§45, board_ink). A stroke is an Ink item, as a drawing over a
-// graph keeps it (sketch.ts): its points are one text of whole-number pairs, `points: '0 0 12 4'`, measured from the
-// item's own corner, so moving the item moves the stroke. A highlighter is a wide, see-through stroke in yellow.
-// Host-free: the host feeds in the points a pointer went through and gets back the item to write, or what to erase.
+// Pen and highlighter strokes on a board (editor spec ES§45, board_ink). A stroke is an Ink item, kept as a drawing
+// over a graph keeps it (sketch.ts). Its points are one text of whole-number pairs, `points: '0 0 12 4'`. They are
+// measured from the item's own corner, so moving the item moves the stroke. A highlighter is a wide, see-through
+// stroke in yellow. Host-free: the host feeds in the points a pointer went through. It gets back the item to write.
 import type { BoardItem } from './board.ts';
-import { thinned } from './sketch-edit.ts';
 
 /** The two pens: the fine one, and the wide see-through one. */
 export type Pen = 'pen' | 'highlighter';
@@ -16,6 +15,38 @@ export const HIGHLIGHT_OPACITY = 0.45;
 const PAD = 8;
 
 type Pair = [number, number];
+
+/** The distance from point `p` to the line from `a` to `b`. */
+function offLine(p: Pair, a: Pair, b: Pair): number {
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+  const long = Math.hypot(dx, dy);
+  if (!long) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+  return Math.abs(dx * (a[1] - p[1]) - dy * (a[0] - p[0])) / long;
+}
+
+/**
+ * A freehand stroke thinned: only the points it needs to keep its shape within `within` pixels (Ramer, Douglas and
+ * Peucker's way). Its first and last points always stay.
+ */
+export function thinned(points: readonly Pair[], within = 1.5): Pair[] {
+  if (points.length < 3) return [...points];
+  const keep = new Array<boolean>(points.length).fill(false);
+  keep[0] = keep[points.length - 1] = true;
+  const spans: [number, number][] = [[0, points.length - 1]];
+  while (spans.length) {
+    const [from, to] = spans.pop() as [number, number];
+    let far = -1,
+      most = within;
+    for (let i = from + 1; i < to; i++) {
+      const d = offLine(points[i] as Pair, points[from] as Pair, points[to] as Pair);
+      if (d > most) [far, most] = [i, d];
+    }
+    if (far < 0) continue;
+    keep[far] = true;
+    spans.push([from, far], [far, to]);
+  }
+  return points.filter((_, i) => keep[i]);
+}
 
 /** Which pen made an Ink item. */
 export const penOf = (item: BoardItem): Pen => (item.more.pen === 'highlighter' ? 'highlighter' : 'pen');
@@ -32,8 +63,8 @@ export function inkPoints(item: BoardItem): Pair[] {
 }
 
 /**
- * The Ink item a pointer's path makes, as `id`: the path thinned to the points that keep its shape, in whole numbers,
- * in a box that holds it. A single press makes a dot. Null when the path has no point.
+ * The Ink item a pointer's path makes, as `id`. The path is thinned to the points that keep its shape, in whole
+ * numbers, in a box that holds it. A single press makes a dot. Null when the path has no point.
  */
 export function inkItem(id: string, pen: Pen, path: readonly Pair[]): BoardItem | null {
   const kept = thinned(path.map(([x, y]): Pair => [Math.round(x), Math.round(y)]));

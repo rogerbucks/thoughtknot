@@ -1,6 +1,6 @@
 // Where things are on a board's screen (editor spec ES§45, board_view). A host that draws a board afresh after each
-// write builds it off the page, where it has no width yet. It must then be taken as wide as the board was, so the
-// view kept from before is put back as it was and nothing jumps (never disorient).
+// write builds it off the page, where it has no width yet. It must then be taken as wide as the board was. So the
+// view kept from before is put back as it was, and nothing jumps (never disorient).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { BoardSpace, HEIGHT } from '../src/display/board/board-space.ts';

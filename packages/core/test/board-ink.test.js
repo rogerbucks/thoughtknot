@@ -1,4 +1,4 @@
-// Pen and highlighter strokes on a board (editor spec ES§45, board_ink). A stroke is an Ink item whose points are one
+// Pen and highlighter strokes on a board (editor spec ES§45, board_ink). A stroke is an Ink item. Its points are one
 // text of whole-number pairs from its own corner, so it moves with its item and is read back as written.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

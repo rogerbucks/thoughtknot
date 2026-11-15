@@ -1,8 +1,8 @@
 // Drawing on a board with a mouse, pen or finger (editor spec ES§45, board_ink). While the rail's Pen, Highlighter or
-// Eraser is in use, a drag on the board draws a stroke, or rubs out the strokes it crosses; the pointer is taken before
-// the board's own handlers see it, so nothing is moved or panned by the same press. A stroke is shown as it goes and
-// written as one Ink item when it lifts. Strokes are written one after another, so two quick ones never share an id.
-// Kept apart so board-view.ts stays small.
+// Eraser is in use, a drag on the board draws a stroke, or rubs out the strokes it crosses. The pointer is taken
+// before the board's own handlers see it, so the same press never moves or pans anything. A stroke is shown as it
+// goes and written as one Ink item when it lifts. Strokes are written one after another, so two quick ones never
+// share an id. Kept apart so board-view.ts stays small.
 import { STYLE, word, type Palette, type Zoom } from '@thoughtknot/core';
 
 import type { Board } from '../../board.ts';
