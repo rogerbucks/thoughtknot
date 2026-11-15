@@ -70,3 +70,48 @@ describe('a note opened in Obsidian', () => {
     }
   });
 });
+
+const MANY_PATH = 'Ideas.md';
+const MANY = [
+  '# Ideas',
+  '```gql',
+  '// graph: ideas · BOARD',
+  "(a:Sticky {x: 10, y: 20, text: 'Go by train'})",
+  '```',
+  '',
+  '```gql',
+  '// graph: plan · BOARD',
+  "(b:Sticky {x: 10, y: 20, text: 'Book it'})",
+  '```',
+  '',
+].join('\n');
+const manyPane = (env) => env.app.workspace.getLeavesOfType('thoughtknot-board')[0]?.view?.contentEl;
+
+describe('a note with many boards opened in Obsidian', () => {
+  // proves: board_many
+  test('shows one board in front, and the list switches to another and adds a new one to the note', async () => {
+    const env = await load({ files: { [MANY_PATH]: MANY } });
+    try {
+      env.state.active = MANY_PATH;
+      env.app.workspace.tell('file-open', env.app.workspace.getActiveFile());
+      await until(() => !!manyPane(env)?.querySelector('[data-item="a"]'), 8000);
+      const list = () => manyPane(env).querySelector('.thoughtknot-board-list');
+      const press = (words) =>
+        list()
+          .querySelectorAll('button')
+          .find((b) => b.textContent === words)
+          .click();
+      assert.equal(list().querySelector('summary').textContent, 'Boards: ideas, 1 of 2');
+      assert.equal(manyPane(env).querySelector('[data-item="b"]'), null, 'one board in front');
+      press('plan');
+      await until(() => !!manyPane(env).querySelector('[data-item="b"]'), 8000);
+      assert.equal(manyPane(env).querySelector('[data-item="a"]'), null);
+      assert.equal(env.state.files.get(MANY_PATH), MANY, 'switching writes nothing');
+      press('New board');
+      await until(() => env.state.files.get(MANY_PATH).endsWith('```gql\n// graph: board · BOARD\n```\n'), 8000);
+      await until(() => list().querySelector('summary').textContent === 'Boards: board, 3 of 3', 8000);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
