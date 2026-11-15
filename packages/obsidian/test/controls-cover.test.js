@@ -84,3 +84,18 @@ test('the level badge covers the drawing while it shows, and nothing while it is
   badge.addClass('is-hidden');
   assert.deepEqual(overCover(viewport, at), none, 'a badge hidden covers nothing');
 });
+
+// The side rail lies over the start edge of the drawing, so a name or a thing chosen must not sit under it.
+// proves: controls_uncover
+test('the side rail covers the drawing, so the fit and the names keep clear of it', () => {
+  const card = doc.body.createDiv({ cls: 'thoughtknot-view' });
+  const over = card.createDiv({ cls: 'thoughtknot-over' });
+  const viewport = card.createDiv({ cls: 'thoughtknot-viewport' });
+  const at = { left: 0, top: 0, right: 700, bottom: 400 };
+  const none = { top: 0, right: 0, bottom: 0, left: 0 };
+  assert.deepEqual(overCover(viewport, at), none);
+  const rail = over.createDiv({ cls: 'thoughtknot-rail' });
+  assert.notDeepEqual(overCover(viewport, at), none, 'a rail shown covers a strip');
+  rail.hidden = true;
+  assert.deepEqual(overCover(viewport, at), none, 'a rail hidden covers nothing');
+});
