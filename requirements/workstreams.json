@@ -759,7 +759,9 @@
       "board_slides",
       "board_view_items",
       "board_main_screen",
-      "board_many"
+      "board_many",
+      "board_nested",
+      "board_proposed"
     ]
   },
   "B2": {

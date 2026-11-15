@@ -3,7 +3,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { boardAdded, boardCopied, boardNames, boardRemoved, boardRenamed } from '../src/board-list.ts';
+import {
+  boardAdded,
+  boardCopied,
+  boardListChanged,
+  boardNames,
+  boardRemoved,
+  boardRenamed,
+} from '../src/board-list.ts';
 
 const NOTE = [
   '# Trip',
@@ -79,4 +86,14 @@ test('a removed board takes its block alone, leaves no gap, and the board before
   assert.ok(first.note.includes("(a:Place {name: 'Rome'})\n```\n\nSome words after."), 'one blank line is left');
   assert.equal(boardRemoved(first.note, 'plan').name, null, 'no board is left');
   assert.match(boardRemoved(NOTE, 'gone').refused, /gone/);
+});
+
+// proves: board_nested
+test('a new board inside this one is made at the end, with a view of it on this board in free room', () => {
+  const r = boardListChanged(NOTE, 'ideas', { kind: 'nest' });
+  assert.equal(r.name, 'ideas', 'the board in front stays in front');
+  assert.deepEqual(boardNames(r.note), ['ideas', 'plan', 'board']);
+  assert.match(r.note, /\(view1:View \{x: \d+, y: \d+, board: 'board'\}\)/);
+  assert.ok(r.note.endsWith('```gql\n// graph: board · BOARD ON trip\n```\n'), 'on the same graph');
+  assert.match(boardListChanged(NOTE, 'gone', { kind: 'nest' }).refused, /gone/);
 });

@@ -20,7 +20,8 @@ import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
 import { BoardSpace, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
-import { bindWheel, outlined } from './board-wheel.ts';
+import { outlined, outlineIn } from './board-wheel.ts';
+import { bindNest, type Nested } from './board-nest.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { Presenter } from './board-present.ts';
 import { LayerList } from './board-layer-list.ts';
@@ -34,7 +35,7 @@ import { listProblems } from './board-problems.ts';
 export { boardEditInNote, boardOf };
 
 /** What a board needs of its host. */
-export interface BoardHost {
+export interface BoardHost extends Nested {
   /** The colours to draw in. */
   palette: Palette;
   /** Writes an edit to the board block in the note; resolves to the block as now written, or why it was refused. */
@@ -119,9 +120,7 @@ class BoardView {
     this.editor.hidden = true;
     listProblems(root, source);
     this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
-    const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
-    outline.createEl('summary', { text: word('board.outline') });
-    this.list = outline.createEl('ul');
+    this.list = outlineIn(root);
     this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
@@ -270,12 +269,12 @@ class BoardView {
 
   private bind(): void {
     const { vp, zoom } = this;
+    bindNest(vp, zoom, this.space, () => [this.board, this.frame, this.cursor.focus], this.host);
     vp.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
     vp.addEventListener('pointerdown', (e: PointerEvent) => this.down(e));
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
     vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
-    bindWheel(vp, zoom, (e) => this.space.point(e));
     new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
 

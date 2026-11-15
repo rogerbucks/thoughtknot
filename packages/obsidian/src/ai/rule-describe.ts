@@ -5,6 +5,7 @@
 import { Notice } from 'obsidian';
 import { aiReady, gqlBlocks, readNote, ruleChoices, ruleDescribeAsk, word } from '@thoughtknot/core';
 import type { RuleWrite } from '@thoughtknot/core';
+import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
 import type ThoughtKnotPlugin from '../main';
 import { levelFor } from './ai';
 import { SendDialog } from './send-dialog';
@@ -14,8 +15,8 @@ import { noteText } from '../storage/plugin-notes';
 export interface RuleAsking {
   /** The ask for `words` over `graph`, held to the graph's choices. */
   ask(base: Parameters<typeof ruleDescribeAsk>[0], graph: string, words: string): ReturnType<typeof ruleDescribeAsk>;
-  /** Fills the form with the rule that came back, and says so. Nothing is tried or saved. */
-  fill(rule: RuleWrite, model: string, done: () => void): void;
+  /** Fills the form with the rule that came back, or shows the board proposed. Nothing is tried or saved. */
+  fill(got: { rule: RuleWrite } | { board: BoardDraft }, model: string, done: () => void): void;
 }
 
 /** The form's way to describe a rule, or nothing while AI is off (ai_off_until_chosen): the box is then not offered. */
@@ -51,8 +52,9 @@ function asking(g: Parameters<typeof ruleChoices>[0], fill: (rule: RuleWrite) =>
   const choices = ruleChoices(g);
   return {
     ask: (base, graph, words) => ruleDescribeAsk(base, graph, choices, words),
-    fill: (rule, model, done) => {
-      fill(rule);
+    fill: (got, model, done) => {
+      if (!('rule' in got)) return;
+      fill(got.rule);
       new Notice(word('ai.rule.filled', { model }));
       done();
     },
