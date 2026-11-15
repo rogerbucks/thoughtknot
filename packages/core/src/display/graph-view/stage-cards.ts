@@ -22,7 +22,7 @@ import { isTilted, onScreen } from '../../render/render-tilt.ts';
 import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { Lifecycle } from '../lifecycle.ts';
-import { markFit, nameOnly } from './stage-cards-fit.ts';
+import { markFit, nameOnly, tallOf } from './stage-cards-fit.ts';
 
 /** Below this alpha a card is not shown. */
 const SHOWN = 0.05;
@@ -211,6 +211,11 @@ export class StageCards {
     this.refit(laid);
   }
 
+  /** Card `key`'s height with all it holds, measured as it then stands, so it is laid at its true height. */
+  tall = (key: string): number | undefined => tallOf(this.els.get(key), () => this.fillIn(key));
+  /** Marks the cards `keys` chosen together, which the chosen bar sizes at once. */
+  choose = (keys: ReadonlySet<string>): void => this.els.forEach((el, k) => el.toggleClass('is-chosen', keys.has(k)));
+
   /** How card `key` is sized now. */
   private fitOf = (key: string): CardFit | undefined => this.laid.cards.find((c) => c.key === key)?.text.fit;
 
@@ -236,11 +241,7 @@ export class StageCards {
       if (this.onFit) {
         // with all it holds, the card is measured as it then stands, so it is laid at its true height
         const full = this.fitOf(key) !== 'full';
-        if (full) {
-          this.fillIn(key);
-          el.addClass('is-full');
-        }
-        return this.onFit(key, full ? 'full' : undefined, full ? el.scrollHeight || undefined : undefined);
+        return this.onFit(key, full ? 'full' : undefined, full ? this.tall(key) : undefined);
       }
       const open = !el.hasClass('is-open');
       el.toggleClass('is-open', open);

@@ -151,6 +151,13 @@
   .thoughtknot-stage-card.is-selected {
     border: 3px solid Highlight;
   }
+  .thoughtknot-stage-card.is-chosen {
+    outline-color: Highlight;
+  }
+  /* the bar over the chosen cards keeps its edge */
+  .thoughtknot-stage-cards-chosen {
+    border: 1px solid CanvasText;
+  }
   .thoughtknot-svg {
     forced-color-adjust: none;
   }
@@ -2617,6 +2624,29 @@ pre.thoughtknot-code {
   box-shadow:
     0 0 0 2px var(--thoughtknot-card-colour),
     var(--gn-shadow-l);
+}
+.thoughtknot-stage-card.is-chosen {
+  outline: 2px dashed var(--gn-accent);
+  outline-offset: 3px;
+}
+/* the bar over the cards chosen together: it sizes them all at once */
+.thoughtknot-stage-cards-chosen {
+  position: absolute;
+  inset-block-end: var(--gn-space-3);
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-half-2);
+  padding: var(--gn-space-half-1) var(--gn-space-2);
+  border-radius: var(--gn-radius-l);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-stage-cards-chosen button[aria-pressed='true'] {
+  color: var(--gn-accent);
 }
 .thoughtknot-stage-card-head {
   display: flex;

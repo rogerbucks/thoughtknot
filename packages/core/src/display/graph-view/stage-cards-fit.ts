@@ -49,6 +49,14 @@ export function nameOnly(head: HTMLElement, press: () => void): void {
   });
 }
 
+/** Card `el`'s height with all it holds, once `fill` has put its words in; none where nothing is drawn yet. */
+export function tallOf(el: HTMLElement | undefined, fill: () => void): number | undefined {
+  if (!el) return undefined;
+  fill();
+  el.addClass('is-full');
+  return el.scrollHeight || undefined;
+}
+
 /** Card `el` marked as `card` is sized: its name only, its first lines or all of it, and its buttons say so. */
 export function markFit(
   el: HTMLElement,

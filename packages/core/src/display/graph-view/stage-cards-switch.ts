@@ -24,6 +24,8 @@ import { fitsOf, glide, placesOf, withFits } from './stage-cards-fit.ts';
 import { MoveUndo } from './move-undo.ts';
 import type { PlacesHost } from './stage-places.ts';
 import { groundShift } from '../../render/render-tilt.ts';
+import { CardChoice, fitOfStep, sharedStep, type CardStep } from '../../card-choice.ts';
+import { choiceBar } from './stage-cards-choice.ts';
 
 /** What switching Cards needs of the stage: its card, scene, places and room sizes (both changed in place), and view. */
 export interface CardsHost {
@@ -193,6 +195,7 @@ export class CardsSwitch {
   turn(h: Omit<CardsHost, 'words'> & { draw: () => void }, on: boolean, done: () => void, atOnce = false): View {
     if (on === !!this.cards) return h.view;
     this.stop(); // a press mid-glide starts from where that glide was going
+    this.choose([]); // cards drawn anew start with none chosen
     const [fits, places] = [fitsOf(this.graph), placesOf(this.graph)];
     // as saved in the note, when it is: the layout block is the truth, and the card drawn again reads it anew
     if (h.saves?.cards) {
@@ -214,28 +217,76 @@ export class CardsSwitch {
    * and the cards it would cover glide aside; nothing else moves (Roger, 15 Nov 2026).
    */
   fit(key: string, fit: CardFit | undefined, tall?: number): void {
+    this.fitAll(new Map([[key, tall]]), fit);
+  }
+
+  /** Sizes each card of `talls` as `fit`, as `fit` sizes one: each keeps its place, and the cards round them move. */
+  private fitAll(talls: ReadonlyMap<string, number | undefined>, fit: CardFit | undefined): void {
     const [h, cards] = [this.host, this.cards];
     if (!h || !cards) return;
     this.stop();
-    const fits = fitsOf(this.graph);
-    if (fit) fits.set(key, { fit, ...(tall ? { tall } : {}) });
-    else fits.delete(key);
-    this.save(key);
-    // laid from where the cards are now: the card keeps its top edge, and only cards it now covers move aside
-    const was = cards.laid,
-      spots = new Map(was.spots),
-      at = was.cards.find((c) => c.key === key),
-      s = spots.get(key);
-    if (at && s && !was.only) spots.set(key, { ...s, y: s.y + (cardSizeOf({ ...at.text, fit, tall }).h - at.h) / 2 });
-    this.relay(key, spots);
+    const fits = fitsOf(this.graph),
+      was = cards.laid,
+      spots = new Map(was.spots);
+    for (const [key, tall] of talls) {
+      if (fit) fits.set(key, { fit, ...(tall ? { tall } : {}) });
+      else fits.delete(key);
+      this.save(key);
+      // laid from where the cards are now: the card keeps its top edge, and only cards it now covers move aside
+      const at = was.cards.find((c) => c.key === key),
+        s = spots.get(key);
+      if (at && s && !was.only) spots.set(key, { ...s, y: s.y + (cardSizeOf({ ...at.text, fit, tall }).h - at.h) / 2 });
+    }
+    this.relay([...talls.keys()], spots);
   }
 
-  /** The cards laid again from `spots`, at the spread they have: `key` and every card put by hand stay, others glide. */
-  private relay(key: string, spots: Map<string, Spot>): void {
+  /** The cards chosen together, which the chosen bar sizes at once, and the bar while any is chosen. */
+  readonly chosen = new CardChoice();
+  private bar: HTMLElement | null = null;
+
+  /**
+   * A click `e` on the stage's canvas, whose box is `r`. With Shift, Cmd or Ctrl held it chooses the card under it,
+   * or lets it go, and says it took the click. Any other click lets the chosen cards go, and the stage takes it.
+   */
+  chose(e: MouseEvent, r: DOMRect): boolean {
+    const together = e.shiftKey || e.metaKey || e.ctrlKey,
+      key = together ? this.cards?.pickAt(e.clientX - r.left, e.clientY - r.top) : null;
+    if (!key) return (together || this.choose([]), false);
+    this.chosen.toggle(key);
+    return (this.choose(this.chosen.list()), true);
+  }
+
+  /** Chooses just the cards `keys`, marks them, and shows the bar over them (none when none is chosen). */
+  private choose(keys: readonly string[]): void {
+    if (!keys.length && !this.chosen.size && !this.bar) return;
+    this.chosen.set(keys);
+    this.cards?.choose(this.chosen.all());
+    const viewport = this.host?.viewport;
+    const step = sharedStep(fitsOf(this.graph), this.chosen.list());
+    this.bar?.remove();
+    this.bar = viewport
+      ? choiceBar(viewport, this.chosen.size, step, {
+          size: (s) => this.sizeChosen(s),
+          every: () => this.choose(this.cards?.laid.cards.map((c) => c.key) ?? []),
+          clear: () => this.choose([]),
+        })
+      : null;
+  }
+
+  /** Gives every chosen card the step `step`, at once; each with all it holds is measured as it then stands. */
+  sizeChosen(step: CardStep): void {
+    const [cards, fit] = [this.cards, fitOfStep(step)];
+    if (!cards || !this.chosen.size) return;
+    this.fitAll(new Map(this.chosen.list().map((k) => [k, fit === 'full' ? cards.tall(k) : undefined])), fit);
+    this.choose(this.chosen.list()); // the bar says the step they share now
+  }
+
+  /** The cards laid again from `spots`, at the spread they have: `keys` and every card put by hand stay, others glide. */
+  private relay(keys: readonly string[], spots: Map<string, Spot>): void {
     const [h, cards] = [this.host, this.cards];
     if (!h || !cards) return;
     const was = cards.laid,
-      pinned = new Set([key, ...placesOf(this.graph).keys()]);
+      pinned = new Set([...keys, ...placesOf(this.graph).keys()]);
     const laid = { ...layCards(h, spots, 1, pinned), spread: was.spread, cx: was.cx, cy: was.cy };
     cards.refit(laid);
     cards.settled = false; // the arrows wait for the cards to come to rest
@@ -299,7 +350,7 @@ export class CardsSwitch {
       else places.delete(held.key);
       this.save(held.key);
       this.stop();
-      this.relay(held.key, new Map([...(this.cards?.laid.spots ?? []), [held.key, s]]));
+      this.relay([held.key], new Map([...(this.cards?.laid.spots ?? []), [held.key, s]]));
     };
     put(at(to), to);
     const name = h.scene.nodes.get(held.key)?.name ?? held.key;
@@ -314,6 +365,7 @@ export class CardsSwitch {
   /** Stops a glide under way and takes the cards away, as the stage goes. */
   remove(): void {
     this.stop();
+    this.choose([]);
     this.cards?.remove();
     this.button?.remove();
   }

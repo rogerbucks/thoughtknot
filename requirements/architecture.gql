@@ -119,7 +119,7 @@
 (display_export:Area {name: 'Export form', section: '16', does: 'The export form and its types.', files: 'packages/core/src/display/export/**'}),
 (display_images:Area {name: 'Images', section: '18', does: 'Image sources and still frames.', files: 'packages/core/src/display/images/**'}),
 (display_proposals:Area {name: 'Proposal strip', section: '17', does: 'Proposals marked on the drawing and the strip that reviews them.', files: 'packages/core/src/display/proposals/**'}),
-(core_render:Area {name: 'The rendering rebuild', section: '73', does: 'The new rendering, one way down: the scene of a graph, then rooms, detail, marks and the painters (wiki/Rendering-spec.md).', files: 'packages/core/src/render/*.ts'}),
+(core_render:Area {name: 'The rendering rebuild', section: '73', does: 'The new rendering, one way down: the scene of a graph, then rooms, detail, marks and the painters (wiki/Rendering-spec.md).', files: 'packages/core/src/render/*.ts packages/core/src/card-choice.ts'}),
 // ── Areas in their parts ──
 (lib_entry)-[:PART_OF]->(graph_spec_js),
 (lib_reading)-[:PART_OF]->(graph_spec_js),
