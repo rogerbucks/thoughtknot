@@ -23,6 +23,13 @@ export class BoardSelection {
     this.changed(this.ids.size);
   }
 
+  /** These items chosen, and no others, as after a paste. */
+  set(ids: readonly string[]): void {
+    this.ids.clear();
+    for (const id of ids) this.ids.add(id);
+    this.changed(this.ids.size);
+  }
+
   /** None chosen; whether any were. */
   clear(): boolean {
     const had = this.ids.size > 0;

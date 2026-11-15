@@ -9,7 +9,8 @@ import type { Box } from '../../board-svg.ts';
 /** How tall a board's viewport is in a note, in pixels. */
 export const HEIGHT = 420;
 
-type Point = { x: number; y: number };
+/** A spot in the viewport, in pixels. */
+export type Point = { x: number; y: number };
 
 /** The geometry of one board's view, read from its viewport, its zoom and its frame as they are now. */
 export class BoardSpace {

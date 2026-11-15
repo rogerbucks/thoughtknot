@@ -7,7 +7,7 @@
 // one in focus, never on top of another.
 import { gqlSpans } from './blocks.ts';
 import { boardOf, itemGql, moveItem, readBoard, writeBoard } from './board.ts';
-import type { Board, BoardItem, BoardKind } from './board.ts';
+import type { Board, BoardItem, BoardKind, Connector } from './board.ts';
 import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
@@ -31,6 +31,8 @@ export type BoardChange =
   | { kind: 'hide'; id: string; person: string; hidden: boolean }
   | { kind: 'comment'; id: string; do: CommentOp }
   | { kind: 'add'; item: BoardItem }
+  /** Several items made at once, with the connectors among them, as a paste makes them: one change, one undo. */
+  | { kind: 'adds'; items: BoardItem[]; connectors: Connector[] }
   | { kind: 'remove'; id: string }
   | { kind: 'connect'; from: string; to: string; label?: string }
   | { kind: 'disconnect'; from: string; to: string }
@@ -72,6 +74,11 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
   if (change.kind === 'add') {
     if (find(change.item.id)) return { refused: word('board.edit.taken', { id: change.item.id }) };
     board.items.push(change.item);
+  } else if (change.kind === 'adds') {
+    const taken = change.items.find((i) => find(i.id));
+    if (taken) return { refused: word('board.edit.taken', { id: taken.id }) };
+    board.items.push(...change.items);
+    board.connectors.push(...change.connectors);
   } else if (change.kind === 'remove') {
     const item = find(change.id);
     if (!item) return { refused: word('board.edit.gone', { id: change.id }) };
