@@ -33,29 +33,25 @@ export function skip(s: string, i: number): number {
 }
 
 function literal(s: string, from: number): [string, number] {
+  const named: Record<string, string> = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' };
   let [out, depth, i] = ['', 1, from + 1];
   while (i < s.length) {
     const c = s[i++] ?? '';
     if (c === '(') depth++;
-    else if (c === ')') {
-      if (--depth === 0) return [out, i];
-    } else if (c !== '\\') {
+    else if (c === ')' && --depth === 0) return [out, i];
+    if (c !== '\\') {
       out += c;
       continue;
-    } else {
-      const e = s[i++] ?? '';
-      const named: Record<string, string> = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' };
-      if (e in named) out += named[e];
-      else if (e >= '0' && e <= '7') {
-        let o = e;
-        while (o.length < 3 && (s[i] ?? '') >= '0' && (s[i] ?? '') <= '7') o += s[i++];
-        out += String.fromCharCode(parseInt(o, 8) & 255);
-      } else if (e === '\r') {
-        if (s[i] === '\n') i++;
-      } else if (e !== '\n') out += e;
-      continue;
     }
-    out += ')';
+    const e = s[i++] ?? '';
+    if (e in named) out += named[e];
+    else if (e >= '0' && e <= '7') {
+      let o = e;
+      while (o.length < 3 && (s[i] ?? '') >= '0' && (s[i] ?? '') <= '7') o += s[i++];
+      out += String.fromCharCode(parseInt(o, 8) & 255);
+    } else if (e === '\r') {
+      if (s[i] === '\n') i++;
+    } else if (e !== '\n') out += e;
   }
   throw new Damaged();
 }
