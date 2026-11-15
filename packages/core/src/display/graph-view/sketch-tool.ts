@@ -9,6 +9,7 @@
 // The drawings are a layer of the drawing's own SVG, drawn from the shared marks (sketch-marks.ts), in its viewBox units.
 import { word } from '@thoughtknot/core';
 import type { View, Zoom } from '@thoughtknot/core';
+import { withLayers } from '../../sketch-board-layers.ts';
 import { marksOver, sketchMarks, sketchSvg } from '../../sketch-marks.ts';
 import { drawnItem, drawnOn } from '../../sketch-edit.ts';
 import type { NewSketchItem, SketchChange } from '../../sketch-edit.ts';
@@ -16,7 +17,7 @@ import type { Sketch, SketchKind, SketchShape } from '../../sketch.ts';
 import type { Palette } from '../../palette.ts';
 import type { MarkPoint } from '../../plugin-diagrams.ts';
 import { marksBounds, type DrawMark } from '../../drawing-marks.ts';
-import { sketchPreview } from './sketch-preview';
+import { ownChild, partOf, sketchPreview } from './sketch-preview';
 import type { Drawn } from '@thoughtknot/core';
 import { tellChanged } from './focus-marks.ts';
 import { button } from '../button';
@@ -26,6 +27,8 @@ import type { ViewOptions } from './view-options';
 /** The drawings over a card's graph, as its host gives them: those in the note now, and how to change them. */
 export interface SketchHost {
   sketch: Sketch | null;
+  /** The board layers shown over this graph, drawn with the drawings and never written (board_layers_over). */
+  over?: Sketch | null;
   /** The colours the drawings are drawn in, as the host writes the drawing's own. */
   palette: Palette;
   /** Writes one change to the note: resolves to the drawings as the note now holds them, or why not, in words. */
@@ -69,14 +72,6 @@ const SVG = 'http://www.w3.org/2000/svg';
 /** How far, in screen pixels, a press may move and still be a tap. */
 const SLOP_PX = 10;
 
-/** The part of the layer that draws the drawing `id`. */
-const partOf = (root: Element, id: string): Element | null =>
-  Array.from(root.querySelectorAll('[data-sketch]')).find((g) => g.getAttribute('data-sketch') === id) ?? null;
-
-/** The svg's own child that `selector` matches: the layer and the preview sit at its root, never inside the drawing. */
-const ownChild = (svg: SVGSVGElement, selector: string): Element | null =>
-  Array.from(svg.children).find((c) => c.matches(selector)) ?? null;
-
 /** The drawing tools for a card whose host gives it drawings (`ViewOptions.sketching`); none when it gives none. */
 export function sketchOn(
   tools: HTMLElement,
@@ -112,9 +107,12 @@ export class SketchTool {
     this.show();
   }
 
+  /** The drawings with the board layers shown over the graph. */
+  private all = (): Sketch | null => withLayers(this.sketch, this.card.sketching.over);
+
   /** The drawings as shown now, or none while hidden: the view in space draws these too. */
   shownSketch(): Sketch | null {
-    return this.shown ? this.sketch : null;
+    return this.shown ? this.all() : null;
   }
 
   /** Whether a tool is chosen, so a drag on the drawing draws rather than pans. */
@@ -127,7 +125,7 @@ export class SketchTool {
     this.el.empty();
     this.live = this.note = null;
     const writes = !this.card.readOnly();
-    const some = !!this.sketch?.items.length;
+    const some = !!this.all()?.items.length;
     if (!this.tool) {
       if (writes) button(this.el, word('sketch.start'), 'pencil', () => this.choose('pen'), word('sketch.start'));
       if (some) {
@@ -170,9 +168,10 @@ export class SketchTool {
     const svg = this.card.svg();
     if (!svg) return;
     ownChild(svg, 'g.tk-sketch')?.remove();
-    if (this.shown && this.sketch?.items.length) {
+    const all = this.shown ? this.all() : null;
+    if (all?.items.length) {
       const marks = marksOver(this.card.drawn().svg, this.card.boxes());
-      const { pieces } = sketchMarks(this.sketch, marks);
+      const { pieces } = sketchMarks(all, marks);
       const text = `<svg xmlns="${SVG}">${sketchSvg(pieces, this.card.sketching.palette)}</svg>`;
       const g = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement.children[0];
       if (g) {
@@ -192,7 +191,7 @@ export class SketchTool {
       return this.took(e);
     }
     const on = (e.target as Element | null)?.closest?.('[data-sketch]')?.getAttribute('data-sketch');
-    if (!on) return false;
+    if (!on || !this.sketch?.items.some((i) => i.id === on)) return false; // a board layer's is not the tool's
     this.tap = { id: e.pointerId, ...p, on };
     return this.took(e);
   }

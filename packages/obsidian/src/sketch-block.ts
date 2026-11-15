@@ -7,6 +7,7 @@ import {
   noteWithProposal,
   readSketch,
   sketchEdit,
+  layersOver,
   sketchInNote,
   sketchOf,
   sketchProposal,
@@ -61,6 +62,7 @@ export function renderSketchBlock(el: HTMLElement, source: string, on: string): 
 export function sketchingFor(plugin: ThoughtKnotPlugin, path: string, graph: string, note?: string): SketchHost {
   return {
     sketch: note === undefined ? null : (sketchInNote(note, graph)?.sketch ?? null),
+    over: note === undefined ? null : layersOver(note, graph),
     palette: PALETTES.obsidian,
     write: async (change: SketchChange) => {
       let out: { sketch: Sketch } | { refused: string } = { refused: word('blocks.note-gone') };

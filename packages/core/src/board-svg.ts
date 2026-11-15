@@ -11,6 +11,7 @@ import { isolated } from './bidi.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { clashOf } from './board-clash.ts';
+import { orderOn, seenBoard, shownOn } from './board-layers.ts';
 import { glyphNamed } from './board-glyphs.ts';
 import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
@@ -119,7 +120,8 @@ export function itemSaid(board: Board, item: BoardItem): string {
 }
 
 /** The outline: every item once, top to bottom then left to right, with what each frame holds under it. */
-export function boardOutline(board: Board): OutlineLine[] {
+export function boardOutline(all: Board): OutlineLine[] {
+  const board = seenBoard(all); // a hidden layer's items are not on the board to be read or reached
   const boxes = new Map(board.items.map((i) => [i.id, itemBox(i)]));
   const order = [...board.items].sort((a, b) => a.y - b.y || a.x - b.x);
   const frames = order.filter((i) => i.kind === 'Frame');
@@ -241,16 +243,18 @@ export function boardFrame(board: Board): Box {
 /**
  * The board as one SVG picture in `palette`'s colours. With `view`, only the items that meet it are drawn, and only the
  * connectors with an end among them. Lower layers come first, then the order written.
+ * A hidden layer's items are not drawn, and the frame stays as it was, so nothing jumps (board_layers).
  */
 export function boardSvg(board: Board, palette: Palette, view?: Box): string {
   const boxes = new Map(board.items.map((i) => [i.id, itemBox(i)]));
+  const order = (item: BoardItem) => orderOn(board, item);
   const shown = board.items
     .map((item, at) => ({ item, at }))
-    .filter(({ item }) => !view || meets(boxes.get(item.id) as Box, view))
-    .sort((a, b) => (a.item.layer ?? 0) - (b.item.layer ?? 0) || a.at - b.at)
+    .filter(({ item }) => shownOn(board, item) && (!view || meets(boxes.get(item.id) as Box, view)))
+    .sort((a, b) => order(a.item) - order(b.item) || (a.item.layer ?? 0) - (b.item.layer ?? 0) || a.at - b.at)
     .map(({ item }) => item);
   const near = new Set(shown.map((i) => i.id));
-  const lines = board.connectors.flatMap((c) => {
+  const lines = seenBoard(board).connectors.flatMap((c) => {
     const a = boxes.get(c.from),
       b = boxes.get(c.to);
     if (!a || !b || (!near.has(c.from) && !near.has(c.to))) return [];

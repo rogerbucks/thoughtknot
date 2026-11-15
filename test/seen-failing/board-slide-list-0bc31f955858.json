@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-slide-list.test.js",
+  "test": "the Slides list > stays open when the same board is drawn again, and another board starts folded",
+  "seen_failing_first": false,
+  "evidence": "It covers behaviour that was already there and untested, as the review of the pull request asked."
+}

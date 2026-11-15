@@ -453,6 +453,7 @@ export const VALUES_LATE = [
   'BOARD_PICTURE_FORMATS',
   'boardPicturesOf',
   'pictureSize',
+  'slidePicturesOf',
   'picturesPdf',
   // the layout block, the reviewers and metadata from Reading view (layout_block, ai_two_reviewers,
   // reading_view_metadata), 7 Nov 2026
@@ -531,6 +532,8 @@ export const VALUES_LATE = [
   // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
   'starterBoard',
   'withStarter',
+  // the board layers shown over a graph's views (ES§70, board_layers_over), 15 Nov 2026
+  'layersOver',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
   'cardInNote',
   'saveCard',

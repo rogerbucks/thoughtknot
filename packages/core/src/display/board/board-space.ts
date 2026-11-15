@@ -14,14 +14,22 @@ export type Point = { x: number; y: number };
 
 /** The geometry of one board's view, read from its viewport, its zoom and its frame as they are now. */
 export class BoardSpace {
-  constructor(
-    private readonly vp: HTMLElement,
-    private readonly zoom: () => Zoom,
-    private readonly frame: () => Box,
-  ) {}
+  private readonly vp: HTMLElement;
+  private readonly zoom: () => Zoom;
+  private readonly frame: () => Box;
+
+  constructor(vp: HTMLElement, zoom: () => Zoom, frame: () => Box) {
+    this.vp = vp;
+    this.zoom = zoom;
+    this.frame = frame;
+  }
+
+  /** The board itself while it is shown over the whole screen, as a slide show is; then the view is as tall as it. */
+  full: HTMLElement | null = null;
 
   size() {
-    return { width: this.vp.getBoundingClientRect().width || 600, height: HEIGHT };
+    const height = this.full?.getBoundingClientRect().height || HEIGHT;
+    return { width: this.vp.getBoundingClientRect().width || 600, height };
   }
 
   /** A box of the board as a part of the whole board, as the zoom wants it. */
