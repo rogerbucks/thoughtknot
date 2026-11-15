@@ -1,5 +1,5 @@
-// The words of a board's tool rail, handles and copying, in UK English (editor spec §45, board_tools and
-// board_handles). display-source-words.ts keeps them with the rest.
+// The words of a board's tool rail, handles and copying, in UK English (editor spec §45, board_tools,
+// board_handles and board_view_items). display-source-words.ts keeps them with the rest.
 
 /** The words of the tool rail, by key, in UK English. */
 export const BOARD_TOOLS_SOURCE_WORDS = {
@@ -18,6 +18,8 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.tool.shape.tip': 'Shape: press where it goes',
   'board.tool.frame': 'Frame',
   'board.tool.frame.tip': 'Frame: press where it goes; it sits behind the items in it',
+  'board.tool.view': 'View of the graph',
+  'board.tool.view.tip': 'View: press where it goes to show the graph drawn, live from the note',
   'board.tool.connect': 'Connector',
   'board.tool.connect.tip': 'Connector: press one item, then another, to join them. Esc stops',
   'board.tool.picked': '{tool} tool.',
@@ -26,4 +28,8 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.copied': 'Copied {count} items.',
   'board.pasted': 'Pasted {count} items in the middle of the view.',
   'board.duplicated': 'Duplicated {count} items, just to the right.',
+  'board.view.said': '{view} view of {graph}',
+  'board.view.gone': 'That view is no longer on the board.',
+  'board.view.no-graph': 'This board is not on a graph, so the view has nothing to show.',
+  'board.view.empty': 'The graph {graph} has nothing in it to show yet.',
 } as const;

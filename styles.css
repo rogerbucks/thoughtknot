@@ -2933,6 +2933,13 @@ button.thoughtknot-stage-card-pin {
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
+.thoughtknot-board .thoughtknot-board-view-picture {
+  pointer-events: none;
+}
+.thoughtknot-board .thoughtknot-board-view-refused {
+  fill: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
+}
 .thoughtknot-board-help,
 .thoughtknot-board-said {
   margin: var(--gn-space-1) 0;

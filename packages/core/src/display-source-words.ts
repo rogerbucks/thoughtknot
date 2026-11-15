@@ -344,6 +344,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'board.kind.ink': 'Drawing',
   'board.kind.image': 'Picture',
   'board.kind.glyph': 'Icon',
+  'board.kind.view': 'View',
   'board.said': '{kind}: {text}',
   'board.card.property': '{key}: {value}',
   'board.card.attached': 'Attached: {names}',

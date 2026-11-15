@@ -754,7 +754,8 @@
       "board_look_and_direction",
       "board_item_plugins",
       "board_tools",
-      "board_handles"
+      "board_handles",
+      "board_view_items"
     ]
   },
   "B2": {
