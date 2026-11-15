@@ -260,8 +260,8 @@ class ImportDialog extends Modal {
     this.board = null;
     const db = this.files[i];
     if (db && boardFormatOf(db.path)) {
-      // a whiteboard file is read once here, so one that cannot be read is said now; nothing is written
-      // a drawing kept in a note is read as any note is; any other whiteboard file is not a note, so its bytes are read
+      // A whiteboard file is read once here, so one that cannot be read is said now. Nothing is written.
+      // A drawing kept in a note is read as any note is. Any other whiteboard file is not a note: its bytes are read.
       const text = /\.md$/i.test(db.path)
         ? ((await noteText(this.app, db.path)) ?? '')
         : new TextDecoder().decode(await this.app.vault.readBinary(db));
