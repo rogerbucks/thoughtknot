@@ -1,14 +1,14 @@
 // A board asked of an AI (editor spec §45, board_proposed). The person asks in plain words, through the one way
 // anything is sent (ai.ts). The answer is read only as views and notes over the graph that went. Every item must cite
 // the things it read. An item that cites nothing is refused, and the whole answer with it, so nothing is inferred
-// (r_no_inference). The editor places the items (board-propose.ts), never the AI. Host-free and pure.
-import type { SendAsk, SendRefused } from './ai.ts';
-import { plainText } from './ai-request.ts';
-import type { AnswerShape, BoardDraft } from './ai-request.ts';
-import { freeBoardName } from './board-list.ts';
-import { DRAFT_MOST, draftOf, type DraftPart } from './view-types/board-propose.ts';
-import { VIEW_TYPES } from './view-types/view-types.ts';
-import { word } from './words.ts';
+// (r_no_inference). The editor places the items (board-propose.ts), never the AI. Host-free and pure. It only makes
+// the ask and reads the answer: it sends nothing itself, and nothing here is reached when a graph is drawn.
+import type { SendAsk, SendRefused } from '../ai.ts';
+import type { AnswerShape, BoardDraft } from '../ai-request.ts';
+import { freeBoardName } from '../board-list.ts';
+import { word } from '../words.ts';
+import { DRAFT_MOST, draftOf, type DraftPart } from './board-propose.ts';
+import { VIEW_TYPES } from './view-types.ts';
 
 const WORD = /^[A-Za-z][A-Za-z0-9_]*$/;
 /** The most characters of a note, and of a name or a frame's title. */
@@ -67,7 +67,7 @@ export function boardDraftIn(
     if (!Array.isArray(read) || !read.length || !read.every((r): r is string => typeof r === 'string'))
       return { unread: word('board.propose.cites-none', { n }) };
     if (!read.every((r) => sent.includes(r))) return { unread: word('board.ai.not-sent', { n }) };
-    const why = typeof s.reason === 'string' ? plainText(oneLine(s.reason)) : '';
+    const why = typeof s.reason === 'string' ? oneLine(s.reason) : '';
     const frame = typeof s.frame === 'string' ? oneLine(s.frame).slice(0, TITLE_MOST) : '';
     const cites = word('board.propose.cites', { read: read.join(', '), why: why || '-' });
     parts.push({ ...(view !== undefined ? { view } : { note }), ...(frame ? { frame } : {}), cites });

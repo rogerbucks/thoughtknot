@@ -1,5 +1,5 @@
 // A whole board proposed (editor spec §45, board_proposed). A board of views is offered from a graph here, or by an AI
-// the person asked in plain words (ai-board.ts). It is a proposal only: it is shown, and written to the note only when
+// the person asked in plain words (board-ask.ts). It is a proposal only: it is shown, and written to the note only when
 // the person keeps it. Every item cites what it came from. Where each item goes is worked out here, never by an AI.
 // Host-free and pure. It lives with the view types, whose drawing it reads, and reaches nothing that sends to an AI.
 import type { BoardDraft } from '../ai-request.ts';

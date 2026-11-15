@@ -6,7 +6,7 @@ export type { BoardChange } from './board-edit.ts';
 export { arrangerOf } from './board-arrange.ts';
 export { viewerOf } from './view-types/board-views.ts';
 export { starterBoard, withStarter } from './board-starter.ts';
-export { boardMakeAsk } from './ai-board.ts';
+export { boardMakeAsk } from './view-types/board-ask.ts';
 export { accessRefused, mayChange } from './board-access.ts';
 export type { BoardRole } from './board-access.ts';
 export type { Here, Together } from './board-together.ts';
