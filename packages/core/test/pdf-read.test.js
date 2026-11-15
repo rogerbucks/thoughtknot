@@ -55,6 +55,30 @@ describe('pdf_read_pages', () => {
     assert.equal(got.why, 'damaged');
   });
 
+  test('a stream named many times is counted each time, and past the total the file is too big', () => {
+    const one = new TextDecoder('latin1').decode(pdf([['Again']], { flate: false }));
+    const named = /\/Contents (\d+ 0 R)/.exec(one)[1];
+    const bytes = new Uint8Array(
+      Buffer.from(one.replace(`/Contents ${named}`, `/Contents [${`${named} `.repeat(3)}]`), 'latin1'),
+    );
+    assert.equal(pdfPages(bytes).pages[0].text, 'Again\n\nAgain\n\nAgain');
+    const got = pdfPages(bytes, { total: 100 });
+    assert.equal(got.why, 'too-large');
+  });
+
+  test('a font map that names more codes than a font can hold is read no further', () => {
+    const one = new TextDecoder('latin1').decode(pdf([['Hello world']], { twoByte: true, flate: false }));
+    const wide = one.replace('beginbfrange ', `beginbfrange ${'<0000> <FFFF> <0041> '.repeat(5)}`);
+    assert.notEqual(wide, one);
+    const got = pdfPages(new Uint8Array(Buffer.from(wide, 'latin1')));
+    assert.notEqual(got.pages[0].text, 'Hello world');
+  });
+
+  test('a long run of spaces inside a line is read in step with its length', () => {
+    const got = pdfPages(pdf([[`${' '.repeat(60_000)}x`, 'end  ']]));
+    assert.equal(got.pages[0].text, `x\nend`);
+  });
+
   test('a cut-off file is damage', () => {
     const whole = pdf(PAGES);
     assert.ok(pdfPages(whole.subarray(0, Math.floor(whole.length / 2))).why);
