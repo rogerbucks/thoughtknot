@@ -1,7 +1,7 @@
 // The list of a note's boards, above the board in front (editor spec §45, board_many; panels start small). It starts
 // folded to one line that names the board in front and how many there are. Opened, it has a button for each board, and
-// New, Rename, Copy and Remove for the one in front. Removing asks first. Which board is in front, and whether the list
-// is open, is kept by the host's key, so a host that draws afresh after a write shows the same again.
+// New, Rename, Copy and Remove for the one in front. Removing asks first. The host's key keeps which board is in front
+// and whether the list is open. So a host that draws afresh after a write shows the same again.
 import { word } from '@thoughtknot/core';
 
 import { boardListChanged, boardNames, type BoardListAsk } from '../../board-list.ts';
@@ -69,7 +69,8 @@ export function showBoardList(el: HTMLElement, host: BoardListHost): HTMLElement
     cls: 'thoughtknot-board-list-names',
     attr: { role: 'group', 'aria-label': word('board.list') },
   });
-  for (const name of names) {
+  // one board alone has nothing to switch to, so it has no button
+  for (const name of names.length > 1 ? names : []) {
     const b = wordButton(row, name, () => {
       putInFront(key, name);
       host.open(name);

@@ -1,6 +1,7 @@
 // The board as the main screen in Obsidian (editor spec §45, board_main_screen). A note with graphs opens with its board
-// beside it, in a view of the plugin's own. It shows the note's board in front, under the list of its boards, or a
-// starter board with a view of each graph, written to the note only once it is changed. Until the person first chooses, one line says what changed,
+// beside it, in a view of the plugin's own. It shows the note's board in front, under the list of its boards. A note
+// with no board shows a starter board with a view of each graph, written to the note only once it is changed.
+// Until the person first chooses, one line says what changed,
 // with a way back: the note alone, as before. The command Open the note's board brings it back. The choice is kept
 // in this vault on this device.
 import { ItemView, TFile } from 'obsidian';

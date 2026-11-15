@@ -5507,7 +5507,7 @@ img.thoughtknot-picture-hidden,
 }
 /* A board just switched to glides in; one drawn again in place does not. */
 .thoughtknot-board-glide {
-  animation: thoughtknot-board-glide 180ms ease-out;
+  animation: thoughtknot-board-glide var(--gn-motion-fade) var(--gn-ease-soft);
 }
 @keyframes thoughtknot-board-glide {
   from {

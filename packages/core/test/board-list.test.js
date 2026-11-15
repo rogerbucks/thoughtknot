@@ -1,5 +1,5 @@
-// The boards of a note as a list (editor spec §45, board_many): named, added, renamed, copied and removed, each a
-// change to that board's block alone.
+// The boards of a note as a list (editor spec §45, board_many). They are named, added, renamed, copied and removed.
+// Each is a change to that board's block alone.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
