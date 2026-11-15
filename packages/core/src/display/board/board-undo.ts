@@ -1,6 +1,6 @@
 // Undo on a board by its usual key (editor spec §45, board_keyboard): Ctrl or Cmd with Z takes back the last change
-// this person made on the board. The changes are logged as they are written (board-history.ts), by the host's key, so
-// the log lives on when the host draws the board afresh. Where something changed since, nothing is undone and that is
+// this person made on the board. Each change is logged as it is written (board-history.ts), by the host's key. So the
+// log lives on when the host draws the board afresh. Where something changed since, nothing is undone and that is
 // said. Kept apart so board-view.ts stays small.
 import { word } from '@thoughtknot/core';
 
