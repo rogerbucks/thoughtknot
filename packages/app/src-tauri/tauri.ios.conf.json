@@ -3,7 +3,8 @@
   "identifier": "app.thoughtknot.mobile",
   "bundle": {
     "iOS": {
-      "minimumSystemVersion": "16.0"
+      "minimumSystemVersion": "16.0",
+      "developmentTeam": "498L23FMB2"
     }
   }
 }
