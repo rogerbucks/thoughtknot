@@ -58,6 +58,11 @@ describe('whiteboard files on the browser editor’s page', () => {
     try {
       await until(() => bar(page), 8000);
       assert.equal(bar(page).open, false, 'closed until it is opened');
+      assert.equal(
+        bar(page).querySelector('div').hidden,
+        true,
+        'its words take no place on the page while it is closed',
+      );
       assert.equal(bar(page).querySelector('summary').textContent, 'Import or export boards');
       bring(page, 'My ideas.canvas', CANVAS);
       await until(() => /graph: My_ideas · BOARD/.test(page.file()), 8000);

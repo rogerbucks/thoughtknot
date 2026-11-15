@@ -97,12 +97,16 @@ export function exchangeBar(win: Win, note: BoardNote): HTMLElement {
   const bar = doc.createElement('details');
   bar.setAttribute('class', 'gn-board-exchange');
   bar.appendChild(doc.createElement('summary')).textContent = word('page.board-exchange');
+  // A closed bar still gives its words a place on the page, so they are hidden until it is opened.
+  const inside = bar.appendChild(doc.createElement('div'));
+  inside.hidden = true;
+  bar.addEventListener('toggle', () => (inside.hidden = !bar.open));
   const status = doc.createElement('p');
   status.setAttribute('role', 'status');
   const say = (text: string) => (status.textContent = text);
   const failed = (e: unknown) => say(word('host.boards.failed', { why: e instanceof Error ? e.message : String(e) }));
 
-  const taking = bar.appendChild(doc.createElement('label'));
+  const taking = inside.appendChild(doc.createElement('label'));
   taking.textContent = word('page.board-exchange.import');
   const input = doc.createElement('input');
   input.type = 'file';
@@ -118,7 +122,7 @@ export function exchangeBar(win: Win, note: BoardNote): HTMLElement {
   });
   taking.append(' ', input);
 
-  const giving = bar.appendChild(doc.createElement('label'));
+  const giving = inside.appendChild(doc.createElement('label'));
   giving.textContent = word('page.board-exchange.as');
   const select = doc.createElement('select');
   for (const value of FORMATS) {
@@ -127,10 +131,10 @@ export function exchangeBar(win: Win, note: BoardNote): HTMLElement {
     option.textContent = word(`host.boards.as.${value}`);
   }
   giving.append(' ', select);
-  const run = bar.appendChild(doc.createElement('button'));
+  const run = inside.appendChild(doc.createElement('button'));
   run.setAttribute('type', 'button');
   run.textContent = word('page.board-exchange.run');
   run.addEventListener('click', () => void handOver(win, note.text, select.value).then(say, failed));
-  bar.append(status);
+  inside.append(status);
   return bar;
 }
