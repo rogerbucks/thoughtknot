@@ -135,12 +135,12 @@ export function buildNumber(cwd = HERE) {
   return execFileSync('git', ['rev-list', '--count', 'HEAD'], { cwd, encoding: 'utf8' }).trim();
 }
 
+// The icon and privacy manifest come from this script's own checkout; the project they go into, from --root's.
 function paths(root) {
-  const tauri = join(root, 'packages', 'app', 'src-tauri');
   return {
-    apple: join(tauri, 'gen', 'apple'),
-    iconSource: join(root, 'site', 'icon.svg'),
-    privacy: join(tauri, 'ios', 'PrivacyInfo.xcprivacy'),
+    apple: join(root, 'packages', 'app', 'src-tauri', 'gen', 'apple'),
+    iconSource: join(HERE, 'site', 'icon.svg'),
+    privacy: join(HERE, 'packages', 'app', 'src-tauri', 'ios', 'PrivacyInfo.xcprivacy'),
   };
 }
 
