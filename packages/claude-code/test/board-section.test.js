@@ -48,6 +48,19 @@ describe('a board on the browser editor’s page', () => {
       assert.equal(buttons()[0].textContent, 'Arrange by graph');
       assert.ok(buttons()[1].hidden, 'nothing to undo yet');
       assert.match(page.file(), /\(a:Sticky \{x: 0, y: 0,/, 'nothing moves by itself');
+      const click = (id, more) =>
+        board()
+          .querySelector(`[data-item="${id}"]`)
+          .dispatchEvent(
+            new page.window.PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, ...more }),
+          );
+      click('a', { shiftKey: true });
+      await until(() => /Arrange 1 chosen/.test(buttons()[0].textContent), 8000);
+      assert.ok(board().querySelector('[data-item="a"].is-chosen'), 'the chosen item is ringed');
+      board()
+        .querySelector('.thoughtknot-viewport')
+        .dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await until(() => buttons()[0].textContent === 'Arrange by graph', 8000);
       buttons()[0].click();
       await until(() => !/\(a:Sticky \{x: 0, y: 0,/.test(page.file()), 8000);
       assert.match(page.file(), /\(d:Sticky \{x: 500, y: 500,/, 'a free item stays put');

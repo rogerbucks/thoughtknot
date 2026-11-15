@@ -1,13 +1,16 @@
 // A board's linked items arranged as the graph is (editor spec ES§45, board_arranged_by_graph; B2).
 // - Only on the person's ask, by a layout they pick, such as force or a layout a plug-in brought. Nothing moves by itself.
-// - Only items that became a thing move, and only where they are not locked. Every other item stays where it is.
+// - With items chosen, only those are arranged, by the links between them. With none chosen, the whole board is.
+// - With no layout picked, the one that fits the links is used (layouts/arrange-fit.ts) and its name is given back.
+// - Only items that became a thing move, and only where they are not locked (pinned). Every other item stays put.
 // - The arrangement keeps its middle where the moved items' middle was, so the board is not thrown across the page.
 // - It gives back the text as it was, so one undo puts every item back, and where each item went, for a glide.
 // Host-free and pure: the host writes the text and draws the glide.
 import { gqlBlocks } from './blocks.ts';
 import { moveItem, readBoard } from './board.ts';
 import { readNote } from './drawing.ts';
-import { FORCE_2D } from './layouts/layouts.ts';
+import { fittingLayout } from './layouts/arrange-fit.ts';
+import type { Fit } from './layouts/arrange-fit.ts';
 import type { Layout } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { word } from './words.ts';
@@ -22,8 +25,9 @@ export interface Glide {
   to: [number, number];
 }
 
-/** A board arranged: the note, the note as it was (one undo), and the glide of each item that moved. */
+/** A board arranged: the note, the note as it was (one undo), how it was arranged and the glide of each item that moved. */
 export interface Arranged {
+  how: Fit | 'picked';
   note: string;
   undo: string;
   glide: Glide[];
@@ -36,8 +40,9 @@ export interface Arranged {
 export function arrangeBoard(
   note: string,
   board: string,
-  layout: Layout<2>,
+  layout: Layout<2> | undefined,
   shared: string[] = [],
+  only?: readonly string[],
 ): Arranged | { refused: string } {
   const texts = gqlBlocks(note).map((b) => b.text);
   const text = texts.find((t) => readBoard(t).board.name === board);
@@ -45,13 +50,19 @@ export function arrangeBoard(
   const { on, items } = readBoard(text).board;
   const g = on ? readNote(texts, undefined, shared).world[on] : undefined;
   if (!on || !g) return { refused: word('board.arrange.free') };
-  const linked = items.filter((i) => i.graph !== undefined && g.nodes.has(i.graph));
+  const chosen = only?.length ? new Set(only) : null;
+  const linked = items.filter((i) => i.graph !== undefined && g.nodes.has(i.graph) && (!chosen || chosen.has(i.id)));
   if (!linked.length) return { refused: word('board.arrange.none') };
+  // chosen items are arranged by the links between their things alone; none chosen, by the whole graph
+  const mine = chosen ? new Set(linked.map((i) => i.graph)) : null;
   const shape: GraphShape = {
-    things: [...g.nodes.keys()].map((key) => ({ key, text: key, kinds: [] })),
-    links: g.edges.map(([from, type, to]) => ({ from, type, to })),
+    things: [...g.nodes.keys()].filter((k) => !mine || mine.has(k)).map((key) => ({ key, text: key, kinds: [] })),
+    links: g.edges
+      .filter(([from, , to]) => !mine || (mine.has(from) && mine.has(to)))
+      .map(([from, type, to]) => ({ from, type, to })),
   };
-  const spots = layout.place(shape);
+  const fit = layout ? { how: 'picked' as const, layout } : fittingLayout(shape);
+  const spots = fit.layout.place(shape);
   const movable = linked.filter((i) => !i.locked && spots.has(i.graph ?? ''));
   if (!movable.length) return { refused: word('board.arrange.none') };
   const at: [number, number][] = movable.map((i) => spots.get(i.graph ?? '') ?? [0, 0]);
@@ -77,7 +88,7 @@ export function arrangeBoard(
     glide.push({ id: item.id, from: [item.x, item.y], to });
   });
   if (!glide.length) return { refused: word('board.arrange.already') };
-  return { note: note.replace(text, () => out), undo: note, glide };
+  return { how: fit.how, note: note.replace(text, () => out), undo: note, glide };
 }
 
 /**
@@ -87,10 +98,10 @@ export function arrangeBoard(
 export function arrangerOf(
   note: () => string | Promise<string>,
   board: string,
-  layout: Layout<2> = FORCE_2D,
-): () => Promise<{ glide: Glide[] } | { refused: string }> {
-  return async () => {
-    const r = arrangeBoard(await note(), board, layout);
-    return 'refused' in r ? r : { glide: r.glide };
+  layout?: Layout<2>,
+): (only?: readonly string[]) => Promise<{ glide: Glide[]; how: Fit | 'picked' } | { refused: string }> {
+  return async (only) => {
+    const r = arrangeBoard(await note(), board, layout, [], only);
+    return 'refused' in r ? r : { glide: r.glide, how: r.how };
   };
 }

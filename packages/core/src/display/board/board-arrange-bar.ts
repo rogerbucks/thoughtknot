@@ -5,6 +5,7 @@
 import { word } from '@thoughtknot/core';
 
 import type { Glide } from '../../board-arrange.ts';
+import type { Fit } from '../../layouts/arrange-fit.ts';
 import type { BoardChange } from '../../board-edit.ts';
 import type { Board } from '../../board.ts';
 import { LAYOUT_GLIDE_MS, easeGlide } from '../../layout-glide.ts';
@@ -13,7 +14,7 @@ import { reducedMotion } from '../graph-view/details-nav.ts';
 /** What the host gives the button. */
 export interface ArrangeHooks {
   /** Works out where the items go, or why not. */
-  arrange: () => Promise<{ glide: Glide[] } | { refused: string }>;
+  arrange: (only?: readonly string[]) => Promise<{ glide: Glide[]; how: Fit | 'picked' } | { refused: string }>;
 }
 
 /** What the button needs of its board. */
@@ -23,6 +24,8 @@ export interface ArrangeBoard {
   say: (words: string) => void;
   board: () => Board;
   svg: () => SVGSVGElement | null;
+  /** The items chosen, or none. */
+  chosen: () => string[];
 }
 
 /** What ends a glide at once: the person reaching for the board. */
@@ -40,6 +43,7 @@ export class ArrangeBar {
   private back: Glide[] = [];
   private run = 0;
   private own = false;
+  private readonly go: HTMLButtonElement;
   private end: (() => void) | null = null;
 
   /** The viewport is listened to, so a reach for the board ends the glide. `key` names the board in its host. */
@@ -51,7 +55,7 @@ export class ArrangeBar {
     private readonly key = '',
   ) {
     const bar = el.createDiv({ cls: 'thoughtknot-board-bar' });
-    const go = bar.createEl('button', {
+    this.go = bar.createEl('button', {
       text: word('board.arrange.button'),
       attr: { title: word('board.arrange.tip') },
     });
@@ -65,9 +69,14 @@ export class ArrangeBar {
       // the host drew the board afresh after the write: the items still glide, from the view now drawn
       if (Date.now() - was.at < FRESH_MS) queueMicrotask(() => this.glide(was.glide));
     }
-    go.addEventListener('click', () => void this.press());
+    this.go.addEventListener('click', () => void this.press());
     this.undo.addEventListener('click', () => void this.put(this.back, 'board.arrange.undone'));
     for (const type of REACHES) vp.addEventListener(type, () => this.stop(), { capture: true });
+  }
+
+  /** How many items are chosen: the button says it arranges them, or the whole board when none are. */
+  chosen(count: number): void {
+    this.go.setText(word(count ? 'board.arrange.selected' : 'board.arrange.button', { count }));
   }
 
   /** Something else was changed: the arrangement is no longer one undo away. */
@@ -87,13 +96,13 @@ export class ArrangeBar {
   }
 
   private async press(): Promise<void> {
-    const r = await this.arrange();
+    const r = await this.arrange(this.h.chosen());
     if ('refused' in r) return this.h.say(r.refused);
-    await this.put(r.glide, 'board.arrange.done');
+    await this.put(r.glide, r.how === 'picked' ? 'board.arrange.done' : 'board.arrange.done-as', r.how);
   }
 
   /** Writes each item at its `to` as one change, then glides the items that arrived there; says it as `said`. */
-  private async put(glide: Glide[], said: string): Promise<void> {
+  private async put(glide: Glide[], said: string, how = ''): Promise<void> {
     this.stop();
     const back = said === 'board.arrange.undone' ? [] : glide.map((g) => ({ id: g.id, from: g.to, to: g.from }));
     // set before the write: the host may draw the board afresh at once, and the new one picks these up
@@ -106,7 +115,7 @@ export class ArrangeBar {
       });
     const at = new Map(this.h.board().items.map((i) => [i.id, i]));
     const arrived = glide.filter((g) => at.get(g.id)?.x === g.to[0] && at.get(g.id)?.y === g.to[1]);
-    if (arrived.length) this.h.say(word(said, { count: arrived.length }));
+    if (arrived.length) this.h.say(word(said, { count: arrived.length, how: how && word(`board.arrange.how.${how}`) }));
     this.glide(arrived);
     this.back = arrived.length ? back : [];
     this.undo.hidden = !this.back.length;

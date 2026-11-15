@@ -2820,6 +2820,10 @@ button.thoughtknot-stage-card-more {
 .thoughtknot-board [data-item] {
   cursor: grab;
 }
+.thoughtknot-board g.is-chosen > rect {
+  stroke: var(--gn-text-normal);
+  stroke-width: 5;
+}
 .thoughtknot-board-bar {
   display: flex;
   gap: 0.5em;
