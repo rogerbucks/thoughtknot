@@ -1,7 +1,8 @@
 // Zooming through boards (editor spec §45, board_nested). A view of a board sits on a board as an item. A zoom in on
 // it, once it fills most of the view, goes on into that board, which opens just where its picture was. A zoom out of a
-// board entered this way, once all of it is in view, comes back out. Enter on such an item goes in too, and the trail
-// above the board is the way back by a press. Kept apart so board-view.ts stays small.
+// board entered this way, once all of it is in view, comes back out. The wheel, the minus key and a pinch all do it.
+// Enter on such an item goes in too, and the trail above the board is the way back by a press. Kept apart so
+// board-view.ts stays small.
 import type { View, Zoom } from '@thoughtknot/core';
 
 import { readBoard, type Board } from '../../board.ts';
@@ -30,6 +31,9 @@ export interface NestHost {
   /** Puts the board this one was entered from back in front. */
   leave: () => void;
 }
+
+/** How far two fingers come together, as a part of how far apart they began, before a pinch goes back out. */
+const PINCH_OUT = 0.8;
 
 /** How long after a wheel, key or pinch a change of zoom still counts as the person's own, in milliseconds. */
 const OWN_MS = 400;
@@ -81,9 +85,30 @@ export function bindNest(
       e.preventDefault();
       e.stopImmediatePropagation();
     };
+    // two fingers drawn together on a board already whole in view go back out, as one more turn of the wheel does
+    const fingers = new Map<number, Point>();
+    let pinch: { apart: number; whole: boolean } | null = null;
+    const apart = (): number => {
+      const [a, b] = [...fingers.values()];
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+    };
+    vp.addEventListener('pointerdown', (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      fingers.set(e.pointerId, space.point(e));
+      pinch = fingers.size === 2 ? { apart: apart(), whole: !zoom.zoomedIn() } : null;
+    });
+    const lifted = (e: PointerEvent) => {
+      fingers.delete(e.pointerId);
+      pinch = null;
+    };
+    vp.addEventListener('pointerup', lifted);
+    vp.addEventListener('pointercancel', lifted);
     vp.addEventListener('pointermove', (e: PointerEvent) => {
       at = space.point(e);
-      if (e.pointerType === 'touch') own = Date.now();
+      if (e.pointerType !== 'touch') return;
+      own = Date.now();
+      if (fingers.has(e.pointerId)) fingers.set(e.pointerId, at);
+      if (pinch?.whole && apart() < pinch.apart * PINCH_OUT && zoomedOut()) taken(e);
     });
     vp.addEventListener('wheel', (e: WheelEvent) => {
       if (e.altKey || (fromTrackpad(e) && !e.ctrlKey && !e.metaKey)) return; // two fingers on a trackpad pan

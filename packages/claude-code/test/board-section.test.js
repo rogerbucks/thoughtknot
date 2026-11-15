@@ -470,7 +470,7 @@ const NESTED = [
 
 describe('a board inside a board on the browser editor’s page', () => {
   // proves: board_nested
-  test('is entered by zooming in on its view, left by zooming out, and the trail is a way back', async () => {
+  test('is entered by zooming in on its view, left by zooming out or a pinch, and the trail is a way back', async () => {
     const page = await livePage(NESTED);
     try {
       const boards = () => page.doc.querySelector('.gn-boards');
@@ -506,6 +506,32 @@ describe('a board inside a board on the browser editor’s page', () => {
       trail().querySelector('button').click();
       await until(() => on('v'), 8000);
       assert.equal(page.file(), NESTED);
+
+      // on touch: in by Enter again, then two fingers drawn together on the whole board go back out
+      vp().focus();
+      vp().dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      await until(() => !on('v') && trail(), 8000);
+      const touch = (type, pointerId, clientX) =>
+        vp().dispatchEvent(
+          new page.window.PointerEvent(type, {
+            pointerId,
+            pointerType: 'touch',
+            clientX,
+            clientY: 200,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      const pinchOut = () => {
+        touch('pointerdown', 1, 100);
+        touch('pointerdown', 2, 400);
+        touch('pointermove', 2, 250);
+        touch('pointerup', 1, 100);
+        touch('pointerup', 2, 250);
+      };
+      for (let i = 0; i < 6 && !on('v'); i++) pinchOut();
+      await until(() => on('v'), 8000);
+      assert.equal(trail(), null, 'a pinch came back out');
     } finally {
       await page.stop();
     }
