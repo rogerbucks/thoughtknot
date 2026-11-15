@@ -36,5 +36,5 @@ export function starterBoard(note: string, isBoard: (text: string) => boolean): 
 
 /** The note with the starter board's block written at its end, so a change can be made to it. */
 export function withStarter(note: string, text: string): string {
-  return `${note.replace(/\s*$/, '')}\n\n\`\`\`gql\n${text}\n\`\`\`\n`;
+  return `${note.trimEnd()}\n\n\`\`\`gql\n${text}\n\`\`\`\n`;
 }
