@@ -10,3 +10,5 @@ export { accessRefused, mayChange } from './board-access.ts';
 export type { BoardRole } from './board-access.ts';
 export type { Here, Together } from './board-together.ts';
 export type { Peer } from './board-presence.ts';
+export { boardFileBlock, boardFilesOf, boardFormatOf } from './board-exchange.ts';
+export type { BoardBlock, BoardFile, BoardFormat } from './board-exchange.ts';

@@ -19,6 +19,8 @@ describe('Obsidian’s commands', () => {
         'ask-ai-model',
         'clear-ai-sends',
         'convert-to-standard',
+        'export-boards-canvas',
+        'export-boards-excalidraw',
         'fit',
         'full-screen',
         'import-from-database',

@@ -8,6 +8,7 @@ import type { PluginCommand, PluginRegistry, ThoughtKnotPlugin as CorePlugin } f
 import { AI_COMMAND, CLEAR_SENDS_COMMAND, askAi, clearAiSends, textGraphCommand } from './ai/ai';
 import { IMPORT_COMMAND, importFromDatabase } from './databases/import';
 import { RECOVER_COMMAND, recoverDrafts } from './drafts';
+import { boardExportCommands } from './export/board-export';
 import { exampleCommand, tourCommand } from './first-run';
 import { shortcutCommands } from './shortcuts';
 import { keepPictures, pictureCommands } from './pictures/pictures';
@@ -32,6 +33,7 @@ export function hostCommands(plugin: ThoughtKnotPlugin): HostCommand[] {
     { id: CLEAR_SENDS_COMMAND.id, title: CLEAR_SENDS_COMMAND.name, run: () => clearAiSends(plugin) },
     { id: IMPORT_COMMAND.id, title: IMPORT_COMMAND.name, run: () => importFromDatabase(plugin) },
     ...pictureCommands(plugin),
+    ...boardExportCommands(plugin),
   ];
 }
 
