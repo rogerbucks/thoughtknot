@@ -8,6 +8,7 @@
 import { MarkdownView, Notice } from 'obsidian';
 import {
   BOARD_PICTURE_FORMATS,
+  THEME_COLOURS,
   boardFilesOf,
   boardPicturesOf,
   pictureSize,
@@ -16,31 +17,32 @@ import {
 } from '@thoughtknot/core';
 import type { BoardFormat, BoardPictureFormat, PdfPage, PluginCommand } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { noteText } from '../storage/plugin-notes';
 import { PNG_PIXEL_LIMIT, rasterise } from './png';
-import { freePath } from './vault-write';
+import { freePath, vaultOps } from './vault-write';
 
 /** Writes each board of the note in front as a file of `format` beside the note; or says why nothing was written. */
 async function exportBoards(plugin: ThoughtKnotPlugin, format: BoardFormat): Promise<void> {
-  const { vault, workspace } = plugin.app;
+  const { workspace } = plugin.app;
   const note = workspace.getActiveViewOfType(MarkdownView)?.file;
   if (!note) return void new Notice(word('host.boards.no-note'));
-  const files = boardFilesOf(await vault.cachedRead(note), format);
+  const files = boardFilesOf((await noteText(plugin.app, note.path)) ?? '', format);
   if (!files.length) return void new Notice(word('host.boards.none'));
   const folder = note.path.split('/').slice(0, -1).join('/');
   for (const file of files) {
     const path = freePath(plugin, `${folder ? `${folder}/` : ''}${note.basename} ${file.name}`);
-    await vault.create(path, file.text);
+    await vaultOps(plugin).write(path, file.text);
     new Notice([word('host.boards.done', { file: path }), ...file.notes].join(' '));
   }
 }
 
 /** Writes the boards of the note in front as pictures of `format` beside the note; or says why nothing was written. */
 async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFormat): Promise<void> {
-  const { vault, workspace } = plugin.app;
+  const { workspace } = plugin.app;
   const note = workspace.getActiveViewOfType(MarkdownView)?.file;
   if (!note) return void new Notice(word('host.boards.no-note'));
   const dark = format !== 'pdf' && activeDocument.body.classList.contains('theme-dark');
-  const pictures = boardPicturesOf(await vault.cachedRead(note), dark ? 'dark' : 'light');
+  const pictures = boardPicturesOf((await noteText(plugin.app, note.path)) ?? '', dark ? 'dark' : 'light');
   if (!pictures.length) return void new Notice(word('host.boards.none'));
   const folder = note.path.split('/').slice(0, -1).join('/');
   const pathOf = (name: string) => freePath(plugin, `${folder ? `${folder}/` : ''}${note.basename}${name}.${format}`);
@@ -50,14 +52,20 @@ async function exportPictures(plugin: ThoughtKnotPlugin, format: BoardPictureFor
     for (const p of pictures) {
       const path = pathOf(` ${p.name}`);
       const pixels = pictureSize(p.width, p.height, PNG_PIXEL_LIMIT);
-      if (format === 'svg') await vault.create(path, p.svg);
-      else if (format === 'png') await vault.createBinary(path, (await rasterise(p.svg, pixels)).slice().buffer);
-      else pages.push({ jpeg: await rasterise(p.svg, pixels, 'image/jpeg'), pixels, width: p.width, height: p.height });
+      if (format === 'svg') await vaultOps(plugin).write(path, p.svg);
+      else if (format === 'png') await vaultOps(plugin).write(path, await rasterise(p.svg, pixels));
+      else
+        pages.push({
+          jpeg: await rasterise(p.svg, pixels, THEME_COLOURS.light.page),
+          pixels,
+          width: p.width,
+          height: p.height,
+        });
       if (format !== 'pdf') wrote(path);
     }
     if (format !== 'pdf') return;
     const path = pathOf(' boards');
-    await vault.createBinary(path, picturesPdf(pages, note.basename).slice().buffer);
+    await vaultOps(plugin).write(path, picturesPdf(pages, note.basename));
     wrote(path);
   } catch (e) {
     new Notice(word('host.boards.failed', { why: e instanceof Error ? e.message : String(e) }));

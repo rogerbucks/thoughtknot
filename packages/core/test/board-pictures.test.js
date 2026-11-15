@@ -28,7 +28,7 @@ describe('board_pictures', () => {
     assert.match(ideas.svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="/);
     for (const said of ['Go by train', 'Far &lt;away&gt; &amp; back', 'then'])
       assert.ok(ideas.svg.includes(said), `${said} is drawn`);
-    const [, , w, h] = /viewBox="(\S+) (\S+) (\S+) (\S+)"/.exec(ideas.svg).slice(1).map(Number);
+    const [, , w, h] = /viewBox="([^" ]+) ([^" ]+) ([^" ]+) ([^" ]+)"/.exec(ideas.svg).slice(1).map(Number);
     assert.deepEqual([ideas.width, ideas.height], [w, h], 'its size is the whole board');
     assert.ok(w >= 1100 && h >= 600, 'the far card is inside the picture');
     assert.deepEqual(boardPicturesOf('# No board\n', 'light'), []);

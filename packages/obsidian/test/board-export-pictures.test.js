@@ -33,11 +33,17 @@ async function withCanvas(fn) {
     }
   };
   const asked = [];
+  const papers = [];
   const canvas = () => ({
     width: 0,
     height: 0,
     remove() {},
-    getContext: () => ({ drawImage() {}, fillRect() {} }),
+    getContext: () => ({
+      drawImage() {},
+      fillRect() {
+        papers.push(this.fillStyle);
+      },
+    }),
     toBlob(done, type) {
       asked.push([type, this.width, this.height]);
       queueMicrotask(() => done(new Blob([new Uint8Array(type === 'image/jpeg' ? JPEG : PNG)], { type })));
@@ -52,7 +58,7 @@ async function withCanvas(fn) {
     await until(() => env.state.notices.length >= said + notices);
   };
   try {
-    await fn(env, run, asked);
+    await fn(env, run, asked, papers);
   } finally {
     globalThis.Image = saved;
     env.uninstall();
@@ -92,7 +98,7 @@ describe('The boards of a note are exported as pictures', () => {
 
   // proves: board_exchange
   test('as PDF: one file with a page for each board, each a picture kept as it was made', async () => {
-    await withCanvas(async (env, run, asked) => {
+    await withCanvas(async (env, run, asked, papers) => {
       await run('export-boards-pdf', 1);
       const pdf = bytes(env.state.files.get('Trips/Plan boards.pdf'));
       const text = String.fromCharCode(...pdf);
@@ -103,6 +109,7 @@ describe('The boards of a note are exported as pictures', () => {
         asked.map((a) => a[0]),
         ['image/jpeg', 'image/jpeg'],
       );
+      assert.deepEqual(papers, ['#ffffff', '#ffffff'], 'each drawn on the light page: a JPEG holds no clear pixels');
       assert.match(env.state.notices.at(-1), /Wrote Trips\/Plan boards\.pdf\./);
     });
   });

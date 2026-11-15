@@ -18,13 +18,9 @@ const sized = (svg: string, size: Pick<PngSize, 'width' | 'height'>) =>
 
 /**
  * The PNG's bytes: the SVG drawn on a canvas of `size`; rejects, saying why, whatever stops it — never hangs. With
- * `type` a JPEG is made instead, on white, since a JPEG holds no clear pixels: a PDF holds a JPEG as it is.
+ * `paper` a JPEG is made instead, drawn on that colour, since a JPEG holds no clear pixels: a PDF holds a JPEG as it is.
  */
-export function rasterise(
-  svg: string,
-  size: Pick<PngSize, 'width' | 'height'>,
-  type: 'image/png' | 'image/jpeg' = 'image/png',
-): Promise<Uint8Array> {
+export function rasterise(svg: string, size: Pick<PngSize, 'width' | 'height'>, paper?: string): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const doc = activeDocument;
     const url = URL.createObjectURL(new Blob([sized(svg, size)], { type: 'image/svg+xml' }));
@@ -38,8 +34,8 @@ export function rasterise(
         canvas.height = size.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error(word('exporting.png-too-large'));
-        if (type === 'image/jpeg') {
-          ctx.fillStyle = '#ffffff';
+        if (paper) {
+          ctx.fillStyle = paper;
           ctx.fillRect(0, 0, size.width, size.height);
         }
         ctx.drawImage(img, 0, 0, size.width, size.height);
@@ -50,7 +46,7 @@ export function rasterise(
             if (!blob) return reject(new Error(word('exporting.png-too-large')));
             blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
           },
-          type,
+          paper ? 'image/jpeg' : 'image/png',
           0.92,
         );
       } catch (e) {
