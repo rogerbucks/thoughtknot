@@ -2622,28 +2622,28 @@ pre.thoughtknot-code {
     var(--gn-shadow-l);
 }
 .thoughtknot-stage-card.is-chosen {
-  outline: 2px dashed var(--interactive-accent);
+  outline: 2px dashed var(--gn-accent);
   outline-offset: 3px;
 }
 /* the bar over the cards chosen together: it sizes them all at once */
 .thoughtknot-stage-cards-chosen {
   position: absolute;
-  inset-block-end: var(--size-4-3);
+  inset-block-end: var(--gn-space-3);
   inset-inline-start: 50%;
   translate: -50% 0;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: var(--size-2-2);
-  padding: var(--size-2-1) var(--size-4-2);
-  border-radius: var(--radius-l);
-  background: var(--background-primary);
-  box-shadow: var(--shadow-s);
-  font-size: var(--font-ui-small);
+  gap: var(--gn-space-half-2);
+  padding: var(--gn-space-half-1) var(--gn-space-2);
+  border-radius: var(--gn-radius-l);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+  font-size: var(--gn-font-size-s);
   white-space: nowrap;
 }
 .thoughtknot-stage-cards-chosen button[aria-pressed='true'] {
-  color: var(--interactive-accent);
+  color: var(--gn-accent);
 }
 .thoughtknot-stage-card-head {
   display: flex;
