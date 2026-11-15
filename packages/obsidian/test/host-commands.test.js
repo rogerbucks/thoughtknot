@@ -25,6 +25,7 @@ describe('Obsidian’s commands', () => {
         'full-screen',
         'import-from-database',
         'insert-example',
+        'open-board',
         'pictures-off',
         'pictures-on',
         'recover-drafts',
