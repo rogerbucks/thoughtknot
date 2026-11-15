@@ -6,7 +6,7 @@ import { readBoard } from './board.ts';
 import type { Board, BoardItem, BoardLayer } from './board.ts';
 import { word } from './words.ts';
 
-/** The layer an item is on, when the board holds it; an item on none, or on one that is gone, is on the board itself. */
+/** The layer an item is on, when the board holds it. An item on none, or on one that is gone, is on the board itself. */
 export function layerOf(board: Board, item: BoardItem): BoardLayer | null {
   const sheet = item.more.sheet;
   return typeof sheet === 'string' ? (board.layers?.find((l) => l.id === sheet) ?? null) : null;

@@ -44,11 +44,15 @@ export function showLayers(root: HTMLElement, hooks: LayersHooks, key: string, r
   if (opened.get(key)) list.setAttribute('open', '');
   list.addEventListener('toggle', () => {
     opened.set(key, list.hasAttribute('open'));
+    body.hidden = !list.hasAttribute('open');
     paint();
   });
   const summary = list.createEl('summary');
-  const rows = list.createEl('ul', { attr: { 'aria-label': word('board.layers') } });
-  const naming = list.createDiv({ cls: 'thoughtknot-board-layers-naming' });
+  // hidden while folded, so nothing in it is ever measured or reached
+  const body = list.createDiv({ cls: 'thoughtknot-board-layers-body' });
+  body.hidden = !opened.get(key);
+  const rows = body.createEl('ul', { attr: { 'aria-label': word('board.layers') } });
+  const naming = body.createDiv({ cls: 'thoughtknot-board-layers-naming' });
   naming.hidden = true;
   const input = naming.createEl('input', { attr: { type: 'text', 'aria-label': word('board.layer.name') } });
   let renaming = '';
@@ -65,7 +69,7 @@ export function showLayers(root: HTMLElement, hooks: LayersHooks, key: string, r
     }
   });
   /** A button of the row of `id` that does `act`: its words short, its label naming the layer. */
-  const button = (row: HTMLElement, act: Act, id: string, name: string, then: () => void) => {
+  const does = (row: HTMLElement, act: Act, id: string, name: string, then: () => void) => {
     const [text, tip, slot] = ACTS[act];
     const b = row.createEl('button', {
       text: word(text),
@@ -98,26 +102,26 @@ export function showLayers(root: HTMLElement, hooks: LayersHooks, key: string, r
       row.createSpan({ cls: 'thoughtknot-board-layers-name', text: name });
       row.createSpan({ cls: 'thoughtknot-board-layers-state', text: ` ${state.join(', ')} ` });
       if (readOnly) continue;
-      button(row, layer.hidden ? 'show' : 'hide', id, name, () => ask({ kind: 'show', id, shown: !!layer.hidden }));
-      button(row, layer.locked ? 'unlock' : 'lock', id, name, () => ask({ kind: 'lock', id, locked: !layer.locked }));
-      button(row, 'up', id, name, () => ask({ kind: 'raise', id, by: 1 }));
-      button(row, 'down', id, name, () => ask({ kind: 'raise', id, by: -1 }));
-      button(row, 'put', id, name, () => put(id, name));
-      button(row, 'rename', id, name, () => {
+      does(row, layer.hidden ? 'show' : 'hide', id, name, () => ask({ kind: 'show', id, shown: !!layer.hidden }));
+      does(row, layer.locked ? 'unlock' : 'lock', id, name, () => ask({ kind: 'lock', id, locked: !layer.locked }));
+      does(row, 'up', id, name, () => ask({ kind: 'raise', id, by: 1 }));
+      does(row, 'down', id, name, () => ask({ kind: 'raise', id, by: -1 }));
+      does(row, 'put', id, name, () => put(id, name));
+      does(row, 'rename', id, name, () => {
         renaming = id;
         naming.hidden = false;
         input.value = name;
         input.focus();
         input.select();
       });
-      button(row, 'remove', id, name, () => ask({ kind: 'remove', id }, word('board.layer.removed', { name })));
+      does(row, 'remove', id, name, () => ask({ kind: 'remove', id }, word('board.layer.removed', { name })));
     }
     const base = rows.createEl('li', { attr: { 'data-layer': '' } });
     base.createSpan({ cls: 'thoughtknot-board-layers-name', text: word('board.layer.base') });
     base.createSpan({ cls: 'thoughtknot-board-layers-state', text: ` ${count((i) => !layerOf(board, i))} ` });
     if (readOnly) return;
     if (board.layers?.length)
-      button(base, 'put', '', word('board.layer.base'), () => put(null, word('board.layer.base')));
+      does(base, 'put', '', word('board.layer.base'), () => put(null, word('board.layer.base')));
     if (!list.isConnected) return; // drawn afresh by the host: the new list takes the keyboard
     const was = pressed.get(key);
     pressed.delete(key);
@@ -125,7 +129,7 @@ export function showLayers(root: HTMLElement, hooks: LayersHooks, key: string, r
   }
   paint();
   if (readOnly) return;
-  const add = list.createEl('button', { text: word('board.layer.add'), attr: { type: 'button' } });
+  const add = body.createEl('button', { text: word('board.layer.add'), attr: { type: 'button' } });
   add.addEventListener('click', () => {
     const name = word('board.layer.new-name', { n: (hooks.board().layers?.length ?? 0) + 1 });
     ask({ kind: 'add', name }, word('board.layer.added', { name }));
