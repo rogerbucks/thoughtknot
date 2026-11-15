@@ -1,15 +1,15 @@
-<svg viewBox="0 0 480 360" width="480" height="360" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
-  <defs>
+<svg viewBox="0 0 480 360" width="480" height="360" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:block;visibility:visible">
+  <defs paint="display:inline">
     <marker id="p1" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="10" refY="5" orient="auto-start-reverse">
       <path d="M0 0L10 5L0 10z">
-  <g>
+  <g paint="display:inline">
     <rect width="480" height="360" x="0" y="0" rx="8">
     <text>
       <tspan x="8" y="17"> force view of reader
     <svg viewBox="0 0 351 249" width="468" height="332" x="6" y="22">
       <g id="p2" transform="scale(1 1) rotate(0) translate(0 249)">
         <g id="p3">
-          <path d="M194.27,-15.48L159.25,-18.3" paint="stroke:rgb(181, 152, 246);stroke-width:2px">
+          <path d="M194.27,-15.48L159.25,-18.3" paint="stroke:rgb(180, 152, 246);stroke-width:2px">
         <g id="p4">
           <path d="M84.73,-30.9C84.73,-30.9 153.25,-30.9 153.25,-30.9 159.25,-30.9 159.25,-30.9 159.25,-24.9 159.25,-24.9 159.25,-18.15 159.25,-18.15 159.25,-12.15 159.25,-12.15 153.25,-12.15 153.25,-12.15 84.73,-12.15 84.73,-12.15 78.73,-12.15 78.73,-12.15 78.73,-18.15 78.73,-18.15 78.73,-24.9 78.73,-24.9 78.73,-30.9 78.73,-30.9 84.73,-30.9" paint="fill:rgb(30, 30, 30)">
           <path d="M84.73,-30.9C84.73,-30.9 153.25,-30.9 153.25,-30.9 159.25,-30.9 159.25,-30.9 159.25,-24.9 159.25,-24.9 159.25,-18.15 159.25,-18.15 159.25,-12.15 159.25,-12.15 153.25,-12.15 153.25,-12.15 84.73,-12.15 84.73,-12.15 78.73,-12.15 78.73,-12.15 78.73,-18.15 78.73,-18.15 78.73,-24.9 78.73,-24.9 78.73,-30.9 78.73,-30.9 84.73,-30.9" paint="fill:rgba(233, 151, 63, 0.16);stroke:rgb(229, 168, 102)">
@@ -23,8 +23,8 @@
           <path d="M183.33,-245.92C183.33,-245.92 201.33,-245.92 201.33,-245.92 207.33,-245.92 207.33,-245.92 207.33,-239.92 207.33,-239.92 207.33,-233.17 207.33,-233.17 207.33,-227.17 207.33,-227.17 201.33,-227.17 201.33,-227.17 183.33,-227.17 183.33,-227.17 177.33,-227.17 177.33,-227.17 177.33,-233.17 177.33,-233.17 177.33,-239.92 177.33,-239.92 177.33,-245.92 177.33,-245.92 183.33,-245.92" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246)">
           <text x="192.33" y="-233.4" text-anchor="middle" paint="fill:rgb(218, 218, 218);stroke:rgb(30, 30, 30);stroke-width:5.25px"> E
 
-<svg viewBox="0 0 421 89" width="561.33" height="118.67" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
-  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+<svg viewBox="0 0 421 89" width="561.33" height="118.67" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:block;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)" paint="display:inline">
     <g id="p2">
       <path d="M385.55,-47.4C385.55,-47.4 289.7,-47.4 289.7,-47.4 283.7,-47.4 277.7,-41.4 277.7,-35.4 277.7,-35.4 277.7,-3 277.7,-3 277.7,3 283.7,9 289.7,9 289.7,9 385.55,9 385.55,9 391.55,9 397.55,3 397.55,-3 397.55,-3 397.55,-35.4 397.55,-35.4 397.55,-41.4 391.55,-47.4 385.55,-47.4" paint="fill:rgba(233, 151, 63, 0.16);stroke:rgb(229, 168, 102)">
       <text x="311.24" y="-26.6" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.25px"> QUESTION
@@ -36,7 +36,7 @@
     <g id="p4">
       <path d="M235.7,-19.2C235.7,-19.2 235.7,-19.2 235.7,-19.2 256.7,-19.2 256.7,-19.2 277.7,-19.2 277.7,-19.2 277.7,-19.2 277.7,-19.2" paint="stroke:rgb(117, 222, 220);stroke-width:2px">
       <polygon points="270.7,-16.75 277.7,-19.2 270.7,-21.65 270.7,-16.75" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2.2px">
-      <text x="256.7" y="-24.97" text-anchor="middle" paint="fill:rgb(151, 221, 220);stroke:rgb(30, 30, 30);stroke-width:5.25px"> answers
+      <text x="256.7" y="-24.97" text-anchor="middle" paint="fill:rgb(150, 221, 219);stroke:rgb(30, 30, 30);stroke-width:5.25px"> answers
     <g id="p5">
       <path d="M71.57,-47.4C71.57,-47.4 21,-47.4 21,-47.4 15,-47.4 9,-41.4 9,-35.4 9,-35.4 9,-3 9,-3 9,3 15,9 21,9 21,9 71.57,9 71.57,9 77.57,9 83.57,3 83.57,-3 83.57,-3 83.57,-35.4 83.57,-35.4 83.57,-41.4 77.57,-47.4 71.57,-47.4" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246)">
       <text x="25.12" y="-26.6" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.25px"> REASON
