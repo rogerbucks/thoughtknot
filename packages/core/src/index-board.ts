@@ -4,6 +4,7 @@
 export { boardBlockIn, boardEditInNote } from './board-edit.ts';
 export type { BoardChange } from './board-edit.ts';
 export { arrangerOf } from './board-arrange.ts';
+export { viewerOf } from './board-views.ts';
 export { accessRefused, mayChange } from './board-access.ts';
 export type { BoardRole } from './board-access.ts';
 export type { Here, Together } from './board-together.ts';

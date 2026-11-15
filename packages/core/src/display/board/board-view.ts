@@ -6,15 +6,13 @@
 // Every edit goes to the host as a change to the board block, and the board is drawn again from what was written. The
 // view stays where it was, and so does every item not changed: nothing jumps (nodes stay put, never disorient). A host
 // that draws the block afresh after a write gets the same view and focus back, kept by its `key`.
-import { word, Zoom } from '@thoughtknot/core';
-import type { Drawn, Palette, View } from '@thoughtknot/core';
+import { word, Zoom, type Drawn, type Palette, type View } from '@thoughtknot/core';
 
 import { boardOf, readBoard, type Board, type BoardItem } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
 import { groupNotes, isGroupKey } from './board-group.ts';
 import { boardKey, NO_CURSOR, type BoardCursor } from '../../board-keys.ts';
-import { boardFrame, boardOutline, boardSvg, itemBox } from '../../board-svg.ts';
-import type { Box } from '../../board-svg.ts';
+import { boardFrame, boardOutline, boardSvg, itemBox, type Box } from '../../board-svg.ts';
 import { BoardPeople } from './board-people.ts';
 import { openCapture, openEditor, type FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
@@ -24,7 +22,8 @@ import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
 import { bindWheel, outlined } from './board-wheel.ts';
 import { ToolRail } from './board-tool-rail.ts';
-import { BoardDrag, drawHandle, SLOP } from './board-drag.ts';
+import { BoardDrag, SLOP } from './board-drag.ts';
+import { paintOver, type Viewer } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
 
 export { boardEditInNote, boardOf };
@@ -41,6 +40,8 @@ export interface BoardHost {
   together?: Together;
   /** Where the linked items go by the graph; with it the board offers an Arrange by graph button. */
   arrange?: ArrangeHooks['arrange'];
+  /** Draws each View item's graph live from the note; without it a view shows only its frame. */
+  views?: Viewer;
 }
 
 /** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
@@ -161,7 +162,7 @@ class BoardView {
       g.toggleClass('is-focused', g.getAttribute('data-item') === this.cursor.focus);
     outlined(this.list, this.board);
     this.sel.paint(next, this.board.items);
-    if (!this.readOnly) drawHandle(next, this.board, this.cursor.focus);
+    paintOver(next, this.board, this.cursor.focus, this.readOnly, this.host);
     this.apply(this.zoom.view());
     this.people?.paint(next);
     this.people?.refresh();

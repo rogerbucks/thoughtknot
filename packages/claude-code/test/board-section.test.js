@@ -161,6 +161,44 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_view_items
+  test('draws a view item’s graph live in its frame, and draws it again when the note changes', async () => {
+    const note = [
+      '# Trip',
+      '```gql',
+      '// graph: trip',
+      '(paris:City), (lyon:City), (paris)-[:ROAD]->(lyon)',
+      '```',
+      '```gql',
+      '// graph: ideas · BOARD ON trip',
+      "(a:Sticky {x: 500, y: 0, text: 'Go by train'}),",
+      '(v:View {x: 0, y: 0, w: 400, h: 300})',
+      '```',
+      '',
+    ].join('\n');
+    const page = await livePage(note);
+    try {
+      const vp = () => page.doc.querySelector('.gn-boards .thoughtknot-board .thoughtknot-viewport');
+      const picture = () => vp()?.querySelector('[data-item="v"] .thoughtknot-board-view-picture');
+      await until(() => picture(), 8000);
+      assert.equal(picture().getAttribute('width'), '400');
+      assert.match(picture().textContent, /paris/);
+      // keys move the view: the board is drawn again, and the view's picture with it, never empty
+      vp().focus();
+      const key = (k, more = {}) =>
+        vp().dispatchEvent(
+          new page.window.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...more }),
+        );
+      key('Tab');
+      key('ArrowDown', { shiftKey: true });
+      await until(() => page.file().includes('(v:View {x: 0, y: 50, w: 400, h: 300})'), 8000);
+      await until(() => picture()?.getAttribute('y') === '50', 8000);
+      assert.ok(page.file().includes("(a:Sticky {x: 500, y: 0, text: 'Go by train'})"), 'the sticky stays put');
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_view, board_keyboard
   test('opens as a board that zooms by keys, and an item moved by keys is written to the note', async () => {
     const page = await livePage(NOTE);

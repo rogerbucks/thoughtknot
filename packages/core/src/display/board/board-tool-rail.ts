@@ -20,6 +20,7 @@ const ICONS: Record<BoardTool, string> = {
   text: 'text',
   shape: 'square',
   frame: 'frame',
+  view: 'network',
   connect: 'move-up-right',
 };
 

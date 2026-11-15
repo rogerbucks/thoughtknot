@@ -14,7 +14,7 @@ import { writtenIn } from './written-things.ts';
 export { boardOf };
 
 /** The kinds of item a board holds. A plug-in may add more later (board_item_plugins). */
-export const BOARD_KINDS = ['Sticky', 'Card', 'Text', 'Shape', 'Frame', 'Ink', 'Image', 'Glyph'] as const;
+export const BOARD_KINDS = ['Sticky', 'Card', 'Text', 'Shape', 'Frame', 'Ink', 'Image', 'Glyph', 'View'] as const;
 
 /** One kind of board item. */
 export type BoardKind = (typeof BOARD_KINDS)[number];
