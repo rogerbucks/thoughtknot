@@ -2,6 +2,7 @@
 // R16). The item follows the pointer over the ground, in 2D, 2.5D and 3D alike. Let go, its place is saved in the
 // layout block, once. Nothing else moves, and the camera stays still (nodes stay put). Each place saved offers its
 // undo, as every edit on a drawing does (move_undo): a toast, and Ctrl+Z or Cmd+Z, with redo.
+import type { CardSave } from '../../layout-block.ts';
 import { pickAt } from '../../render/render-camera.ts';
 import type { Mark, View } from '../../render/render-marks.ts';
 import type { Spot } from '../../render/render-rooms.ts';
@@ -22,6 +23,9 @@ export interface PlacesHost {
   place?: (key: string, x: number, y: number) => Wrote;
   forget?: (key: string) => Wrote;
   graph?: string;
+  /** How each thing's card was sized and put, as saved; and how to save one, or forget it with none (render_cards). */
+  cards?: ReadonlyMap<string, CardSave>;
+  card?: (key: string, c: CardSave | null) => Wrote;
 }
 
 /** What the mover reads of the stage. */

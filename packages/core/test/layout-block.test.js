@@ -103,3 +103,29 @@ describe('saving a place (layout_drag_saves, layout_block)', () => {
     assert.deepEqual([...readLayout(before).layout.places], [...readLayout(BLOCK).layout.places]);
   });
 });
+
+// proves: layout_block
+test('a card has a line of its own, kept apart from its thing place, saved, read back and forgotten', async () => {
+  const { saveCard } = await import('../src/layout-block.ts');
+  // no block yet: one is made, holding only the card
+  const made = saveCard(null, 'trip', 'ann', { x: 10.4, y: 20.6, fit: 'full', h: 300.2 });
+  assert.equal(
+    made,
+    "// graph: trip_layout · LAYOUT ON trip\n(ann_card:Card {x: 10, y: 21, h: 300, graph: 'ann', fit: 'full'})",
+  );
+  // beside a place for the same thing, each keeps its own line
+  let text = saveCard(BLOCK, 'trip', 'ann', { x: 300, y: 80, placed: true, fit: 'title' });
+  const { layout, problems } = readLayout(text, new Set(['ann', 'bob']));
+  assert.deepEqual(problems, []);
+  assert.deepEqual(layout.places.get('ann'), { x: 120, y: 40, group: 'Team' }, 'the place stays as it was');
+  assert.deepEqual(layout.cards.get('ann'), { x: 300, y: 80, placed: true, fit: 'title' });
+  assert.ok(text.startsWith(BLOCK.trimEnd()), 'every other line stays as it was');
+  // saved again, only its own line changes; forgotten, it goes
+  text = saveCard(text, 'trip', 'ann', { x: 5, y: 6 });
+  assert.deepEqual(readLayout(text).layout.cards.get('ann'), { x: 5, y: 6 });
+  text = saveCard(text, 'trip', 'ann', null);
+  assert.equal(readLayout(text).layout.cards, undefined);
+  // a card for a thing that is gone is a problem, as a place is
+  const gone = readLayout(saveCard(BLOCK, 'trip', 'zed', { x: 1, y: 1 }), new Set(['ann', 'bob']));
+  assert.ok(gone.problems.some((p) => p.code === 'GN910' && p.message.includes('zed')));
+});

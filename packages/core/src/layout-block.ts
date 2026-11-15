@@ -1,7 +1,10 @@
 // Where things sit on screen, kept apart from the data (editor spec §2, layout_block; Roger, 7 Nov 2026, R16). The
 // places a person gives things, and the group each is shown in, are a block of their own after the graph:
 // `// graph: trip_layout · LAYOUT ON trip`. Each line places one thing, named by its key in the graph:
-//   (ann:Place {x: 120, y: 40, group: 'Team'})
+//   (ann:Place {x: 120, y: 40, group: 'Team'}).
+// A thing's card, in the card view, has a line of its own, as its reader sized it and put it (Roger, 15 Nov 2026):
+//   (ann_card:Card {graph: 'ann', x: 300, y: 80, h: 410, locked: true, fit: 'full'})
+// `locked` is a card put by hand; `fit` is 'title' or 'full'; `h` how tall all of it was seen to be.
 // The graph block is never rewritten to save a layout. Deleting this block loses only where things sat
 // (layout_block_optional). A place for a thing the graph no longer holds is a problem whose fix forgets it
 // (layout_block_checked). It is read with the board's reader (board.ts), with one kind.
@@ -23,6 +26,16 @@ export interface Place {
   group?: string;
 }
 
+/** How a thing's card was sized and put, in the layout's own places. Put by hand, it is `placed` there. */
+export interface CardSave {
+  x: number;
+  y: number;
+  placed?: boolean;
+  fit?: 'title' | 'full';
+  /** How tall all of it was seen to be, in pixels. */
+  h?: number;
+}
+
 /** The layout of one graph. */
 export interface Layout {
   name: string;
@@ -30,9 +43,14 @@ export interface Layout {
   on: string;
   /** Each thing's place, by its key in the graph, in the order written. */
   places: Map<string, Place>;
+  /** Each thing's card, by its key in the graph: kept apart from its place (render_cards, layout_block). */
+  cards?: Map<string, CardSave>;
 }
 
-const KINDS = new Set(['Place']);
+const KINDS = new Set(['Place', 'Card']);
+
+/** The name of the line that saves `thing`'s card. */
+const cardLine = (thing: string): string => `${thing}_card`;
 
 /**
  * The places a layout block holds, with their problems. `things` are the keys of the graph's things. A place for any
@@ -60,16 +78,24 @@ export function readLayout(text: string, things?: Set<string>, block = 0): { lay
     if (w.writes && w.variable && !lineOf.has(w.variable.name))
       lineOf.set(w.variable.name, text.slice(0, w.open).split('\n').length);
   for (const it of read.board.items) {
-    if (things && !things.has(it.id)) {
+    const card = (it.kind as string) === 'Card';
+    const thing = card ? (it.graph ?? '') : it.id;
+    if (things && !things.has(thing)) {
       problems.push({
         graph: layout.name,
         block,
         line: lineOf.get(it.id) ?? 1,
         severity: 'error',
         code: 'GN910',
-        message: word('layout.thing-gone', { thing: it.id, graph: layout.on }),
+        message: word('layout.thing-gone', { thing, graph: layout.on }),
         fix: word('layout.thing-gone.fix', { thing: it.id }),
       });
+      continue;
+    }
+    if (card) {
+      const fit = it.more.fit === 'title' || it.more.fit === 'full' ? it.more.fit : undefined;
+      const save: CardSave = { x: it.x, y: it.y, ...(it.locked && { placed: true }), ...(fit && { fit }) };
+      (layout.cards ??= new Map()).set(thing, it.h ? { ...save, h: it.h } : save);
       continue;
     }
     // the board's reader keeps a group as its own field
@@ -87,9 +113,28 @@ function placeGql(thing: string, place: Place): string {
   return itemGql(item);
 }
 
-/** A layout written as its block, in the one fixed form: the graph line, then each place on a line. */
+/** One card written as GQL, in the one fixed form. */
+function cardGql(thing: string, c: CardSave): string {
+  const item: BoardItem = {
+    id: cardLine(thing),
+    kind: 'Card',
+    x: c.x,
+    y: c.y,
+    graph: thing,
+    more: {},
+  };
+  if (c.h) item.h = c.h;
+  if (c.placed) item.locked = true;
+  if (c.fit) item.more.fit = c.fit;
+  return itemGql(item);
+}
+
+/** A layout written as its block, in the one fixed form: the graph line, then each place, then each card, on a line. */
 export function writeLayout(layout: Layout): string {
-  const lines = [...layout.places].map(([thing, place]) => placeGql(thing, place));
+  const lines = [
+    ...[...layout.places].map(([thing, place]) => placeGql(thing, place)),
+    ...[...(layout.cards ?? [])].map(([thing, c]) => cardGql(thing, c)),
+  ];
   return [
     `// graph: ${layout.name} · LAYOUT ON ${layout.on}`,
     ...lines.map((l, i) => (i < lines.length - 1 ? `${l},` : l)),
@@ -150,4 +195,23 @@ export function renamePlace(text: string, from: string, to: string): string {
   const was = readLayout(text).layout.places.get(from);
   if (!w || !was) return text;
   return text.slice(0, w.open) + placeGql(to, was) + text.slice(w.close + 1);
+}
+
+/**
+ * The block with `thing`'s card saved as `c`, its place rounded to whole numbers; with none, its line goes. With no
+ * block yet (`text` null), a new one is made for `graph`. Only the card's own line changes (render_cards, layout_block).
+ */
+export function saveCard(text: string | null, graph: string, thing: string, c: CardSave | null): string | null {
+  const at = c && { ...c, x: Math.round(c.x), y: Math.round(c.y), ...(c.h && { h: Math.round(c.h) }) };
+  if (text === null || !layoutOf(text)) {
+    if (!at) return text;
+    return writeLayout({ name: layoutName(graph), on: graph, places: new Map(), cards: new Map([[thing, at]]) });
+  }
+  const w = writtenIn(text).find((t) => t.writes && t.variable?.name === cardLine(thing));
+  if (!at) return w ? forgetPlace(text, cardLine(thing)) : text;
+  const line = cardGql(thing, at);
+  if (w) return text.slice(0, w.open) + line + text.slice(w.close + 1);
+  const { places, cards } = readLayout(text).layout;
+  const body = text.trimEnd();
+  return places.size || cards?.size ? `${body},\n${line}` : `${body}\n${line}`;
 }
