@@ -12,6 +12,7 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import {
   connect,
   databasePlace,
+  DOCUMENT_LIMITS,
   dataSetTables,
   sha256,
   joinPlaces,
@@ -65,7 +66,8 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
   // a plug-in's source is asked of the plug-in that adds it, never looked for in the vault (plugin_source_from)
   if (source.kind === 'plugin')
     return plugin.outside.readGraph(source.scheme ?? '', source.target, plugin.settings.classifications);
-  if (source.kind === 'database' || source.kind === 'workbook') return bytesOf(plugin, source, from);
+  if (source.kind === 'database' || source.kind === 'workbook' || source.kind === 'document')
+    return bytesOf(plugin, source, from);
   let registry = registries.get(plugin);
   if (!registry) registries.set(plugin, (registry = vaultSourceRegistry((s, f) => fromVault(plugin, s, f))));
   const r = await registry.fetchSource(source.kind, source.target, from);
@@ -77,15 +79,22 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
 }
 
 /**
- * The bytes of a database or workbook, for a `file#table` or `file#sheet` place, with its mapping beside it. It is
- * for the note at `from` (connector_files_to_gql). It is read on the device and never written. A file over the
- * reader's limit is not read.
+ * The bytes of a database or workbook, for a `file#table` or `file#sheet` place, with its mapping beside it. Or those of
+ * a Word document or a PDF, which is the whole file. It is for the note at `from` (connector_files_to_gql). It is read
+ * on the device and never written. A file over the reader's limit is not read.
  */
 async function bytesOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): Promise<SourceFetched> {
   const { target } = source;
   const db = databasePlace(target);
   const wb = workbookPlace(target);
-  const at = db ? { file: db.file, table: db.table } : wb ? { file: wb.file, table: wb.sheet } : null;
+  const doc = source.kind === 'document';
+  const at = db
+    ? { file: db.file, table: db.table }
+    : wb
+      ? { file: wb.file, table: wb.sheet }
+      : doc
+        ? { file: target, table: '' }
+        : null;
   const file = at ? fileOf(plugin, { kind: 'file', target: at.file }, from) : null;
   if (!at || !file) {
     const name = (at?.file ?? target).split('/').at(-1) ?? '';
@@ -97,10 +106,12 @@ async function bytesOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: str
         .map((f) => f.path),
     };
   }
-  if (file.stat.size > (wb ? WORKBOOK_LIMITS.bytes : SQLITE_LIMITS.bytes))
-    return { found: file.path, tooLarge: file.stat.size };
+  const most = doc ? DOCUMENT_LIMITS.bytes : wb ? WORKBOOK_LIMITS.bytes : SQLITE_LIMITS.bytes;
+  if (file.stat.size > most) return { found: file.path, tooLarge: file.stat.size };
   try {
     const bytes = new Uint8Array(await plugin.app.vault.readBinary(file));
+    // a document is the whole file: it has no table or sheet, so no mapping beside it
+    if (doc) return { found: file.path, bytes };
     const found = `${file.path}#${at.table}`;
     const mapping = await fromVault(plugin, { kind: 'file', target: mappingPlace(found) }, from);
     return 'text' in mapping ? { found, bytes, mapping: mapping.text } : { found, bytes };
@@ -189,6 +200,7 @@ export async function readFromVault(
     source.places ||
     source.kind === 'table' ||
     source.kind === 'text' ||
+    source.kind === 'document' ||
     source.kind === 'database' ||
     source.kind === 'workbook'
   )
