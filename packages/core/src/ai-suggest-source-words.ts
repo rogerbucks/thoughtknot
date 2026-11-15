@@ -1,6 +1,6 @@
 // The words of AI suggestions, in UK English (editor spec §42, words_catalogue; §59). They say why a suggestion request
 // or an answer is refused, name the groups suggestions are reviewed in, and write each suggestion's reason.
-// The words of describing a picture (§18, image_describe_auto) are here too. ai-source-words.ts keeps them with the
+// The words of describing a picture (ES§18, image_describe_auto) are here too. ai-source-words.ts keeps them with the
 // other AI words.
 
 /** The words of AI suggestions, by key, in UK English. */
