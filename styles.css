@@ -5534,3 +5534,47 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-held {
   min-height: var(--thoughtknot-held);
 }
+/* The list of a note's boards, folded to one line above the board in front (board_many). */
+.thoughtknot-board-list {
+  margin-bottom: var(--gn-space-1);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-board-list > summary {
+  min-height: 24px;
+  cursor: pointer;
+  color: var(--gn-text-muted);
+}
+.thoughtknot-board-list-names,
+.thoughtknot-board-list-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  margin-top: var(--gn-space-1);
+}
+.thoughtknot-board-list button,
+.thoughtknot-board-list input {
+  min-height: 24px;
+  min-width: 24px;
+}
+.thoughtknot-board-list-names button[aria-current='true'] {
+  outline: 2px solid var(--gn-text-normal);
+  outline-offset: -2px;
+}
+.thoughtknot-board-list-said:empty {
+  display: none;
+}
+/* A board just switched to glides in; one drawn again in place does not. */
+.thoughtknot-board-glide {
+  animation: thoughtknot-board-glide var(--gn-motion-fade) var(--gn-ease-soft);
+}
+@keyframes thoughtknot-board-glide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thoughtknot-board-glide {
+    animation: none;
+  }
+}
