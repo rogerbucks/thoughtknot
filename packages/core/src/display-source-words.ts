@@ -358,7 +358,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'board.taken-out': 'Took out {item}.',
   'board.role': 'whiteboard',
   'board.help':
-    'Tab goes to each item. Arrows move it, Alt and arrows size it. N makes a note, Enter edits text, C joins, Delete takes out. Ctrl or Cmd and Z undoes. Plus, minus and 0 zoom.',
+    'Tab goes to each item. Arrows move it, Alt and arrows size it. N makes a note, Enter edits text, C joins, Delete takes out. Ctrl or Cmd and Z undoes, with Shift redoes. Plus, minus and 0 zoom.',
   'board.help-read': 'Tab goes to each item. Arrows pan. Plus, minus and 0 zoom.',
   'board.outline': 'Outline',
   'board.empty': 'This board is empty. Press N to make a sticky note.',

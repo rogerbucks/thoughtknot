@@ -35,6 +35,8 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
     other: 'Duplicated {count} items, just to the right.',
   },
   'board.undone': 'Undone: your last change to the board is taken back.',
+  'board.redone': 'Redone: the change you took back is made again.',
+  'board.redo.nothing': 'There is nothing to redo.',
   'board.view.said': '{view} view of {graph}',
   'board.view.gone': 'That view is no longer on the board.',
   'board.view.no-graph': 'This board is not on a graph, so the view has nothing to show.',

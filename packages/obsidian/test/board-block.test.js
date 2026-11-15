@@ -412,6 +412,47 @@ describe('editing by keyboard, written to the note', () => {
     }
   });
 
+  test('Ctrl or Cmd, Shift and Z makes again the change just undone, and a new change ends that', async () => {
+    const { env, press, said, noteNow } = await board();
+    try {
+      press('Z', { ctrlKey: true, shiftKey: true });
+      await settled();
+      assert.match(said(), /nothing to redo/);
+      press('Tab'); // a
+      press('ArrowRight', { shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      press('z', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      press('Z', { ctrlKey: true, shiftKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      assert.match(said(), /Redone/);
+      // what was made again can be undone again, and Ctrl with Y redoes too
+      press('z', { metaKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      press('y', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 60, y: 20/.test(noteNow()));
+      await settled();
+      // a new change after an undo leaves nothing to redo
+      press('z', { ctrlKey: true });
+      await until(() => /\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      press('ArrowDown', { shiftKey: true });
+      await until(() => !/\(a:Sticky \{x: 10, y: 20/.test(noteNow()));
+      await settled();
+      const after = noteNow();
+      press('Z', { ctrlKey: true, shiftKey: true });
+      await settled();
+      assert.equal(noteNow(), after);
+      assert.match(said(), /nothing to redo/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('copy, paste and duplicate say how many items, one as "1 item", and the count is what stays said', async () => {
     const { env, press, said, noteNow } = await board();
     try {

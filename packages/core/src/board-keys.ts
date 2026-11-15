@@ -11,7 +11,8 @@
 //   press takes nothing else out.
 // - G puts notes that share a tag or a word into frames (the host does it, board-cluster.ts).
 // - Escape lets go of the item in focus, and the next Tab then leaves the board.
-// - Ctrl or Cmd with Z takes back this person's last change (the host's part: display/board/board-undo.ts).
+// - Ctrl or Cmd with Z takes back this person's last change, and with Shift makes it again (the host's part:
+//   display/board/board-undo.ts).
 import { writeBoard } from './board.ts';
 import type { Board, BoardItem } from './board.ts';
 import { boardEdit, MIN_SIDE, newItem } from './board-edit.ts';
