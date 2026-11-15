@@ -2998,6 +2998,50 @@ button.thoughtknot-stage-card-pin {
   padding-top: var(--gn-space-1);
   border-top: 1px solid var(--gn-text-muted);
 }
+/* The slide show: the Present button in the row above the board; while it plays, the board alone fills the screen. */
+.thoughtknot-board-present {
+  display: inline-block;
+  vertical-align: top;
+  margin-inline-start: var(--gn-space-2);
+}
+.thoughtknot-board.thoughtknot-board-show {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--gn-bg);
+}
+.thoughtknot-board.thoughtknot-board-show
+  > :not(.thoughtknot-viewport, .thoughtknot-board-present-bar, .thoughtknot-board-said) {
+  display: none;
+}
+.thoughtknot-board.thoughtknot-board-show > .thoughtknot-viewport {
+  border-radius: 0;
+}
+.thoughtknot-board.thoughtknot-board-show > .thoughtknot-board-said {
+  position: absolute;
+  inset-inline-start: var(--gn-space-2);
+  bottom: var(--gn-space-2);
+  margin: 0;
+}
+.thoughtknot-board-present-bar {
+  position: absolute;
+  inset-inline-end: var(--gn-space-2);
+  bottom: var(--gn-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  padding: var(--gn-space-1);
+  background: var(--gn-bg);
+  border: 1px solid var(--gn-text-muted);
+  border-radius: var(--gn-space-1);
+}
+.thoughtknot-board-present-bar[hidden] {
+  display: none;
+}
+.thoughtknot-board-present-count {
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
 /* The handle that sizes the item in focus, and the guides a moved item snaps to. */
 .thoughtknot-board .thoughtknot-board-handle {
   fill: var(--gn-bg);
@@ -3013,6 +3057,8 @@ button.thoughtknot-stage-card-pin {
 }
 .thoughtknot-board-tools button,
 .thoughtknot-board-layers button,
+.thoughtknot-board-present button,
+.thoughtknot-board-present-bar button,
 .thoughtknot-board-bar button,
 .thoughtknot-board-outline > summary {
   min-height: 24px;

@@ -18,10 +18,11 @@ import { openCapture, openEditor, type FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
-import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
+import { BoardSpace, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
 import { bindWheel, outlined } from './board-wheel.ts';
 import { ToolRail } from './board-tool-rail.ts';
+import { Presenter } from './board-present.ts';
 import { LayerList } from './board-layer-list.ts';
 import { lockedOn } from '../../board-layers.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
@@ -124,6 +125,7 @@ class BoardView {
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
     host.together?.watch(() => this.othersChanged());
+    new Presenter(root, this.vp, this.hooks(), this.zoom, this.space);
     this.draw();
     if (was) this.zoom.restore(was.place.scale, was.place.x, was.place.y);
     if (was?.focused) this.vp.focus({ preventScroll: true });
@@ -142,7 +144,7 @@ class BoardView {
     this.vp.setCssProps({
       '--thoughtknot-x': `${v.x}px`,
       '--thoughtknot-y': `${v.y}px`,
-      '--thoughtknot-height': `${HEIGHT}px`,
+      '--thoughtknot-height': `${this.space.size().height}px`,
       '--thoughtknot-touch': this.zoom.touchAction(),
     });
     this.vp.toggleClass('is-zoomed', this.zoom.zoomedIn());

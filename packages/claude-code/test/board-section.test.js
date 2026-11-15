@@ -127,6 +127,38 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_slides
+  test('has a Present button that shows the board alone, steps the slides by keys and ends by Escape, writing nothing', async () => {
+    const note = NOTE.replace(
+      "(a:Sticky {x: 10, y: 20, text: 'Go by train'}),",
+      (line) =>
+        `(intro:Frame {x: 0, y: 0, w: 280, h: 200, text: 'Why'}),\n(next:Frame {x: 290, y: 0, w: 280, h: 200}),\n${line}`,
+    );
+    const page = await livePage(note);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      const vp = () => board()?.querySelector('.thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="a"]'), 8000);
+      const said = () => board().querySelector('.thoughtknot-board-said').textContent;
+      const key = (k) =>
+        vp().dispatchEvent(new page.window.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+      const bar = () => board().querySelector('.thoughtknot-board-present-bar');
+      assert.ok(bar().hidden, 'no bar until the show plays');
+      board().querySelector('.thoughtknot-board-present button').click();
+      assert.ok(board().classList.contains('thoughtknot-board-show'));
+      assert.equal(said(), 'Slide 1 of 2: Why');
+      key('ArrowRight');
+      assert.equal(said(), 'Slide 2 of 2');
+      key('Delete'); // the board under the show does not hear it
+      key('Escape');
+      assert.ok(!board().classList.contains('thoughtknot-board-show'));
+      assert.ok(bar().hidden);
+      assert.equal(page.file(), note, 'the show wrote nothing');
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_layers
   test('has a Layers list, folded at first, that hides a layer in the note, and a new item goes into the layer picked', async () => {
     const note = NOTE.replace("(a:Sticky {x: 10, y: 20, text: 'Go by train'}),", (line) =>

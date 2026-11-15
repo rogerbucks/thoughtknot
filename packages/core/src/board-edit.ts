@@ -15,6 +15,7 @@ import { commentedMore } from './board-comments.ts';
 import type { CommentOp } from './board-comments.ts';
 import { isLayerChange, layerEdit, lockedOn, type LayerChange } from './board-layers.ts';
 import { hiddenMore } from './board-session.ts';
+import { isSlideChange, slideEdit, type SlideChange } from './board-slides.ts';
 import { votedMore } from './board-vote.ts';
 import { word } from './words.ts';
 
@@ -38,7 +39,8 @@ export type BoardChange =
   | { kind: 'connect'; from: string; to: string; label?: string }
   | { kind: 'disconnect'; from: string; to: string }
   | { kind: 'put'; item: BoardItem }
-  | LayerChange;
+  | LayerChange
+  | SlideChange;
 
 /** The smallest an item's side may be made, so it can still be seen and pointed at. */
 export const MIN_SIDE = 20;
@@ -61,6 +63,7 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
       change,
       problems.some((p) => p.severity === 'error'),
     );
+  if (isSlideChange(change)) return slideEdit(text, board, change);
   if (change.kind === 'moves') {
     // several items at once, each by its own text alone, as an arrangement puts them; a locked one stays
     const open = change.moves.filter((m) => {
