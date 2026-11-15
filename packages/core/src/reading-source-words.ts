@@ -182,6 +182,18 @@ export const READING_SOURCE_WORDS = {
   'reading.docx.too-many-blocks': 'The document holds more than {most} paragraphs and tables, so it was not read.',
   'reading.docx.block-too-long': 'A paragraph holds more than {most} characters, so the document was not read.',
   'reading.docx.damaged': 'This document is damaged or in a form this reader does not know, so it was not read.',
+  // a board read from and written as JSON Canvas in plain JavaScript (board-canvas.ts)
+  'reading.canvas.not-canvas': 'This file is not a JSON Canvas file (.canvas), so it was not read.',
+  'reading.canvas.too-large': 'This canvas is larger than {most} characters, so it was not read.',
+  'reading.canvas.too-many': 'This canvas holds more than {most} cards, so it was not read.',
+  'reading.canvas.text-too-long': 'A card holds more than {most} characters, so the canvas was not read.',
+  'reading.canvas.skipped-items':
+    '{count} items were left out: each needs a name of its own, a known type and a place in numbers.',
+  'reading.canvas.skipped-lines': '{count} lines were left out: each must join two items that are there, once.',
+  'reading.canvas.look':
+    'Colours of their own and background pictures are not kept: a board uses the colours of the theme.',
+  'reading.canvas.out-skipped':
+    '{count} items were left out: JSON Canvas cannot hold a view of a graph or a hand drawing.',
   // a PDF read as pages of text in plain JavaScript (pdf-read.ts)
   'reading.pdf.not-pdf': 'This file is not a PDF, so it was not read.',
   'reading.pdf.encrypted': 'This PDF is password-protected, so it was not read. Save a copy with no password.',
