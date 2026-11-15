@@ -3,6 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard, writeBoard } from '../src/board.ts';
+import { cardOf } from '../src/board-card.ts';
 import { boardEdit } from '../src/board-edit.ts';
 import { layerRows, lockedOn, seenBoard } from '../src/board-layers.ts';
 import { mergeBoards } from '../src/board-merge.ts';
@@ -151,6 +152,12 @@ describe('the named layers of a board', () => {
       merged.layers.map((l) => l.id),
       ['notes', 'back', 'layer1'],
     );
+  });
+
+  // proves: board_layers
+  test('never show a card its layer as one of its own properties', () => {
+    const card = { id: 'c', kind: 'Card', x: 0, y: 0, text: 'Paris', more: { in_layer: 'notes', country: 'France' } };
+    assert.deepEqual(cardOf(card).properties, [['country', 'France']]);
   });
 
   // proves: board_layers

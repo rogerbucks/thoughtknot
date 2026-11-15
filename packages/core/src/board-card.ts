@@ -18,8 +18,8 @@ export interface Card {
 }
 
 // These item properties are the card's body, attachments and links. Every other one is a property of the card.
-// Attachments and links are texts told apart by semicolons.
-const OWN = new Set(['body', 'attachments', 'links']);
+// Attachments and links are texts told apart by semicolons. Its layer is the board's to show, not the card's.
+const OWN = new Set(['body', 'attachments', 'links', 'in_layer']);
 
 /** A list of words from a value: one text, its parts told apart by a semicolon. Anything else is nothing. */
 const listOf = (v: Value | undefined): string[] =>
