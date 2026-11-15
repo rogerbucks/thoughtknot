@@ -9,7 +9,7 @@ import { word } from '@thoughtknot/core';
 import type { Board } from '../../board.ts';
 import type { BoardChange } from '../../board-edit.ts';
 import { BOARD_TOOLS, opensText, toolPress, type BoardTool } from '../../board-tools.ts';
-import { button } from '../button';
+import { button } from '../button.ts';
 import { setIcon } from '../host.ts';
 
 /** The icon each tool shows. */
@@ -45,15 +45,17 @@ export class ToolRail {
   from: string | null = null;
   private readonly fold: HTMLButtonElement;
   private readonly tools = new Map<BoardTool, HTMLButtonElement>();
+  private readonly vp: HTMLElement;
+  private readonly key: string;
+  private readonly said: (words: string) => void;
+  private readonly readOnly: boolean;
 
   /** The rail is put above the viewport `vp`. `key` names the board in its host; `said` speaks each pick. */
-  constructor(
-    el: HTMLElement,
-    private readonly vp: HTMLElement,
-    private readonly key: string,
-    private readonly said: (words: string) => void,
-    private readonly readOnly = false,
-  ) {
+  constructor(el: HTMLElement, vp: HTMLElement, key: string, said: (words: string) => void, readOnly = false) {
+    this.vp = vp;
+    this.key = key;
+    this.said = said;
+    this.readOnly = readOnly;
     const rail = el.createDiv({
       cls: 'thoughtknot-board-tools',
       attr: { role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': word('board.tools') },
@@ -148,10 +150,13 @@ export class ToolRail {
     for (const [tool, b] of this.tools) b.setAttribute('aria-pressed', String(tool === this.tool));
     const now = word(`board.tool.${this.tool}`);
     this.fold.setAttribute('aria-label', word(this.isOpen() ? 'board.tools.hide' : 'board.tools.show', { tool: now }));
-    if (this.fold.getAttribute('data-tool') !== this.tool) {
+    // folded, it shows the tool in use; open, the tools show that, and it shows the way to fold them
+    const icon = this.isOpen() ? 'chevron-left' : ICONS[this.tool];
+    if (this.fold.getAttribute('data-icon') !== icon) {
       this.fold.replaceChildren();
-      setIcon(this.fold, ICONS[this.tool]);
+      setIcon(this.fold, icon);
     }
+    this.fold.setAttribute('data-icon', icon);
     this.fold.setAttribute('data-tool', this.tool);
   }
 

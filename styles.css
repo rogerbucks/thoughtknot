@@ -2829,10 +2829,17 @@ button.thoughtknot-stage-card-more {
   gap: 0.5em;
   margin-bottom: 0.4em;
 }
+/* The tool rail and the Arrange bar share one row above the board. */
 .thoughtknot-board-tools {
-  display: flex;
+  display: inline-flex;
   gap: var(--gn-space-1);
   margin-bottom: var(--gn-space-1);
+  margin-inline-end: var(--gn-space-2);
+  vertical-align: top;
+}
+.thoughtknot-board-tools + .thoughtknot-board-bar {
+  display: inline-flex;
+  vertical-align: top;
 }
 .thoughtknot-board-tools button[aria-pressed='true'] {
   outline: 2px solid var(--gn-text-normal);
