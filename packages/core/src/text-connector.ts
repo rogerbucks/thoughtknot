@@ -12,11 +12,33 @@ import { basisOf } from './proposals-basis.ts';
 import { makeProposal } from './proposals.ts';
 import type { Proposal } from './proposals.ts';
 import { placeKey, readSource } from './sources.ts';
+import type { Source, SourceRefusal } from './sources.ts';
 import { TEXT_MOST, citedChanges, knownThings, textGraphIn } from './text-to-graph.ts';
 import type { Matched } from './text-to-graph.ts';
 import { word } from './words.ts';
 
 export { lineAt } from './text-to-graph.ts';
+
+/**
+ * A place's prose connected: no statements, its text kept as prose for a person to turn into a proposal. It is the
+ * one way a plain text file and a document read as text are held, so each is never read as fact.
+ */
+export function proseConnected(
+  source: Source,
+  place: string,
+  found: string,
+  text: string,
+  note: string,
+): Connected | SourceRefusal {
+  if (text.length > TEXT_MOST)
+    return { source, why: 'unreadable', refused: word('reading.text.too-long', { place, most: String(TEXT_MOST) }) };
+  const block = `// graph: ${source.graph}`;
+  const read = { source, from: found, texts: [block], lines: [0], reading: readNote([block]) };
+  const connected: Connected = { source, place, version: sha256(text), statements: [], read };
+  connected.prose = text;
+  connected.note = note;
+  return connected;
+}
 
 /** The connector for a .txt file: no statements, its text kept as prose for a person to turn into a proposal. */
 export const textConnector: Connector = {
@@ -32,14 +54,7 @@ export const textConnector: Connector = {
         refused: word('reading.source.place-too-large', { place, graph: source.graph }),
       };
     }
-    if (fetched.text.length > TEXT_MOST)
-      return { source, why: 'unreadable', refused: word('reading.text.too-long', { place, most: String(TEXT_MOST) }) };
-    const block = `// graph: ${source.graph}`;
-    const read = { source, from: fetched.found, texts: [block], lines: [0], reading: readNote([block]) };
-    const connected: Connected = { source, place, version: sha256(fetched.text), statements: [], read };
-    connected.prose = fetched.text;
-    connected.note = word('reading.text.proposal-only', { place });
-    return connected;
+    return proseConnected(source, place, fetched.found, fetched.text, word('reading.text.proposal-only', { place }));
   },
 };
 
