@@ -75,7 +75,7 @@ export function paneHost(
     ...(pictures && { picture: (graph: string) => pagePicture(pictures, graph) }),
     ...(note && {
       noteText: () => note.text,
-      // the note's drawings and the board layers over the graph, as in Obsidian (§70, board_layers_over)
+      // the note's drawings and the board layers over the graph, as in Obsidian (ES§70, board_layers_over)
       sketching: (graph: string) => pageSketching(note, graph, !!globalThis.matchMedia?.(DARK).matches),
       // in the desktop app, a huge block's rows go to its file on disk (scale_parts_on_disk); else the pane keeps them
       ...(onDisk && { store: () => onDisk(note.path) }),

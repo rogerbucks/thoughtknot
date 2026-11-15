@@ -73,7 +73,7 @@ export interface PaneHost {
   picture?: (graph: string) => PictureStatus;
   /** The store a block too large to read at once is read into (scale_parts_store_swap). Not set: kept in memory. */
   store?: () => PartsStore;
-  /** The drawings over a graph, with the board layers that lie over it (§70). Not set: none are drawn. */
+  /** The drawings over a graph, with the board layers that lie over it (ES§70). Not set: none are drawn. */
   sketching?: (graph: string) => SketchHost;
 }
 

@@ -1,4 +1,4 @@
-// Drawings over a graph on the page (editor spec §70). It is the page VS Code's tab and the apps run too.
+// Drawings over a graph on the page (editor spec ES§70). It is the page VS Code's tab and the apps run too.
 // The pane draws the note's drawings and the board layers that lie over the graph (board_layers_over).
 // A drawing made there goes through the page's own version-checked write.
 import { layersOver, PALETTES, sketchEdit, sketchInNote } from '@thoughtknot/core';
