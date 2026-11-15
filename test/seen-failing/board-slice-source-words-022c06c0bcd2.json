@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-slice-source-words.test.js",
+  "test": "the whiteboard words > the arrange words are all there, and the ones that count or name a shape ask for it",
+  "seen_failing_first": false,
+  "evidence": "the code it names was written in an earlier commit; this test is added so the module has a test of its own"
+}

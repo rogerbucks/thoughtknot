@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-arrange.test.js",
+  "test": "arranged cards keep clear of every other card > big cards are spaced by their own size",
+  "seen_failing_first": false,
+  "evidence": "the test passed before: the old fixed spacing happened to leave the one big card clear; the test is now stricter, with both cards big"
+}

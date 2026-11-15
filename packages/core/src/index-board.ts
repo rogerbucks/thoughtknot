@@ -3,6 +3,7 @@
 // a person at a shared board. Kept apart from index.ts so each file stays short.
 export { boardBlockIn, boardEditInNote } from './board-edit.ts';
 export type { BoardChange } from './board-edit.ts';
+export { arrangerOf } from './board-arrange.ts';
 export { accessRefused, mayChange } from './board-access.ts';
 export type { BoardRole } from './board-access.ts';
 export type { Here, Together } from './board-together.ts';

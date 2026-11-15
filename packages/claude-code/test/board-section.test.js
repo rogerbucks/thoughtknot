@@ -23,6 +23,58 @@ const NOTE = [
 ].join('\n');
 
 describe('a board on the browser editor’s page', () => {
+  // proves: board_arranged_by_graph
+  test('has an Arrange by graph button that moves linked items once, and Undo puts them back', async () => {
+    const note = [
+      '# Team',
+      '```gql',
+      '// graph: team',
+      "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cat:Person {name: 'Cat'}),",
+      '(ann)-[:KNOWS]->(bob), (bob)-[:KNOWS]->(cat)',
+      '```',
+      '```gql',
+      '// graph: ideas · BOARD ON team',
+      "(a:Sticky {x: 0, y: 0, text: 'Ann', graph: 'ann'}),",
+      "(b:Sticky {x: 10, y: 10, text: 'Bob', graph: 'bob'}),",
+      "(d:Sticky {x: 500, y: 500, text: 'Free note'})",
+      '```',
+      '',
+    ].join('\n');
+    const page = await livePage(note);
+    try {
+      const board = () => page.doc.querySelector('.gn-boards .thoughtknot-board');
+      await until(() => board()?.querySelector('[data-item="a"]'), 8000);
+      const buttons = () => Array.from(board().querySelectorAll('.thoughtknot-board-bar button'));
+      assert.equal(buttons()[0].textContent, 'Arrange by graph');
+      assert.ok(buttons()[1].hidden, 'nothing to undo yet');
+      assert.match(page.file(), /\(a:Sticky \{x: 0, y: 0,/, 'nothing moves by itself');
+      const click = (id, more) =>
+        board()
+          .querySelector(`[data-item="${id}"]`)
+          .dispatchEvent(
+            new page.window.PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, ...more }),
+          );
+      click('a', { shiftKey: true });
+      await until(() => /Arrange 1 chosen/.test(buttons()[0].textContent), 8000);
+      assert.ok(board().querySelector('[data-item="a"].is-chosen'), 'the chosen item is ringed');
+      board()
+        .querySelector('.thoughtknot-viewport')
+        .dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await until(() => buttons()[0].textContent === 'Arrange by graph', 8000);
+      buttons()[0].click();
+      await until(() => !/\(a:Sticky \{x: 0, y: 0,/.test(page.file()), 8000);
+      assert.match(page.file(), /\(d:Sticky \{x: 500, y: 500,/, 'a free item stays put');
+      await until(() => !buttons()[1].hidden, 8000);
+      buttons()[1].click();
+      await until(
+        () => /\(a:Sticky \{x: 0, y: 0,/.test(page.file()) && /\(b:Sticky \{x: 10, y: 10,/.test(page.file()),
+        8000,
+      );
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_view, board_keyboard
   test('opens as a board that zooms by keys, and an item moved by keys is written to the note', async () => {
     const page = await livePage(NOTE);
