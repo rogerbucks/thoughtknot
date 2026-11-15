@@ -1,4 +1,4 @@
-// The words of the card view, in UK English (editor spec §42, words_catalogue; §73, render_cards). They are said on
+// The words of the card view, in UK English (ES§42, words_catalogue; ES§73, render_cards). They are said on
 // each card, the bar over the cards chosen together, their arrangements, and the undo of a card sized, put or pinned.
 
 /** The words of the card view, by key, in UK English. */
