@@ -3,20 +3,17 @@
 // board entered this way, once all of it is in view, comes back out. The wheel, the minus key and a pinch all do it.
 // Enter on such an item goes in too, and the trail above the board is the way back by a press. Kept apart so
 // board-view.ts stays small.
-import type { View, Zoom } from '@thoughtknot/core';
+import type { Zoom } from '@thoughtknot/core';
 
 import { readBoard, type Board } from '../../board.ts';
-import type { BoardCursor } from '../../board-keys.ts';
 import { NO_CURSOR } from '../../board-keys.ts';
 import { entering, nestedBoardOf, placeInside } from '../../board-nest.ts';
 import { boardFrame, type Box } from '../../board-svg.ts';
 import { viewSpace } from '../../view-types/board-views.ts';
 import { fromTrackpad } from '../../render/render-tilt.ts';
+import { seed } from './board-kept.ts';
 import type { BoardSpace, Point } from './board-space.ts';
 import { bindWheel } from './board-wheel.ts';
-
-/** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
-export const kept = new Map<string, { place: View; cursor: BoardCursor; focused: boolean }>();
 
 /** What a board needs of its host to go into the boards on it, and back out. */
 export interface NestHost {
@@ -30,6 +27,12 @@ export interface NestHost {
   enter: (name: string) => void;
   /** Puts the board this one was entered from back in front. */
   leave: () => void;
+}
+
+/** What a host that lets boards nest gives its board. */
+export interface Nested {
+  /** Goes into the boards on this one, and back out; without it a view of a board is only a picture. */
+  nest?: NestHost;
 }
 
 /** How far two fingers come together, as a part of how far apart they began, before a pinch goes back out. */
@@ -47,7 +50,7 @@ export function bindNest(
   zoom: Zoom,
   space: BoardSpace,
   drawn: () => [board: Board, frame: Box, focus: string | null],
-  host: { nest?: NestHost },
+  host: Nested,
 ): void {
   const nest = host.nest;
   const now = () => {
@@ -65,8 +68,9 @@ export function bindNest(
       const text = nest.text(name);
       const item = now().board.items.find((i) => i.id === id);
       if (gone || text === undefined || !item) return false;
-      const to = placeInside(viewSpace(item), now().frame, zoom.view(), boardFrame(readBoard(text).board));
-      kept.set(nest.keyOf(name), { place: { ...zoom.view(), ...to }, cursor: NO_CURSOR, focused: true });
+      const inner = boardFrame(readBoard(text).board);
+      const to = placeInside(viewSpace(item), now().frame, zoom.view(), inner);
+      seed(nest.keyOf(name), { ...zoom.view(), ...to }, [inner.x, inner.y], NO_CURSOR);
       gone = true;
       nest.enter(name);
       return true;
