@@ -3,12 +3,13 @@
 // - Reading: a rectangle, ellipse or diamond is a shape, and the text bound to it is its text. A text is a text.
 //   A frame is a frame. A pen stroke is ink. An arrow bound to two shapes is a connector; any other is a drawn line.
 // - Writing: every item with words is a box with its text bound to it, and a connector is an arrow bound to both.
-// - It reads a `.excalidraw` file, and the drawing inside an Obsidian Excalidraw note when that is not compressed.
+// - It reads a `.excalidraw` file, and the drawing inside an Obsidian Excalidraw note, compressed or not.
 // - Untrusted: the size, the count and each text are checked, and a file that is no drawing is refused.
 // - Loss stated: a board holds no picture kept inside a drawing, colour of its own, fill, font or turn. A drawing
 //   holds no view of a graph, picture by its place, vote, comment or link to a thing. What is left out is said.
 import type { Board, BoardItem, Connector } from './board.ts';
 import { freeName, isObject, text, whole } from './board-canvas.ts';
+import { unpackedLz } from './board-lz.ts';
 import type { Json } from './board-canvas.ts';
 import { itemBox } from './board-svg.ts';
 import type { Box } from './board-svg.ts';
@@ -148,10 +149,14 @@ function boardParts(elements: unknown[], limits: typeof EXCALIDRAW_LIMITS) {
   return { items, connectors, skipped, pictures, look };
 }
 
-/** The drawing's JSON in a file's text, or the Drawing block of an Obsidian Excalidraw note; null when compressed. */
-function drawingJson(file: string): string | null {
+/**
+ * The drawing's JSON in a file's text, or in the Drawing block of an Obsidian Excalidraw note. A compressed block is
+ * unpacked by our own code (board-lz.ts); null when it cannot be unpacked within `most` characters.
+ */
+function drawingJson(file: string, most: number): string | null {
   if (file.trimStart().startsWith('{')) return file;
-  if (/^```compressed-json\s*$/m.test(file)) return null;
+  const packed = /^```compressed-json\s*\n([\s\S]*?)\n```\s*$/m.exec(file);
+  if (packed) return unpackedLz(packed[1] ?? '', most);
   const m = /^```json\s*\n([\s\S]*?)\n```\s*$/m.exec(file);
   return m?.[1] ?? file;
 }
@@ -170,7 +175,7 @@ export function excalidrawBoard(
     refused: word(`reading.excalidraw.${why}`, { most }),
   });
   if (file.length > limits.chars) return refuse('too-large', limits.chars);
-  const json = drawingJson(file);
+  const json = drawingJson(file, limits.chars);
   if (json === null) return refuse('compressed');
   let drawing: unknown;
   try {
