@@ -151,6 +151,9 @@ export const READING_SOURCE_WORDS = {
     '{place} is plain text: it becomes a graph only as a proposal, each thing citing its line, for a person to accept.',
   'reading.text.too-long': '{place} has more than {most} characters, so it was not read: split it into smaller files.',
   'reading.text.cites': '{place}, line {line}: "{words}"',
+  // a Word document or a PDF read as plain text, only as a proposal (document-connector.ts)
+  'reading.document.proposal-only':
+    '{place} is a document: only its text is read, and it becomes a graph only as a proposal for a person to accept. Each thing cites a line of that text.',
   // a SQLite database read as tables in plain JavaScript (sqlite-read.ts)
   'reading.sqlite.not-sqlite': 'This file is not a SQLite database, so it was not read.',
   'reading.sqlite.too-large': 'This database is larger than {most} bytes, so it was not read.',
@@ -170,6 +173,23 @@ export const READING_SOURCE_WORDS = {
   'reading.xlsx.no-sheet': 'The workbook has no sheet {name}.',
   'reading.xlsx.empty': 'The sheet {name} holds nothing to read: its first row is the header.',
   'reading.source.workbook': 'The workbook sheet {target}',
+  'reading.source.document': 'The document {target}',
+  // a Word document read as blocks of text in plain JavaScript (docx-read.ts)
+  'reading.docx.not-docx': 'This file is not a Word document (.docx), so it was not read.',
+  'reading.docx.old-or-encrypted':
+    'This is an old Word file (.doc) or a password-protected one, so it was not read. Save it as .docx with no password.',
+  'reading.docx.too-large': 'This document (or one of its parts) is larger than {most} bytes, so it was not read.',
+  'reading.docx.too-many-blocks': 'The document holds more than {most} paragraphs and tables, so it was not read.',
+  'reading.docx.block-too-long': 'A paragraph holds more than {most} characters, so the document was not read.',
+  'reading.docx.damaged': 'This document is damaged or in a form this reader does not know, so it was not read.',
+  // a PDF read as pages of text in plain JavaScript (pdf-read.ts)
+  'reading.pdf.not-pdf': 'This file is not a PDF, so it was not read.',
+  'reading.pdf.encrypted': 'This PDF is password-protected, so it was not read. Save a copy with no password.',
+  'reading.pdf.too-large': 'This PDF (or one of its parts) is larger than {most} bytes, so it was not read.',
+  'reading.pdf.too-many-pages': 'This PDF holds more than {most} pages, so it was not read.',
+  'reading.pdf.no-text':
+    'This PDF holds no text this reader can use. It may be scanned pictures of pages: only text is read.',
+  'reading.pdf.damaged': 'This PDF is damaged or in a form this reader does not know, so it was not read.',
   // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
   'reading.table.fetched-now': '{place} was fetched just now.',
   'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',
