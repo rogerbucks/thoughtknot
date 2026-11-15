@@ -1,6 +1,6 @@
 // Where things are on a board's screen (editor spec §45, board_view). It gives the viewport's size and a spot of the
-// view in board units, and back. It also gives a box of the board as a part of the whole, and opens a board at a
-// size its text can be read. Kept apart so board-view.ts stays small.
+// view in board units, and back. It also gives a box of the board as a part of the whole. And it opens a board at
+// a size its text can be read. Kept apart so board-view.ts stays small.
 
 import { STYLE, type Zoom } from '@thoughtknot/core';
 
