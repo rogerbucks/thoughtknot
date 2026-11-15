@@ -408,6 +408,24 @@ textarea:focus-visible,
 .gn-presets input[type='file'] {
   max-inline-size: 100%;
 }
+/* whiteboard files in and out (board_exchange): a small bar under the boards, closed until it is opened */
+.gn-board-exchange {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.gn-board-exchange label {
+  display: block;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+.gn-board-exchange summary,
+.gn-board-exchange input,
+.gn-board-exchange select,
+.gn-board-exchange button {
+  min-height: 24px;
+  min-width: 24px;
+  max-inline-size: 100%;
+}
 /* the board as the main screen (board_main_screen): the line about the change, and the button to turn the page round */
 .gn-board-first {
   color: var(--gn-text-muted);
