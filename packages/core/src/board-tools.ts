@@ -8,7 +8,7 @@
 //
 // Host-free: the host passes each press in and does what comes back. A new item is made where it was asked for. If that
 // spot is taken it goes just below, so it never covers another (nodes stay put: nothing else moves).
-import type { Board, BoardItem, BoardKind } from './board.ts';
+import { BOARD_KINDS, type Board, type BoardItem, type BoardKind } from './board.ts';
 import { freeId } from './board-edit.ts';
 import { itemBox } from './board-svg.ts';
 
@@ -18,17 +18,12 @@ export const BOARD_TOOLS = ['choose', 'hand', 'sticky', 'text', 'shape', 'frame'
 /** One tool of a board. */
 export type BoardTool = (typeof BOARD_TOOLS)[number];
 
-/** The kind of item each making tool makes. */
-const MAKES: Partial<Record<BoardTool, BoardKind>> = {
-  sticky: 'Sticky',
-  text: 'Text',
-  shape: 'Shape',
-  frame: 'Frame',
-};
+/** The tools that make an item: each makes the kind of its own name. */
+const MAKING = new Set<BoardTool>(['sticky', 'text', 'shape', 'frame']);
 
 /** The kind of item a tool makes, or null for a tool that makes none. */
 export function toolMakes(tool: BoardTool): BoardKind | null {
-  return MAKES[tool] ?? null;
+  return MAKING.has(tool) ? (BOARD_KINDS.find((k) => k.toLowerCase() === tool) ?? null) : null;
 }
 
 /** Whether a made item's text is opened at once: the kinds that are mostly words. */
