@@ -238,6 +238,8 @@ export const VALUES_LATE = [
   'wayIn',
   'withExample',
   'withImport',
+  // the block that draws a document after FROM, written by the Import dialog (connector_text_proposed), 15 Nov 2026
+  'documentBlock',
   'withMeant',
   'withStandardSchemas',
   'withSuggestion',
@@ -484,6 +486,7 @@ export const VALUES_LATE = [
   'partsStoreContract',
   // a Word document or a PDF named after FROM, read as text for a proposal (connector_text_proposed), 15 Nov 2026
   'DOCUMENT_LIMITS',
+  'documentText',
   'isDocumentPlace',
   // a sheet of an Excel workbook named after FROM, `book.xlsx#Sheet1` (connector_files_to_gql), 12 Nov 2026
   'workbookPlace',
