@@ -197,6 +197,10 @@ export function fakeObsidian(state = {}) {
   workspace.getActiveViewOfType = (type) => (state.activeView instanceof type ? state.activeView : null);
   addVaultWrites(vault, state, file);
   const app = { vault, workspace, metadataCache: fakeMetadataCache(state), fileManager: fakeFileManager(state) };
+  // what Obsidian keeps for a vault on a device, in state.local for a test to read and set
+  state.local = state.local ?? new Map();
+  app.loadLocalStorage = (key) => state.local.get(key) ?? null;
+  app.saveLocalStorage = (key, value) => void state.local.set(key, value);
   // a link found as Obsidian finds one: the file whose path is the link, or ends with it, a note's .md left off
   app.metadataCache.getFirstLinkpathDest = (link) => {
     const ends = (p, l) => p === l || p.endsWith(`/${l}`);
