@@ -224,7 +224,8 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const flag = clashOf(item)
     ? `<g aria-hidden="true" data-clash="${escaped(clashOf(item) ?? '')}"><path d="M${num(box.x + box.w - 18)} ${num(box.y + 4)}h14l-7 12z" fill="${palette.text}"/><text x="${num(box.x + box.w - 11)}" y="${num(box.y + 14)}" font-size="9" text-anchor="middle" fill="${palette.page ?? '#fff'}">!</text></g>`
     : '';
-  const slot = item.kind === 'View' ? ` data-view="${escaped(item.id)}"` : '';
+  const slot =
+    item.kind === 'View' || item.kind === 'Image' ? ` data-${item.kind.toLowerCase()}="${escaped(item.id)}"` : '';
   return `<g data-item="${escaped(item.id)}"${slot} role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}${flag}</g>`;
 }
 

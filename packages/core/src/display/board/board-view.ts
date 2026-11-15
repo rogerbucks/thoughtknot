@@ -6,7 +6,7 @@
 // Every edit goes to the host as a change to the board block. The board is drawn again from what was written, and
 // the view and every item not changed stay put (nodes stay put, never disorient). A host that draws the block afresh
 // after a write gets the same view and focus back, kept by its `key`.
-import { word, Zoom, type Drawn, type Palette, type View } from '@thoughtknot/core';
+import { word, Zoom, type Drawn, type View } from '@thoughtknot/core';
 
 import { boardOf, readBoard, type Board, type BoardItem } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
@@ -17,33 +17,20 @@ import { BoardPeople } from './board-people.ts';
 import { openCapture, openEditor, type FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
-import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
+import { ArrangeBar } from './board-arrange-bar.ts';
 import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
 import { bindWheel, outlined } from './board-wheel.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
-import { paintOver, type Viewer } from './board-view-items.ts';
+import { paintOver } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
 import { BoardInk } from './board-ink.ts';
+import { bindDrop } from './board-images.ts';
+import type { BoardHost } from './board-host.ts';
 
 export { boardEditInNote, boardOf };
-
-/** What a board needs of its host. */
-export interface BoardHost {
-  /** The colours to draw in. */
-  palette: Palette;
-  /** Writes an edit to the board block in the note; resolves to the block as now written, or why it was refused. */
-  write?: (change: BoardChange) => Promise<{ text: string } | { refused: string }>;
-  /** What names this board in its host, such as its note and name, so its view is kept when it is drawn again. */
-  key: string;
-  /** The seat of this person at a shared board: the others are drawn over it, and the edits go through it. */
-  together?: Together;
-  /** Where the linked items go by the graph; with it the board offers an Arrange by graph button. */
-  arrange?: ArrangeHooks['arrange'];
-  /** Draws each View item's graph live from the note; without it a view shows only its frame. */
-  views?: Viewer;
-}
+export type { BoardHost };
 
 /** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
 const kept = new Map<string, { place: View; cursor: BoardCursor; focused: boolean }>();
@@ -274,6 +261,7 @@ class BoardView {
     vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
     bindWheel(vp, zoom, (e) => this.space.point(e));
+    bindDrop(vp, this.copying(), this.host.images, (e) => this.space.onBoard(this.space.point(e)));
     new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
 

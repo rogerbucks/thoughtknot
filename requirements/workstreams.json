@@ -757,7 +757,8 @@
       "board_handles",
       "board_view_items",
       "board_main_screen",
-      "board_ink"
+      "board_ink",
+      "board_images"
     ]
   },
   "B2": {
