@@ -69,12 +69,17 @@ describe('pictures brought onto a board', () => {
   });
 
   // proves: board_images
-  test('two pictures at once get two ids and do not hide one another', async () => {
+  test('two pictures at once get two ids, and a picture never covers another item: it goes just below', async () => {
     const { h, done } = hooks();
-    await bringIn(carried([file('a.png', 'image/png'), file('b.jpg', 'image/jpeg')]), [0, 0], h, keeper());
+    await bringIn(carried([file('a.png', 'image/png'), file('b.jpg', 'image/jpeg')]), [1500, 1500], h, keeper());
     const [one, two] = done.writes.map((w) => w.item);
     assert.notEqual(one.id, two.id);
-    assert.ok(two.x > one.x && two.y > one.y);
+    assert.ok(two.y >= one.y + one.h, 'the second is below the first');
+    const over = hooks();
+    await bringIn(carried([file('c.png', 'image/png')]), [50, 50], over.h, keeper());
+    const { item } = over.done.writes[0];
+    assert.ok(item.y >= 160, 'dropped on the sticky, it lands clear of it');
+    assert.equal(item.x + item.w / 2, 50, 'and no further across');
   });
 
   // proves: board_images
@@ -129,7 +134,7 @@ describe('pictures brought onto a board', () => {
     const { window } = new JSDOM('<body><div id="vp" tabindex="0"></div></body>');
     const vp = window.document.getElementById('vp');
     const { h, done } = hooks();
-    bindDrop(vp, h, keeper(), () => [40, 50]);
+    bindDrop(vp, h, keeper(), () => [40, 2050]);
     const fire = (type, key, data) => {
       const e = new window.Event(type, { bubbles: true, cancelable: true });
       e[key] = data;
@@ -144,7 +149,7 @@ describe('pictures brought onto a board', () => {
     const items = done.writes.map((w) => w.item);
     const pic = items.find((i) => i.kind === 'Image'),
       card = items.find((i) => i.kind === 'Card');
-    assert.deepEqual([pic.x + pic.w / 2, pic.y + pic.h / 2], [40, 50]);
+    assert.deepEqual([pic.x + pic.w / 2, pic.y + pic.h / 2], [40, 2050]);
     assert.deepEqual([card.kind, card.x + 100, card.y + 60], ['Card', 1000, 1000]);
   });
 });

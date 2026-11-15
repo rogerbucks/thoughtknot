@@ -61,13 +61,21 @@ export function madeAt(board: Board, kind: BoardKind, at: [number, number]): Boa
     item.layer = layers.length ? Math.min(0, ...layers) - 1 : -1;
     return item; // a frame is drawn behind, so it may go over other items
   }
-  // a frame holds items, so a new item inside one is not on top of anything
-  const boxes = board.items.filter((i) => i.kind !== 'Frame').map(itemBox);
+  return clearOfOthers(board, item);
+}
+
+/**
+ * The item moved down, half its height at a time, until it covers no other item. A frame holds items and a stroke
+ * is drawn over them, so neither counts. Nothing else on the board moves.
+ */
+export function clearOfOthers(board: Board, item: BoardItem): BoardItem {
+  const boxes = board.items.filter((i) => i.kind !== 'Frame' && i.kind !== 'Ink').map(itemBox);
+  const step = Math.max(1, Math.round(itemBox(item).h / 2));
   const taken = () => {
     const b = itemBox(item);
     return boxes.some((o) => b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h);
   };
-  for (let tries = 0; tries < 200 && taken(); tries++) item.y += Math.round(size.h / 2);
+  for (let tries = 0; tries < 200 && taken(); tries++) item.y += step;
   return item;
 }
 

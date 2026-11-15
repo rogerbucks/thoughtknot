@@ -8,6 +8,7 @@ import type { Board } from '../../board.ts';
 import { freeId, type BoardChange } from '../../board-edit.ts';
 import { imageItem, imageSrc, isLocalSrc, isPicture, nameOf, noteCard, noteLinkOf } from '../../board-image.ts';
 import { itemBox } from '../../board-svg.ts';
+import { clearOfOthers } from '../../board-tools.ts';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -99,7 +100,7 @@ export async function bringIn(
   const { files, note } = broughtIn(data);
   if (h.readOnly || (!files.length && !note)) return false;
   if (note) {
-    const card = noteCard(freeId(h.board(), 'Card'), note, at);
+    const card = clearOfOthers(h.board(), noteCard(freeId(h.board(), 'Card'), note, at));
     h.say(word('board.note.added', { name: nameOf(note) }));
     await h.write({ kind: 'add', item: card });
     h.choose(card.id);
@@ -109,16 +110,14 @@ export async function bringIn(
     h.say(word('board.image.no-store'));
     return true;
   }
-  let n = 0;
   for (const file of files) {
     const [kept, size] = await Promise.all([pictures.keep(file), sizeOf(file)]);
     if ('refused' in kept) {
       h.say(kept.refused);
       continue;
     }
-    // each next picture a little down and right of the last, so none hides another
-    const item = imageItem(freeId(h.board(), 'Image'), kept.src, [at[0] + n * 24, at[1] + n * 24], size);
-    n += 1;
+    // where it was dropped, or just below when that would cover another item; nothing else moves
+    const item = clearOfOthers(h.board(), imageItem(freeId(h.board(), 'Image'), kept.src, at, size));
     h.say(word('board.image.added', { name: nameOf(kept.src) }));
     await h.write({ kind: 'add', item });
     h.choose(item.id);
