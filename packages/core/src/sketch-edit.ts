@@ -15,9 +15,9 @@ import { thinned } from './board-ink.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 
-/** A drawing to add: all a drawing holds but its id, which the block gives it. */
-export { thinned };
+export { thinned }; // the board's pen thins its strokes with it too, so it lives on the board's side
 
+/** A drawing to add: all a drawing holds but its id, which the block gives it. */
 export type NewSketchItem = Omit<SketchItem, 'id' | 'more'>;
 
 /** A change to the drawings over a graph: one added, one moved to a new place, or one taken away. */
