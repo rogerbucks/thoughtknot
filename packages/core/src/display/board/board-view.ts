@@ -21,7 +21,7 @@ import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
 import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
 import { outlined } from './board-wheel.ts';
-import { bindNest, kept, type NestHost } from './board-nest.ts';
+import { bindNest, type Nested } from './board-nest.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
 import { paintOver, type Viewer } from './board-view-items.ts';
@@ -31,7 +31,7 @@ import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts'
 export { boardEditInNote, boardOf };
 
 /** What a board needs of its host. */
-export interface BoardHost {
+export interface BoardHost extends Nested {
   /** The colours to draw in. */
   palette: Palette;
   /** Writes an edit to the board block in the note; resolves to the block as now written, or why it was refused. */
@@ -44,8 +44,6 @@ export interface BoardHost {
   arrange?: ArrangeHooks['arrange'];
   /** Draws each View item's graph live from the note; without it a view shows only its frame. */
   views?: Viewer;
-  /** Goes into the boards on this one, and back out; without it a view of a board is only a picture. */
-  nest?: NestHost;
 }
 
 let boardsShown = 0;

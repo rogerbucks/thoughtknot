@@ -59,3 +59,11 @@ export function saying(key: string, said: HTMLElement, words: string): void {
   const was = kept.get(key);
   if (was) kept.set(key, { ...was, said: { words, at: Date.now() } });
 }
+
+/**
+ * Keeps a view for a board not drawn yet, so it opens there with the keyboard on it. A board entered by zooming in
+ * opens where its picture was (board-nest.ts). `origin` is the corner of the board the view is measured from.
+ */
+export function seed(key: string, place: View, origin: readonly [number, number], cursor: BoardCursor): void {
+  kept.set(key, { place, origin, cursor, focused: true });
+}
