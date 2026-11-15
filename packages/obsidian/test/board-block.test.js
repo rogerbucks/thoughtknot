@@ -141,6 +141,52 @@ describe('pan and zoom, as a drawing', () => {
   });
 });
 
+describe('a host that draws the board afresh as soon as the note is written', () => {
+  /** Where a spot of the board is on screen, from the view and the picture drawn in `el`. */
+  const onScreen = (el, at) => {
+    const vp = el.querySelector('.thoughtknot-board .thoughtknot-viewport');
+    const svg = el.querySelector('svg.thoughtknot-svg');
+    const [fx, , fw] = svg.getAttribute('viewBox').split(' ').map(Number);
+    return parseFloat(vp.cssProps['--thoughtknot-x']) + ((at - fx) * Number(svg.getAttribute('width'))) / fw;
+  };
+
+  test('every other item stays where it was, the keyboard stays on the board, and what was said is kept', async () => {
+    const { env, el, vp, press, noteNow } = await board();
+    try {
+      // as Obsidian does: the block is drawn again, in a new element, before the write comes back
+      let fresh = null;
+      const { vault } = env.plugin.app,
+        process = vault.process;
+      vault.process = async (...args) => {
+        const r = await process.apply(vault, args);
+        (fresh ?? el).remove();
+        fresh = (await show(env, noteNow())).el;
+        return r;
+      };
+      vp.focus();
+      press('Tab');
+      const was = onScreen(el, 300);
+      press('ArrowLeft', { shiftKey: true }); // a goes left of the board's corner, so the corner moves
+      await until(() => /\(a:Sticky \{x: -40, y: 20/.test(noteNow()) && fresh);
+      await settled();
+      assert.ok(Math.abs(onScreen(fresh, 300) - was) < 0.01, 'b is on the same spot of the screen');
+      const now = fresh.querySelector('.thoughtknot-board .thoughtknot-viewport');
+      assert.equal(env.doc.activeElement, now, 'the keyboard is on the new board');
+      assert.ok(fresh.querySelector('[data-item="a"]').classList.contains('is-focused'), 'on the same item');
+      assert.match(fresh.querySelector('.thoughtknot-board-said').text, /Moved to -40, 20/);
+      // and the next key works: the board drawn before is dead, and does not take the keyboard away again
+      const first = fresh;
+      now.dispatch('keydown', { key: 'ArrowLeft', target: now, shiftKey: true });
+      await until(() => /\(a:Sticky \{x: -90, y: 20/.test(noteNow()) && fresh !== first);
+      await settled();
+      assert.ok(Math.abs(onScreen(fresh, 300) - was) < 0.01, 'b is still on the same spot');
+      assert.equal(env.doc.activeElement, fresh.querySelector('.thoughtknot-board .thoughtknot-viewport'));
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('editing by keyboard, written to the note', () => {
   test('Tab reaches an item and says it; an arrow moves it, and only its line changes', async () => {
     const { env, el, press, said, noteNow, place } = await board();
