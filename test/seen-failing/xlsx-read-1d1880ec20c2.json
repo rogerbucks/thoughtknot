@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/xlsx-read.test.js",
+  "test": "xlsx_read_untrusted: a second look at zips, paths, entities and sizes > a number format of unclosed brackets and quotes is looked over once, and a date format is still found",
+  "seen_failing_first": false,
+  "evidence": "It guards time, not a result. The old pattern gave the same answer, but looked on from each unclosed bracket to the end: 100,000 brackets in an 890-byte file held the reader for 11 seconds, and the time grew with the square. The format is now looked over once."
+}

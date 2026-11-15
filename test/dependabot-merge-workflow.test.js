@@ -41,3 +41,17 @@ describe('the workflow that turns auto-merge on for a Dependabot pull request', 
     assert.doesNotMatch(run, /\$\{\{/);
   });
 });
+
+// What Dependabot watches is held by policy.test.js; the app's Rust crates are held here, as that file is at its size.
+describe('Dependabot', () => {
+  test('the app’s Rust crates are watched too, with Tauri held at its major and the reason written down', () => {
+    const cargo = read('.github/dependabot.yml')
+      .split(/^\s*- package-ecosystem:/m)
+      .find((chunk) => chunk.startsWith(' cargo\n'));
+    assert.ok(cargo, 'a cargo entry');
+    assert.match(cargo, /directory: \/packages\/app\/src-tauri\n/, 'it reads the app’s lock file');
+    assert.match(cargo, /dependency-name: 'tauri\*'\n\s*update-types: \['version-update:semver-major'\]/);
+    assert.match(cargo, /# Held back:/, 'the reason is written down');
+    assert.match(cargo, /default-days: 7\n/, 'after the seven-day wait');
+  });
+});
