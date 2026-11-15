@@ -1,5 +1,5 @@
-// The words of the whiteboard's slice (editor spec §45): each key is lower-case and dotted, each wording is said in
-// plain words, and what a wording asks for ({count}, {how}) is what the code gives it.
+// The words of the whiteboard's slice (editor spec §45). Each key is lower-case and dotted. Each wording is said in
+// plain words. What a wording asks for, such as {count} or {how}, is what the code gives it.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BOARD_SLICE_SOURCE_WORDS as WORDS } from '../src/board-slice-source-words.ts';
