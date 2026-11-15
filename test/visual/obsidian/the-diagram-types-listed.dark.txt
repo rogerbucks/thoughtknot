@@ -1,5 +1,5 @@
-<svg viewBox="0 0 228 159" width="304" height="212" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
-  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+<svg viewBox="0 0 228 159" width="304" height="212" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:block;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)" paint="display:inline">
     <g id="p2">
       <path d="M71.57,-47.4C71.57,-47.4 21,-47.4 21,-47.4 15,-47.4 9,-41.4 9,-35.4 9,-35.4 9,-3 9,-3 9,3 15,9 21,9 21,9 71.57,9 71.57,9 77.57,9 83.57,3 83.57,-3 83.57,-3 83.57,-35.4 83.57,-35.4 83.57,-41.4 77.57,-47.4 71.57,-47.4" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208)">
       <text x="25.12" y="-26.6" text-anchor="start" paint="fill:rgb(179, 179, 179);stroke:rgb(30, 30, 30);stroke-width:5.6px"> PERSON
