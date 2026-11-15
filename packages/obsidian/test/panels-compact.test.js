@@ -67,13 +67,15 @@ test('each switch keeps its hint as its tooltip and its description; each key co
 });
 
 // proves: panels_compact
-test('a head shows its name and fold, its grip and dock buttons only once focused, and an empty chip is gone', () => {
+test('a head shows its name and fold, its grip and dock buttons only once a key focuses it, and an empty chip is gone', () => {
   const css = hovering();
   assert.match(
     css,
-    /\.thoughtknot-dock-head:not\(:focus-within\) :is\(\.thoughtknot-dock-grip, \.thoughtknot-dock-place\) \{[^}]*position: absolute;[^}]*opacity: 0;[^}]*pointer-events: none;/,
+    /\.thoughtknot-dock-head:not\(:has\(:focus-visible\)\) :is\(\.thoughtknot-dock-grip, \.thoughtknot-dock-place\) \{[^}]*position: absolute;[^}]*opacity: 0;[^}]*pointer-events: none;/,
     'out of sight, yet still reached by a key',
   );
+  // a press of the mouse focuses the fold too: were that to show them, the fold would move from under the pointer
+  assert.doesNotMatch(css, /\.thoughtknot-dock-head:not\(:focus-within\)/, 'a mouse press shows nothing new');
   assert.match(css, /\.thoughtknot-corner > \.thoughtknot-view-dock:not\(\.is-folded\) \{\s*flex-direction: row;/);
   const all = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
   assert.match(
