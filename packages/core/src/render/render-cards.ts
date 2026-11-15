@@ -243,7 +243,8 @@ const depthsOf = (scene: Scene, items: readonly string[]): Map<string, number> =
  * The layout `spots` of `scene` drawn as the cards of `texts`, with arrows for `links`. Every place, groups too, is
  * spread from the layout's middle as far as the cards need. Then cards still covering one another are pushed apart,
  * each inside its group, and the groups grow round their cards. An item with no text gets a card of its name. `keep`
- * is the spread to lay at, and the card `pinned` stays put: as a card resized, only the cards round it move.
+ * is the spread to lay at, and the cards `pinned` stay put. So as a card is resized or moved, only the cards round it
+ * move.
  */
 export function cardsLaid(
   scene: Scene,
@@ -252,7 +253,7 @@ export function cardsLaid(
   links: readonly { from: string; to: string }[],
   axis: 0 | 1 = 1,
   keep?: number,
-  pinned?: string,
+  pinned?: ReadonlySet<string>,
 ): CardsLaid {
   const items = itemsOf(scene).filter((k) => spots.has(k));
   const text = (k: string): CardText => texts.get(k) ?? { key: k, name: scene.nodes.get(k)?.name ?? k };

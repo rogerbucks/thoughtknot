@@ -34,9 +34,9 @@ const roundsFor = (n: number) => Math.max(1, Math.min(ROUNDS, Math.floor(WORK / 
 /**
  * Moves the cards `p` apart, in place, so that none covers another. Any two still covering one another are pushed
  * apart the shorter way, each half the overlap. Two in one place part down, the first above. The same cards always end
- * in the same places, whatever order they come in. A card `pinned` stays put: the one covering it moves the whole way.
+ * in the same places, whatever order they come in. The cards `pinned` stay put: one covering them moves the whole way.
  */
-export function partCards(p: Box[], pinned?: string): void {
+export function partCards(p: Box[], pinned?: ReadonlySet<string>): void {
   p.sort(byKey);
   for (let round = 0, n = roundsFor(p.length); round < n; round++) {
     let moved = false;
@@ -62,8 +62,10 @@ export function partCards(p: Box[], pinned?: string): void {
 }
 
 /** How much of half the overlap each of two things moves: one `pinned` stays, and the other moves it all. */
-const shares = (a: string, b: string, pinned?: string): [number, number] =>
-  a === pinned ? [0, 2] : b === pinned ? [2, 0] : [1, 1];
+function shares(a: string, b: string, pinned?: ReadonlySet<string>): [number, number] {
+  const [pa, pb] = [!!pinned?.has(a), !!pinned?.has(b)];
+  return pa && !pb ? [0, 2] : pb && !pa ? [2, 0] : [1, 1];
+}
 
 /** A thing in a room, to be moved apart from the rest: a round room, or a card taken as the round that holds it. */
 interface Body {
@@ -76,7 +78,7 @@ interface Body {
 }
 
 /** Moves the rounds `p` apart, each half the overlap, along the line between their middles; one place parts down. */
-function partRounds(p: Body[], pinned?: string): void {
+function partRounds(p: Body[], pinned?: ReadonlySet<string>): void {
   p.sort(byKey);
   for (let round = 0, n = roundsFor(p.length); round < n; round++) {
     let moved = false;
@@ -102,10 +104,15 @@ function partRounds(p: Body[], pinned?: string): void {
 /**
  * Keeps each of the cards `boxes` inside its group's rooms in `scene`, and no room over another. It moves the cards and
  * the rooms' places in `spots`, in place, and grows each room round what it holds. A drawing with no groups has its
- * cards moved apart only. The same scene and places always give the same result. The card `pinned`, and every room
- * that holds it, stays put: the things round it make room.
+ * cards moved apart only. The same scene and places always give the same result. The cards `pinned`, and every room
+ * that holds one, stay put: the things round them make room.
  */
-export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[], pinned?: string): void {
+export function keepInRooms(
+  scene: Scene,
+  spots: Map<string, Spot>,
+  boxes: Box[],
+  pinned?: ReadonlySet<string>,
+): void {
   const card = new Map(boxes.map((b) => [b.key, b]));
   const rooms = [...scene.nodes.values()].filter((n) => n.children.length && spots.has(n.key));
   if (!rooms.length) return partCards(boxes, pinned);
@@ -123,10 +130,12 @@ export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[]
   const part = (keys: readonly string[]): void => {
     const cards = keys.flatMap((k) => (card.has(k) ? [card.get(k) as Box] : []));
     const inner = keys.filter((k) => !card.has(k) && spots.has(k));
-    // the thing here that holds the card pinned, if any, stays put
-    const pin = pinned && keys.find((k) => k === pinned || scene.nodes.get(k)?.items.includes(pinned));
+    // the things here that are, or hold, a card pinned stay put
+    const pin = pinned?.size
+      ? new Set(keys.filter((k) => pinned.has(k) || scene.nodes.get(k)?.items.some((i) => pinned.has(i))))
+      : undefined;
     // a room of cards only parts them as cards, close; mixed with rooms, each card is the round that holds it
-    if (!inner.length) return partCards(cards, pin || undefined);
+    if (!inner.length) return partCards(cards, pin);
     const bodies: Body[] = [
       ...cards.map((b): Body => {
         const body: Body = {
@@ -153,7 +162,7 @@ export function keepInRooms(scene: Scene, spots: Map<string, Spot>, boxes: Box[]
         return body;
       }),
     ];
-    partRounds(bodies, pin || undefined);
+    partRounds(bodies, pin);
   };
   // the innermost rooms first, so each room grows round rooms already final
   rooms.sort((a, b) => b.depth - a.depth || byKey(a, b));

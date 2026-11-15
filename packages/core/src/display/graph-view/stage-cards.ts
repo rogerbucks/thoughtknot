@@ -7,6 +7,7 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { valueText } from '../../inline-properties.ts';
 import {
+  CARD_HEAD,
   CARD_PROPS,
   CARD_W,
   cardSizeOf,
@@ -369,11 +370,12 @@ export class StageCards {
     c.restore();
   }
 
-  /** The item whose card is at `x`, `y` on the screen, the top card first; none off every card. */
-  pickAt(x: number, y: number): string | null {
+  /** The item whose card is at `x`, `y` on the screen, the top card first; none off every card. `head`: on its head. */
+  pickAt(x: number, y: number, head = false): string | null {
     for (let i = this.boxes.length - 1; i >= 0; i--) {
       const b = this.boxes[i] as (typeof this.boxes)[number];
-      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.key;
+      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h)
+        return !head || y <= b.y + CARD_HEAD * (b.w / CARD_W) ? b.key : null; // a card is moved by its head
     }
     return null;
   }

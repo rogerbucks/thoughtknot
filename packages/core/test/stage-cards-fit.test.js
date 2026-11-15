@@ -96,7 +96,7 @@ test('a card pinned stays put while the cards it covers move aside the whole way
   // a card grown down over the one below: only the one below moves
   const flat = { depths: ['i'], nodes: new Map(), roots: [], named: [], roads: [[]] };
   const cards = [box('a', 0, 0, 300), box('b', 0, 100, 60), box('c', 1000, 0, 60)];
-  keepInRooms(flat, new Map(), cards, 'a');
+  keepInRooms(flat, new Map(), cards, new Set(['a']));
   const at = new Map(cards.map((b) => [b.key, b]));
   assert.deepEqual([at.get('a').x, at.get('a').y], [0, 0], 'the pinned card stays');
   assert.ok(at.get('b').y - 30 >= 150, 'the one below moves clear of it');
@@ -114,8 +114,67 @@ test('a card pinned stays put while the cards it covers move aside the whole way
     ['B', { x: 0, y: 200, r: 10 }],
   ]);
   const two = [box('a', 0, 0, 300), box('b', 0, 200, 60)];
-  keepInRooms(scene, spots, two, 'a');
+  keepInRooms(scene, spots, two, new Set(['a']));
   assert.deepEqual([spots.get('A').x, spots.get('A').y], [0, 0], 'the room holding it stays');
   const [A, B] = [spots.get('A'), spots.get('B')];
   assert.ok(Math.hypot(A.x - B.x, A.y - B.y) >= A.r + B.r, 'the other room moved clear');
+});
+
+// proves: render_cards
+test('a card dragged by its head stays where it is put, the cards it lands on move aside, and the move undoes', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { installHost } = await import('../src/display/host.ts');
+    installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { cardsControl } = await import('../src/display/graph-view/stage-cards-switch.ts');
+    const { MoveUndo } = await import('../src/display/graph-view/move-undo.ts');
+    const { drawing, g, keys } = drawingAndGraph();
+    const root = doc.createElement('div');
+    doc.body.appendChild(root);
+    const dock = root.createDiv({ cls: 'thoughtknot-view-dock' }).createDiv({ cls: 'thoughtknot-dock-body' });
+    const viewport = root.createDiv();
+    const stage = new RenderStage(viewport, drawing, g, { open: () => {}, clear: () => {}, selected: () => null });
+    cardsControl(root, stage, 'drag-plan');
+    dock.querySelector('button').click();
+    const w0 = stage.spots.get('W0');
+    stage.view = { ...stage.view, scale: 1, x: w0.x - 400, y: w0.y - 300 };
+    stage.draw();
+    const el = cardEl(viewport, 'Work 0');
+    const [x, y] = ['x', 'y'].map((a) => parseFloat(el.cssProps[`--thoughtknot-card-${a}`]));
+    const sw = stage.cardsOn;
+    assert.equal(
+      sw.grab(x + 20, y + 60, () => stage.view),
+      false,
+      'its body does not take it: the stage pans',
+    );
+    assert.ok(
+      sw.grab(x + 20, y + 10, () => stage.view),
+      'its head takes it',
+    );
+    // dropped right on W2, which moves aside; W0 stays where it was put
+    const target = boxesOf(stage).get('W2');
+    const from = { ...stage.spots.get('W0') };
+    sw.drag(target.x - from.x, target.y - from.y);
+    sw.drop();
+    const now = boxesOf(stage);
+    assert.ok(Math.abs(now.get('W0').x - target.x) < 1e-6 && Math.abs(now.get('W0').y - target.y) < 1e-6, 'W0 stays');
+    for (const a of keys)
+      for (const b of keys) if (a < b) assert.ok(!covers(now.get(a), now.get(b)), `${a} clear of ${b}`);
+    // turned off and on, it is still where it was put
+    dock.querySelector('button').click();
+    dock.querySelector('button').click();
+    const again = boxesOf(stage).get('W0');
+    assert.ok(Math.abs(again.x - target.x) < 1e-6 && Math.abs(again.y - target.y) < 1e-6, 'kept for the graph');
+    // undone, it goes back where the layout had it
+    assert.ok(new MoveUndo(viewport, 'drag-plan').undo());
+    await new Promise((r) => setTimeout(r, 0)); // the undo's toast says so before the page goes
+    const back = boxesOf(stage).get('W0');
+    assert.ok(Math.abs(back.x - from.x) < 1e-6 && Math.abs(back.y - from.y) < 1e-6, 'back where it was');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
 });

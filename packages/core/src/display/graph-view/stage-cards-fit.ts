@@ -18,6 +18,16 @@ export function fitsOf(graph: string): Map<string, { fit: CardFit; tall?: number
   return m;
 }
 
+/** Where the reader put each card of each graph by hand, by thing, in the layout's own places (before spreading). */
+const put = new Map<string, Map<string, { x: number; y: number }>>();
+
+/** Where the reader put the cards of `graph` by hand. */
+export function placesOf(graph: string): Map<string, { x: number; y: number }> {
+  let m = put.get(graph);
+  if (!m) put.set(graph, (m = new Map<string, { x: number; y: number }>()));
+  return m;
+}
+
 /** The texts `texts`, each sized as `fits` says. */
 export function withFits(
   texts: Map<string, CardText>,
