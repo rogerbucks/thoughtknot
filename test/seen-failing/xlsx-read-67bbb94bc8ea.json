@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/xlsx-read.test.js",
+  "test": "xlsx_read_untrusted: a second look at zips, paths, entities and sizes > what every sheet shares is read once for a workbook, however many sheets are read",
+  "seen_failing_first": false,
+  "evidence": "It guards time, not a result. The old reader gave the same tables, but read the shared strings again for every sheet: a 63 KB workbook of 100 sheets held Import for over two minutes. They are now read once for a workbook."
+}

@@ -250,6 +250,45 @@ export function saveCard(text: string | null, graph: string, thing: string, c: C
 }
 
 /**
+ * The block with several lines changed in one pass, so a big arrangement is one reading of the block and not one for
+ * every card. The lines named in `drop` go, each line in `put` takes the place of the one of its name, and `add` goes
+ * at the end. Every other line stays as it was. An item is written on one line, as this file writes it.
+ */
+function linesChanged(text: string, drop: ReadonlySet<string>, put: ReadonlyMap<string, string>, add: string[]) {
+  const first = new Map<string, { open: number; close: number }>();
+  for (const w of writtenIn(text))
+    if (w.writes && w.variable && !first.has(w.variable.name)) first.set(w.variable.name, w);
+  const gone = [...drop].flatMap((id) => {
+    const w = first.get(id);
+    return w ? [text.slice(0, w.open).split('\n').length - 1] : [];
+  });
+  // from the end, so the places of the lines before stay true
+  let out = text;
+  const swaps = [...put].flatMap(([id, line]) => {
+    const w = first.get(id);
+    return w && !drop.has(id) ? [{ ...w, line }] : [];
+  });
+  for (const w of swaps.sort((a, b) => b.open - a.open)) out = out.slice(0, w.open) + w.line + out.slice(w.close + 1);
+  let lines = out.split('\n');
+  if (gone.length) {
+    const goes = new Set(gone);
+    lines = lines.filter((_, n) => !goes.has(n));
+    // the last line now ends without a comma
+    for (let n = lines.length - 1; n > 0; n--) {
+      const l = lines[n] ?? '';
+      if (!l.trim() || l.trim().startsWith('//')) continue;
+      const kept = l.trimEnd();
+      lines[n] = kept.endsWith(',') ? kept.slice(0, -1) : l;
+      break;
+    }
+  }
+  out = lines.join('\n');
+  if (!add.length) return out;
+  const body = out.trimEnd();
+  return `${body}${itemsOf(out).board.items.length ? ',' : ''}\n${add.join(',\n')}`;
+}
+
+/**
  * The block with the arrangement `name` saved as `cards`, every card as it is. It takes the place of the one saved
  * by that name before; with none, it is forgotten. With no block yet, one is made for `graph`. Each card has a line of
  * its own, named after its thing and the arrangement. The cards in use, and every other line, stay as they were.
@@ -260,12 +299,11 @@ export function saveArrangement(
   name: string,
   cards: ReadonlyMap<string, CardSave> | null,
 ): string | null {
-  let out = text !== null && layoutOf(text) ? text : null;
-  for (const it of out === null ? [] : itemsOf(out).board.items)
-    if (it.more.set === name) out = forgetPlace(out as string, it.id);
-  if (!cards?.size) return out ?? text;
-  out ??= writeLayout({ name: layoutName(graph), on: graph, places: new Map() });
-  const taken = new Set(itemsOf(out).board.items.map((it) => it.id));
+  const had = text !== null && layoutOf(text) ? text : null;
+  const items = had === null ? [] : itemsOf(had).board.items;
+  const old = new Set(items.filter((it) => it.more.set === name).map((it) => it.id));
+  if (!cards?.size) return had === null ? text : linesChanged(had, old, new Map(), []);
+  const taken = new Set(items.filter((it) => !old.has(it.id)).map((it) => it.id));
   const tag =
     name
       .toLowerCase()
@@ -275,8 +313,8 @@ export function saveArrangement(
   const id = (thing: string): string => `${thing}_card_${tag}${n > 1 ? `_${n}` : ''}`;
   while ([...cards.keys()].some((k) => taken.has(id(k)))) n++;
   const lines = [...cards].map(([k, c]) => cardGql(k, rounded(c), { name, id: id(k) }));
-  const body = out.trimEnd();
-  return `${body}${itemsOf(out).board.items.length ? ',' : ''}\n${lines.join(',\n')}`;
+  const from = had ?? writeLayout({ name: layoutName(graph), on: graph, places: new Map() });
+  return linesChanged(from, old, new Map(), lines);
 }
 
 /**
@@ -287,8 +325,15 @@ export function useArrangement(text: string, graph: string, name: string): strin
   const { cards, arrangements } = readLayout(text).layout;
   const set = arrangements?.get(name);
   if (!set) return text;
-  let out: string = text;
-  for (const k of cards?.keys() ?? []) if (!set.has(k)) out = saveCard(out, graph, k, null) ?? out;
-  for (const [k, c] of set) out = saveCard(out, graph, k, c) ?? out;
-  return out;
+  const written = new Set(itemsOf(text).board.items.map((it) => it.id));
+  const drop = new Set([...(cards?.keys() ?? [])].filter((k) => !set.has(k)).map(cardLine));
+  const put = new Map<string, string>();
+  const add: string[] = [];
+  for (const [k, c] of set) {
+    const line = cardGql(k, rounded(c));
+    if (written.has(cardLine(k))) put.set(cardLine(k), line);
+    else add.push(line);
+  }
+  void graph; // the block is there already: an arrangement is read from it
+  return linesChanged(text, drop, put, add);
 }
