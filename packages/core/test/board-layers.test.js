@@ -73,6 +73,9 @@ test('an item on a locked layer stays as it is until the layer is unlocked, and 
   const step = boardKey(readShown(locked.text), { focus: 'b', linking: null }, press, [0, 0], false);
   assert.match(step.said, /locked layer Notes/, 'and the keyboard says why');
   assert.equal(step.change, undefined);
+  assert.match(ask(locked.text, { kind: 'put', items: ['b'], id: null }).refused, /locked layer Notes/);
+  assert.match(ask(locked.text, { kind: 'put', items: ['a', 'b'], id: 'marks' }).refused, /locked layer Notes/);
+  assert.ok('text' in ask(locked.text, { kind: 'put', items: ['a'], id: 'notes' }), 'an item may still be put on it');
   const open = ask(locked.text, { kind: 'lock', id: 'notes', locked: false });
   assert.equal(open.text, TEXT);
 });
@@ -88,6 +91,11 @@ test('a new layer goes on top under a name nothing has, and layers change places
   assert.deepEqual(top(up.text), ['notes', 'marks']);
   assert.match(ask(up.text, { kind: 'raise', id: 'notes', by: 1 }).refused, /on top/);
   assert.match(ask(TEXT, { kind: 'raise', id: 'notes', by: -1 }).refused, /at the back/);
+  const tied = TEXT.replace(', order: 1}', '}').replace('order: 2, ', '');
+  assert.deepEqual(top(tied), ['marks', 'notes'], 'layers written with no order both have 1: the later is over');
+  const untied = ask(tied, { kind: 'raise', id: 'notes', by: 1 });
+  assert.deepEqual(top(untied.text), ['notes', 'marks'], 'and still change places');
+  assert.match(untied.text, /\(notes:Layer \{name: 'Notes', order: 2\}\)/);
 });
 
 // proves: board_layers

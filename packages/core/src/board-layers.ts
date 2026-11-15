@@ -28,9 +28,9 @@ export function stackOf(board: Board, item: BoardItem): number {
   return layerOf(board, item)?.order ?? 0;
 }
 
-/** The layers of a board, the one drawn on top first, as a list of layers shows them. */
+/** The layers of a board, the one drawn on top first, as a list shows them. Of two with one order, the later is over. */
 export function layersTopFirst(board: Board): BoardLayer[] {
-  return [...(board.layers ?? [])].sort((a, b) => b.order - a.order);
+  return [...(board.layers ?? [])].sort((a, b) => a.order - b.order).reverse();
 }
 
 /**
@@ -109,6 +109,9 @@ export function layersEdit(board: Board, ask: LayerAsk): Board | { refused: stri
       return { refused: word('board.layer.gone', { id: ask.id }) };
     const moved = new Set(ask.items);
     if (!board.items.some((i) => moved.has(i.id))) return { refused: word('board.layer.none-chosen') };
+    // an item that is locked, or on a locked layer, stays on its layer: moving it off would unlock it
+    const held = board.items.find((i) => moved.has(i.id) && lockedIn(board, i));
+    if (held) return { refused: lockedSaid(board, held) };
     return { ...board, items: board.items.map((i) => (moved.has(i.id) ? onLayer(i, ask.id) : i)) };
   }
   const layer = layers.find((l) => l.id === ask.id);
@@ -127,13 +130,15 @@ export function layersEdit(board: Board, ask: LayerAsk): Board | { refused: stri
     case 'lock':
       return set({ locked: ask.locked });
     case 'raise': {
-      // it changes places with the layer next over it, or next under it
+      // It changes places with the layer next over it, or next under it. Then each layer has an order of its own,
+      // from 1 up. So layers written with one order, or with none, still change places.
       const sorted = [...layers].sort((a, b) => a.order - b.order);
-      const other = sorted[sorted.indexOf(layer) + ask.by];
+      const at = sorted.indexOf(layer);
+      const other = sorted[at + ask.by];
       if (!other) return { refused: word(ask.by > 0 ? 'board.layer.top' : 'board.layer.bottom') };
-      const swap = (l: BoardLayer) =>
-        l === layer ? { ...l, order: other.order } : l === other ? { ...l, order: layer.order } : l;
-      return { ...board, layers: layers.map(swap) };
+      sorted[at] = other;
+      sorted[at + ask.by] = layer;
+      return { ...board, layers: layers.map((l) => ({ ...l, order: sorted.indexOf(l) + 1 })) };
     }
     case 'remove':
       return {
