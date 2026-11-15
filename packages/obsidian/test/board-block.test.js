@@ -378,6 +378,25 @@ describe('editing by keyboard, written to the note', () => {
     }
   });
 
+  test('copy, paste and duplicate say how many items, one as "1 item", and the count is what stays said', async () => {
+    const { env, press, said, noteNow } = await board();
+    try {
+      press('Tab'); // a
+      press('c', { ctrlKey: true });
+      assert.equal(said(), 'Copied 1 item.');
+      press('v', { ctrlKey: true });
+      await until(() => (noteNow().match(/Go by train/g) ?? []).length === 2);
+      await settled();
+      assert.equal(said(), 'Pasted 1 item in the middle of the view.');
+      press('d', { ctrlKey: true });
+      await until(() => (noteNow().match(/Go by train/g) ?? []).length === 3);
+      await settled();
+      assert.equal(said(), 'Duplicated 1 item, just to the right.');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a mouse drag moves an item, and a tap on one puts the keyboard on it', async () => {
     const { env, el, vp, said, noteNow, place } = await board();
     try {
