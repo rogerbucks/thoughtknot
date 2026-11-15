@@ -12,7 +12,6 @@ import type { Value } from '@thoughtknot/graph-spec';
 import { gqlBlock } from './export-data-gql.ts';
 import { oneLine } from './export-data-model.ts';
 import type { DataLink, DataThing } from './export-data-model.ts';
-import { isDocumentPlace } from './document-text.ts';
 import { saidDate } from './export-frame.ts';
 import type { SqliteTable } from './sqlite-read.ts';
 import { word } from './words.ts';
@@ -134,7 +133,7 @@ export function importedBlock(
  */
 export function documentBlock(graph: string, file: string): DbImported {
   if (!NAME.test(graph)) return { refused: word('import.not-graph-name', { graph }) };
-  if (!isDocumentPlace(file) || /[\n\r·]/.test(file))
+  if (!/\.(docx|pdf)$/i.test(file) || /[\n\r·]/.test(file))
     return { refused: word('import.document.not-document', { file }) };
   return { block: `\`\`\`gql\n// graph: ${graph} · FROM ${file}\n\`\`\`` };
 }
