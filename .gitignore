@@ -65,3 +65,6 @@ quality/instruction-spread.json
 
 # Each person's own AI plans and limits, read by the tools on their machine (docs/agents/ROLES.md). Never committed.
 /docs/agents/*.local.md
+
+# Made by node scripts/public-api.mjs --update for a local look; never committed (it conflicted in every PR).
+public-api.json

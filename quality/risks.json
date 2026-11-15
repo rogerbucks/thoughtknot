@@ -5719,7 +5719,6 @@
       "check": "test/lib-public-api.test.js: every package under packages/ that exports a persisted type is in LIBRARY or in an explicit list of private packages.",
       "paths": [
         "scripts/public-api.mjs",
-        "public-api.json",
         "packages/sync/src/index.ts"
       ],
       "effort": "days",
