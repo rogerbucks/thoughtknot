@@ -450,6 +450,10 @@ export const VALUES_LATE = [
   'boardFileBlock',
   'boardFilesOf',
   'boardFormatOf',
+  'BOARD_PICTURE_FORMATS',
+  'boardPicturesOf',
+  'pictureSize',
+  'picturesPdf',
   // the layout block, the reviewers and metadata from Reading view (layout_block, ai_two_reviewers,
   // reading_view_metadata), 7 Nov 2026
   'forgetPlace',
