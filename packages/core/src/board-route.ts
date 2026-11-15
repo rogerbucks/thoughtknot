@@ -1,7 +1,7 @@
 // How a connector of a board runs from one item to the other (editor spec ES§45, board_routes). A connector runs
 // straight while nothing is in its way. With an item in its way it bows round it, by the curve router's own rule
 // (direct-bends.ts). It may also be told to run straight, as an elbow from side to side, or curved. Pure and host-free.
-import type { Board, Connector, Route, Tips } from './board.ts';
+import { ROUTES, TIPS, type Board, type Connector, type Route, type Tips } from './board.ts';
 import { GENTLE, aside } from './direct-bends.ts';
 import { curveOf, type Placed } from './direct-curve.ts';
 
@@ -109,16 +109,21 @@ export function sharedRoute(links: readonly Connector[]): { route?: Route | null
   return shared;
 }
 
-/** The connector with what `set` names changed; the board's own route and an arrow at the end are not written. */
+/**
+ * The connector with what `set` names changed. The board's own route and an arrow at the end are not written.
+ * Only the words a board knows are taken: any other is read as the board's own choice, so none is written to the note.
+ */
 export function routedAs(c: Connector, set: RouteSet): Connector {
   const next = { ...c };
   if ('route' in set) {
-    if (set.route) next.route = set.route;
+    const route = ROUTES.find((r) => r === set.route);
+    if (route) next.route = route;
     else delete next.route;
   }
-  if (set.tips) {
-    if (set.tips === 'end') delete next.tips;
-    else next.tips = set.tips;
+  const tips = TIPS.find((t) => t === set.tips);
+  if (tips) {
+    if (tips === 'end') delete next.tips;
+    else next.tips = tips;
   }
   return next;
 }

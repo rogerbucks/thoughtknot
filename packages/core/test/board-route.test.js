@@ -78,6 +78,9 @@ describe('how a connector of a board runs', () => {
     assert.equal(boardEdit(both, { kind: 'routes', links: [{ from: 'a', to: 'c' }], set: { tips: 'end' } }).text, TEXT);
     const odd = TEXT.replace('(a)-[:CONNECTS]->(c)', "(a)-[:CONNECTS {route: 'wavy', tips: 'three'}]->(c)");
     assert.deepEqual(readBoard(odd).board.connectors[0], { from: 'a', to: 'c' }, 'words not known are left out');
+    const sly = { route: "wavy'}]->(x), (y)-[:CONNECTS {route: 'elbow", tips: 'three' };
+    const kept = boardEdit(both, { kind: 'routes', links: [{ from: 'a', to: 'c' }], set: sly }).text;
+    assert.equal(kept, both, 'a change writes only the words a board knows');
   });
 
   // proves: board_routes
