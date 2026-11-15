@@ -1,7 +1,7 @@
 // A whiteboard in Obsidian (editor spec §45, board_view). A board block opens as a board to pan, zoom and edit, on
 // desktop and phone, offline: the display layer's board (display/board/board-view.ts). Each edit is written to the
 // note, against the note as it is when written. In reading view, or with no section to write to, it is read-only.
-import { arrangerOf, PALETTES, word } from '@thoughtknot/core';
+import { arrangerOf, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
 import { readOnlyHere } from '@thoughtknot/core/display/graph-view/placement';
 import type { BlockContext } from './block-context';
@@ -35,6 +35,7 @@ export function renderBoardBlock(
         }
       : undefined,
     arrange: writable ? arrangerOf(async () => (await noteText(plugin.app, path)) ?? '', line.name) : undefined,
+    views: viewerOf(async () => (await noteText(plugin.app, path)) ?? ''),
   });
   return true;
 }

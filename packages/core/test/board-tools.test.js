@@ -16,7 +16,7 @@ const overlaps = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h
 describe('the tools of a board', () => {
   // proves: board_tools
   test('start with Choose and Hand, then a tool for each kind made by a press, then Connect', () => {
-    assert.deepEqual(BOARD_TOOLS, ['choose', 'hand', 'sticky', 'text', 'shape', 'frame', 'connect']);
+    assert.deepEqual(BOARD_TOOLS, ['choose', 'hand', 'sticky', 'text', 'shape', 'frame', 'view', 'connect']);
     assert.equal(toolMakes('sticky'), 'Sticky');
     assert.equal(toolMakes('frame'), 'Frame');
     assert.equal(toolMakes('choose'), null);
