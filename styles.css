@@ -154,6 +154,14 @@
   .thoughtknot-stage-card.is-chosen {
     outline-color: Highlight;
   }
+  /* a colour's swatch on a board loses its colour, so it shows the colour's name instead */
+  .thoughtknot-board-swatch {
+    border-radius: 0;
+    padding: 0 var(--gn-space-1);
+  }
+  .thoughtknot-board-swatch::after {
+    content: attr(aria-label);
+  }
   /* the bars over the cards keep their edge */
   .thoughtknot-stage-cards-chosen,
   .thoughtknot-stage-cards-sets {
@@ -2971,7 +2979,6 @@ button.thoughtknot-stage-card-pin {
   border: 2px solid var(--thoughtknot-swatch-edge);
   border-radius: 50%;
   padding: 0;
-  forced-color-adjust: none; /* a swatch is its colour; its name is its label and tooltip */
 }
 .thoughtknot-board-format button[aria-pressed='true'],
 .thoughtknot-board-tools button[aria-pressed='true'] {
