@@ -14,6 +14,7 @@ import {
   showBoardList,
 } from '@thoughtknot/core/display/board/board-list';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
+import { exchangeBar } from './board-exchange.ts';
 import { boardFirst, chooseFirst, firstLine, firstTimeLine, keptIn, starterBoard, withStarter } from './board-first.ts';
 
 /** The page's note as the board needs it: its text now, and its write against the version the page last saw. */
@@ -153,6 +154,9 @@ export function boardsKept(
     boards?.remove();
     boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw);
     if (!boards) return;
+    // whiteboard files in and out: a small bar under the boards, closed until it is opened (board_exchange)
+    const win = parent.ownerDocument.defaultView;
+    if (win) boards.append(exchangeBar(win, note));
     // the board is the main screen: it comes first, unless this person chose the graph first (board_main_screen)
     const first = boardFirst(kept);
     const turn = (board: boolean) => () => {
