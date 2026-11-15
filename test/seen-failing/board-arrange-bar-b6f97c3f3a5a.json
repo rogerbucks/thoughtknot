@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/board-arrange-bar.test.js",
+  "test": "the Arrange by graph button > moves nothing until pressed, then arranges the items in one change, and Undo puts them back",
+  "seen_failing_first": false,
+  "evidence": "the code it names was written in an earlier commit; this test is added so the module has a test of its own"
+}

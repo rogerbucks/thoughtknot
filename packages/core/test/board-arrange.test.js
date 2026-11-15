@@ -188,12 +188,15 @@ describe('arranged cards keep clear of every other card', () => {
   });
 
   test('big cards are spaced by their own size', () => {
-    const big = FAR.replace("text: 'Ann'", "w: 600, h: 400, text: 'Ann'");
+    const big = FAR.replace("text: 'Ann'", "w: 600, h: 400, text: 'Ann'").replace(
+      "text: 'Bob'",
+      "w: 600, h: 400, text: 'Bob'",
+    );
     const r = arrangeBoard(big, 'ideas', force);
     const [a, b] = boardOf(r.note).items;
     assert.ok(
-      a.x + 600 <= b.x || b.x + 160 <= a.x || a.y + 400 <= b.y || b.y + 160 <= a.y,
-      'the big card is clear of its neighbour',
+      a.x + 600 <= b.x || b.x + 600 <= a.x || a.y + 400 <= b.y || b.y + 400 <= a.y,
+      'the big cards are clear of each other',
     );
   });
 });
