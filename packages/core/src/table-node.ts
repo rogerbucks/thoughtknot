@@ -9,7 +9,7 @@
 import type { DrawMark } from './drawing-marks.ts';
 import { LETTER, fitText } from './view-types/fit-text.ts';
 import type { NodeTable, TableNodeLimit } from './table-source.ts';
-import { TABLE_NODE_LIMIT, tableTail } from './table-source.ts';
+import { PAGE_LETTERS, TABLE_NODE_LIMIT, tableTail } from './table-source.ts';
 
 export type { NodeTable, TableNodeLimit } from './table-source.ts';
 export { TABLE_NODE_LIMIT, tableTail } from './table-source.ts';
@@ -45,12 +45,13 @@ export function tableNode(
   const rows = table.rows.slice(0, limit.rows);
   const more = { rows: table.rows.length - rows.length, columns: table.header.length - columns };
   const lines = [table.header, ...rows];
+  const most = table.page ? PAGE_LETTERS : COLUMN_MOST;
   const letters = Array.from({ length: columns }, (_, c) =>
-    Math.min(COLUMN_MOST, Math.max(COLUMN_LEAST, ...lines.map((r) => [...(r[c] ?? '')].length))),
+    Math.min(most, Math.max(COLUMN_LEAST, ...lines.map((r) => [...(r[c] ?? '')].length))),
   );
   const pad = PAD * SIZE;
   const widths = letters.map((n) => n * LETTER * SIZE);
-  const tail = tableTail(table.rows.length, more);
+  const tail = tableTail(table.rows.length, more, table.page);
   const across = widths.reduce((s, w) => s + w, 0) + pad * Math.max(columns - 1, 0);
   const width = Math.max(across, [...tail].length * LETTER * SIZE, [...name].length * LETTER * SIZE) + 2 * pad;
   const height = (lines.length + 2) * ROW * SIZE + pad;

@@ -424,6 +424,7 @@ export const TYPES_LATE = [
   'CsvLimits',
   'CsvRefusal',
   'CsvTable',
+  'DataSetFile',
   'TableMapping',
   // graphs kept in a GitHub repository, and graph information pulled out of one (§48), 5 Nov 2026
   'PullOutcome',

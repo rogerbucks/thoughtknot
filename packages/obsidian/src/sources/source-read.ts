@@ -20,12 +20,14 @@ import {
   namesSharedSchema,
   placeKey,
   READ_LIMITS,
+  readAsBytes,
   readSource,
   SQLITE_LIMITS,
   WORKBOOK_LIMITS,
   workbookPlace,
 } from '@thoughtknot/core';
 import type {
+  DataSetFile,
   GraphDrawing,
   GraphSource,
   JoinedRead,
@@ -157,6 +159,17 @@ async function tableText(plugin: ThoughtKnotPlugin, place: string, from: string)
   return 'text' in r ? r.text : null;
 }
 
+/**
+ * What a data set's box shows, read from `place` for the note at `from` (ES§67, format_content_node). That is a
+ * workbook's, database's or document's bytes, or a text file's text. Or null when it cannot be read.
+ */
+async function dataSetFile(plugin: ThoughtKnotPlugin, place: string, from: string): Promise<DataSetFile> {
+  if (!readAsBytes(place)) return tableText(plugin, place, from);
+  const kind = databasePlace(place) ? 'database' : workbookPlace(place) ? 'workbook' : 'document';
+  const r = await bytesOf(plugin, { graph: '', kind, target: place, block: 0 }, from);
+  return 'bytes' in r ? r.bytes : null;
+}
+
 /** `drawing` with each data set of `graph` drawn as its table, read from its place (ES§67, format_content_node). */
 export async function withTables<D extends GraphDrawing | undefined>(
   plugin: ThoughtKnotPlugin,
@@ -164,7 +177,7 @@ export async function withTables<D extends GraphDrawing | undefined>(
   graph: Graph | undefined,
   from: string,
 ): Promise<D> {
-  const tables = drawing ? await dataSetTables(graph, (place) => tableText(plugin, place, from)) : [];
+  const tables = drawing ? await dataSetTables(graph, (place) => dataSetFile(plugin, place, from)) : [];
   return tables.length ? { ...drawing, tables } : drawing;
 }
 

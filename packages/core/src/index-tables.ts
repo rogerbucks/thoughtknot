@@ -6,7 +6,7 @@ export type { ColumnMap, ColumnRole, TableMapping } from './csv-mapping.ts';
 export { CSV_LIMITS, readCsv } from './csv-read.ts';
 export type { CsvLimits, CsvRefusal, CsvTable } from './csv-read.ts';
 export { tableMeasures } from './csv-measures.ts';
-export { dataSetTables } from './data-set-tables.ts';
+export { dataSetTables, nodeTableOf, readAsBytes, type DataSetFile } from './data-set-tables.ts';
 export { dataSetsOf } from './data-set-reference.ts';
 export { keptOf, keptWords, linkEdit, snapshotEdit, snapshotPlace } from './data-set-kept.ts';
 export type { KeptEdit, KeptSet } from './data-set-kept.ts';
