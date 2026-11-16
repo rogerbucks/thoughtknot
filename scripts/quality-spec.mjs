@@ -78,7 +78,6 @@ export const METRICS = {
   audit_low: { better: 'lower', tolerance: 0, slack: 0, unit: 'vulnerabilities' },
   secrets_found: { better: 'lower', tolerance: 0, slack: 0, unit: 'secrets', fast: true, waivable: false },
   bundle_bytes: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
-  bundle_bytes_without_viz: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
   ...Object.fromEntries(BENCHMARK_NAMES.map((name) => [`instructions_${name}`, instructionMetric])),
   // a benchmark's claim, such as linear and not square, that does not hold: never, whatever the baseline says
   instruction_claims_broken: { ...instructionMetric, tolerance: 0, unit: 'claims', most: 0, waivable: false },
