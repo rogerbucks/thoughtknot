@@ -25,6 +25,7 @@ import { tableConnector } from './csv-connector.ts';
 import { textConnector } from './text-connector.ts';
 import { databaseConnector } from './database-connector.ts';
 import { documentConnector } from './document-connector.ts';
+import { graphmlConnector } from './graphml-connector.ts';
 import { workbookConnector } from './workbook-connector.ts';
 import { word } from './words.ts';
 
@@ -115,6 +116,7 @@ export const CONNECTORS: readonly Connector[] = [
   documentConnector,
   databaseConnector,
   workbookConnector,
+  graphmlConnector,
 ];
 
 /** The connector that reads this kind of place. */

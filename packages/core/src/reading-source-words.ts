@@ -118,6 +118,21 @@ export const READING_SOURCE_WORDS = {
   'reading.source.cited-cell': '{place} row {row}, column {column} ({version})',
   'reading.source.cited-key': '{place} row {row}, key {key} ({version})',
   'reading.source.table': 'The table {target}',
+  // a GraphML file read back (graphml-read.ts, graphml-connector.ts)
+  'reading.graphml.too-large': '{place} is too large to read, so it was not read: split it, or keep fewer nodes.',
+  'reading.graphml.too-many': '{place} holds more than {most} nodes and edges, so it was not read: split it.',
+  'reading.graphml.damaged':
+    '{place} is damaged or holds a document type, so it was not read: save it again as GraphML.',
+  'reading.graphml.not-graphml': '{place} is not a GraphML file: it has no graphml element, so it was not read.',
+  'reading.graphml.left-out': 'Left out of {place}, which a graph here cannot keep: {what}.',
+  'reading.graphml.lost-notes': 'notes written as comments',
+  'reading.graphml.lost-faded': 'which things a view faded',
+  'reading.graphml.lost-drawing': 'drawing data, such as positions, sizes and colours',
+  'reading.graphml.lost-undirected': 'that some links go both ways',
+  'reading.graphml.lost-nested': 'graphs inside nodes',
+  'reading.graphml.lost-graphs': 'every graph after the first',
+  'reading.graphml.lost-hyper': 'hyperedges and ports',
+  'reading.graphml.lost-edges': 'edges to nodes the file does not hold',
   'reading.source.text': 'The text file {target}',
   'reading.source.database': 'The database table {target}',
   // a table read from a CSV file (csv-read.ts, csv-connector.ts)
@@ -179,6 +194,7 @@ export const READING_SOURCE_WORDS = {
   'reading.xlsx.empty': 'The sheet {name} holds nothing to read: its first row is the header.',
   'reading.source.workbook': 'The workbook sheet {target}',
   'reading.source.document': 'The document {target}',
+  'reading.source.graphml': 'The GraphML file {target}',
   // a Word document read as blocks of text in plain JavaScript (docx-read.ts)
   'reading.docx.not-docx': 'This file is not a Word document (.docx), so it was not read.',
   'reading.docx.old-or-encrypted':
