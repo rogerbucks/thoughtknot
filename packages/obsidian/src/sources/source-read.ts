@@ -202,7 +202,8 @@ export async function readFromVault(
     source.kind === 'text' ||
     source.kind === 'document' ||
     source.kind === 'database' ||
-    source.kind === 'workbook'
+    source.kind === 'workbook' ||
+    source.kind === 'graphml'
   )
     return readPlaces(plugin, source, from);
   const held = await lookUp(plugin, source, from);
