@@ -116,6 +116,7 @@ export const READING_SOURCE_WORDS = {
   'reading.source.cited': '{place} line {line} ({version})',
   'reading.source.cited-row': '{place} row {row} ({version})',
   'reading.source.cited-cell': '{place} row {row}, column {column} ({version})',
+  'reading.source.cited-key': '{place} row {row}, key {key} ({version})',
   'reading.source.table': 'The table {target}',
   // a GraphML file read back (graphml-read.ts, graphml-connector.ts)
   'reading.graphml.too-large': '{place} is too large to read, so it was not read: split it, or keep fewer nodes.',
@@ -161,6 +162,10 @@ export const READING_SOURCE_WORDS = {
     other: '{count} more columns not shown',
   },
   'reading.table.node-no-rows': 'No rows yet',
+  'reading.table.node-lines': { one: '{count} line', other: '{count} lines' },
+  'reading.table.node-more-lines': { one: '{count} more line not shown', other: '{count} more lines not shown' },
+  'reading.table.node-no-lines': 'No text in it',
+  'reading.table.node-page': 'First lines',
   // a plain text file, read only as a proposal (text-connector.ts)
   'reading.text.proposal-only':
     '{place} is plain text: it becomes a graph only as a proposal, each thing citing its line, for a person to accept.',

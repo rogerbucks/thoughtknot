@@ -4,7 +4,7 @@
 //   written.
 // - The table is read as a CSV file's rows are, by the mapping written beside the database, `shop.orders.mapping.gql`.
 //   With none, it gives no statements and proposes one for a person to apply. Nothing is guessed at a read.
-// - Each statement cites the place, the table's hash and the row. A blob has no text a note can hold, so it is left out.
+// - Each statement cites the place, the table's hash, the row and its key in the file, the rowid. A blob has no text a note can hold, so it is left out.
 import { sha256 } from './ai-digest.ts';
 import type { Connector } from './connectors.ts';
 import { tableConnected } from './csv-connector.ts';
@@ -23,6 +23,7 @@ export function asCsvTable(t: SqliteTable): CsvTable {
     header: t.columns,
     rows: t.rows.map((r) => r.map(cellOf)),
     lines: t.rows.map((_, i) => i + 1),
+    ...(t.rowids ? { keys: t.rowids.map(String) } : {}),
     delimiter: ',',
     quotedEmpty: new Set(),
     uneven: [],
