@@ -306,6 +306,10 @@ export const VALUES_LATE = [
   'gqlConnector',
   'joinPlaces',
   'placeKey',
+  // what a file breaks into, kept by its hash (ES§63, connector_derived_kept_apart), 16 Nov 2026
+  'CONNECT_CACHE_MOST',
+  'cacheKey',
+  'connectCache',
   // layouts a plug-in adds (§68, layout_plugins), 28 Oct 2026
   'layoutContract',
   'offerLayouts',

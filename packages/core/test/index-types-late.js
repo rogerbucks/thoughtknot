@@ -47,6 +47,7 @@ export const TYPES_LATE = [
   'RuleTest',
   'RuleRemove',
   'Citation',
+  'ConnectCache',
   'Connected',
   'Connector',
   'HitAreas',
