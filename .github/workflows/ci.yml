@@ -111,7 +111,8 @@ jobs:
         run: |
           if [ "$PLAN" != success ]; then echo "::warning::The CI plan failed, so the whole suite ran. Fix scripts/ci-plan.mjs."; fi
           if [ "$TIER" = subset ]; then echo "::notice::A partial run: only what the change reaches. The label ci:full runs everything; main always does."; fi
-          if [ "$EVENT" = push ]; then echo "::notice::A push to main runs the suite once, in the coverage shards: the coverage check is its result."; test "$RESULT" = skipped; else test "$RESULT" = success; fi
+          if [ "$EVENT" = push ]; then echo "::notice::A push to main runs the suite once, in the coverage shards: the coverage check is its result."; test "$RESULT" = skipped; exit; fi
+          test "$RESULT" = success
 
   # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
   lint:
