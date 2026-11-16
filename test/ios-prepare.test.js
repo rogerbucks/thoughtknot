@@ -1,3 +1,4 @@
+// Requirement: ios_app (spec §40).
 // The iPhone build's preparation (scripts/ios-prepare.mjs): App Store icons with no alpha channel, and a build
 // number that only grows.
 import { test } from 'node:test';
