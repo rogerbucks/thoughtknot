@@ -42,7 +42,8 @@ export function tableStatements(table: CsvTable, mapping: TableMapping, version:
   const out: Statement[] = [];
   table.rows.forEach((cells, r) => {
     const line = table.lines[r] ?? 0;
-    const cite = { place, version, line, row: r + 1 };
+    const own = table.keys?.[r];
+    const cite = { place, version, line, row: r + 1, ...(own === undefined ? {} : { key: own }) };
     const keyed = key ? at(cells, key.column) : '';
     let id = keyed ? idOf(kind, keyed) : `${kind.toLowerCase()}_row_${r + 1}`;
     if (seen.has(id)) id = `${id}_row_${r + 1}`;

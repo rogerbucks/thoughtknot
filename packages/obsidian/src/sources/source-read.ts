@@ -10,7 +10,7 @@ import type { TAbstractFile } from 'obsidian';
 import type { BlockContext } from '../block-context';
 import type { Graph } from '@thoughtknot/graph-spec';
 import {
-  connect,
+  connectCache,
   databasePlace,
   DOCUMENT_LIMITS,
   dataSetTables,
@@ -224,6 +224,9 @@ export async function readFromVault(
   return readSource(source, held, await plugin.sharedSchemas());
 }
 
+/** What each file of a FROM list broke into, kept by the file's hash, so an unchanged file is not read again (ES§63). */
+const derived = connectCache();
+
 /**
  * The places of a FROM list, each read as one source is and joined as the mesh joins documents (connector_many_sources).
  * A place that cannot be read is named in the join's `missing`, and the others are drawn (connector_source_missing).
@@ -236,9 +239,9 @@ async function readPlaces(
   const reads = await Promise.all(
     (source.places ?? [source]).map(async (place) => {
       const held = await lookUp(plugin, place, from);
-      const read = connect(place, held);
+      const read = derived.connect(place, held);
       if ('refused' in read || !read.read.texts.some(namesSharedSchema)) return read;
-      return connect(place, held, await plugin.sharedSchemas());
+      return derived.connect(place, held, await plugin.sharedSchemas());
     }),
   );
   return joinPlaces(source.graph, reads);

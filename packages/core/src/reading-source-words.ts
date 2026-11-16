@@ -116,6 +116,7 @@ export const READING_SOURCE_WORDS = {
   'reading.source.cited': '{place} line {line} ({version})',
   'reading.source.cited-row': '{place} row {row} ({version})',
   'reading.source.cited-cell': '{place} row {row}, column {column} ({version})',
+  'reading.source.cited-key': '{place} row {row}, key {key} ({version})',
   'reading.source.table': 'The table {target}',
   'reading.source.text': 'The text file {target}',
   'reading.source.database': 'The database table {target}',
