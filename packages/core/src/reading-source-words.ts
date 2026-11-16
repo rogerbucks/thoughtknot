@@ -146,6 +146,10 @@ export const READING_SOURCE_WORDS = {
     other: '{count} more columns not shown',
   },
   'reading.table.node-no-rows': 'No rows yet',
+  'reading.table.node-lines': { one: '{count} line', other: '{count} lines' },
+  'reading.table.node-more-lines': { one: '{count} more line not shown', other: '{count} more lines not shown' },
+  'reading.table.node-no-lines': 'No text in it',
+  'reading.table.node-page': 'First lines',
   // a plain text file, read only as a proposal (text-connector.ts)
   'reading.text.proposal-only':
     '{place} is plain text: it becomes a graph only as a proposal, each thing citing its line, for a person to accept.',

@@ -392,6 +392,8 @@ export const VALUES_LATE = [
   'proposeMapping',
   'readCsv',
   'dataSetTables',
+  'nodeTableOf',
+  'readAsBytes',
   'dataSetsOf',
   'keptOf',
   'keptWords',
