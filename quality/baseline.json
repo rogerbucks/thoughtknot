@@ -15,7 +15,6 @@
     "audit_low": 0,
     "secrets_found": 0,
     "bundle_bytes": 1958060,
-    "bundle_bytes_without_viz": 357577,
     "suite_seconds": 24.3,
     "flaky_tests": 0,
     "quiet_run_bytes": 14,

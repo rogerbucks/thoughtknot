@@ -47,7 +47,7 @@ describe('the metrics the requirement names', () => {
     'file sizes': ['max_source_lines', 'max_test_lines'],
     'a dependency vulnerability scan': ['audit_critical', 'audit_high', 'audit_moderate', 'audit_low'],
     'a secrets scan': ['secrets_found'],
-    'bundle size': ['bundle_bytes', 'bundle_bytes_without_viz'],
+    'bundle size': ['bundle_bytes'],
     'the work a fixed set of benchmarks takes, counted in CPU instructions': Object.keys(METRICS).filter(
       (n) => METRICS[n].instructions,
     ),
@@ -92,10 +92,17 @@ describe('the metrics the requirement names', () => {
     assert.ok(b.metrics.coverage_percent > 0 && b.metrics.coverage_percent <= 100);
     assert.equal(b.metrics.secrets_found, 0);
     assert.equal(b.metrics.flaky_tests, 0);
-    assert.ok(b.metrics.bundle_bytes_without_viz <= b.metrics.bundle_bytes);
   });
 
-  test('the report says what is large in the bundle, besides the engine', () => {
+  // Graphviz left the plugin on 12 Nov 2026 (layout_own_engine). The metric that took its engine off the bundle size
+  // went with it. A figure equal to bundle_bytes measures nothing twice, and its recorded reasons were the same reasons.
+  test('no metric is kept for an engine that is gone', () => {
+    assert.ok(!('bundle_bytes_without_viz' in METRICS));
+    assert.ok(!('bundle_bytes_without_viz' in baseline().metrics));
+    assert.ok(readJSON('quality/accepted.json').accepted.every((a) => a.metric !== 'bundle_bytes_without_viz'));
+  });
+
+  test('the report says what is large in the bundle', () => {
     const { bundle } = baseline().details;
     assert.ok(Array.isArray(bundle) && bundle.length >= 3);
     for (const b of bundle) assert.ok(typeof b.name === 'string' && b.bytes > 0, JSON.stringify(b));
