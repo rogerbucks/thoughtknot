@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-metrics.test.js",
+  "test": "the metrics the requirement names > the report says what is large in the bundle",
+  "seen_failing_first": false,
+  "evidence": "Only the title changed, to drop 'besides the engine' now that Graphviz is gone; the assertions are the same ones that passed before."
+}
