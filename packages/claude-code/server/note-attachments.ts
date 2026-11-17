@@ -1,4 +1,4 @@
-// Pictures kept beside an open note, and sent back (editor spec ES§45, board_images_kept; spec §26, cc_pictures_kept).
+// Pictures kept beside an open note, and sent back (editor spec ES§45, board_images_kept; spec ES§26, cc_pictures_kept).
 // The page hands over one picture; the server keeps it in the `attachments` folder beside the note, and sends it back
 // to be shown. Nothing is read from the page but the picture's bytes and a name to start its own from.
 // - Only a PNG, JPEG, GIF or WebP, by its first bytes, whatever the name says. Never SVG. At most 8 MB.

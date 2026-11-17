@@ -1,4 +1,4 @@
-// The page's calls into the note's folder in VS Code (spec §41, vscode_plugin).
+// The page's calls into the note's folder in VS Code (spec ES§41, vscode_plugin).
 // The picture the page asks for back is among them (editor spec ES§45, board_images_kept).
 // Each call is checked before the disk is asked. The disk here is in memory.
 import { test } from 'node:test';

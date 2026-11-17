@@ -1,4 +1,4 @@
-// A board's pictures in the app's own calls (editor spec ES§45, board_images_kept; spec §41). The page's picture calls
+// A board's pictures in the app's own calls (editor spec ES§45, board_images_kept; spec ES§41). The page's picture calls
 // (board-attachments.ts) run against the app's answers, with a folder held in memory:
 // - a picture is kept as a new file in the folder `attachments` beside the note, the kind read from its first bytes;
 // - it is shown from the bytes read back, only for a name a picture is kept under;

@@ -1,4 +1,4 @@
-// Pictures kept beside an open note and sent back (editor spec ES§45, board_images_kept; spec §26).
+// Pictures kept beside an open note and sent back (editor spec ES§45, board_images_kept; spec ES§26).
 // Each case is tried on the real store and a running server. The escapes are laid out in a real vault on disk.
 // - Only a PNG, JPEG, GIF or WebP by its first bytes, never SVG, at most 8 MB.
 // - Only into the folder beside the note, never through a link and never outside the vault.
