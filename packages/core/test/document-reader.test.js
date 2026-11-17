@@ -7,6 +7,7 @@ import { DocumentReader, serveDocuments } from '../src/document-reader.ts';
 import { sourceOf } from '../src/sources.ts';
 import { document } from './docx-fixture.js';
 import { pdf } from './pdf-fixture.js';
+import { deck, sp } from './pptx-fixture.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
 
@@ -48,6 +49,20 @@ describe('format_untrusted_files: a document is read in a worker', () => {
     assert.deepEqual(await reader.read(pdf([['Alpha']]), 'b.pdf'), { text: '[page 1]\nAlpha' });
     assert.match((await reader.read(pdf([['x']]), 'c.docx')).refused, /not a Word document/);
     assert.equal(made.length, 1, 'one worker is reused');
+  });
+
+  test('the worker gives the slides of a PowerPoint deck, in the worker and on the page, and refuses a wrong file', async () => {
+    const bytes = deck([{ shapes: [sp({ ph: { type: 'title' }, paras: ['Plan'] })] }]);
+    const { worker, made } = served();
+    for (const reader of [new DocumentReader({ worker, clock: CLOCK }), new DocumentReader({ clock: CLOCK })]) {
+      const got = await reader.readDeck(bytes, 'a.pptx', '1:1');
+      assert.deepEqual(
+        got.deck.slides.map((s) => s.title),
+        ['Plan'],
+      );
+      assert.match((await reader.readDeck(document(['x']), 'b.pptx')).refused, /not a PowerPoint/);
+    }
+    assert.equal(made.length, 1, 'the one worker reads Word, PDF and decks');
   });
 
   test('a read that overruns the limit stops the worker, refuses the file in words, and the next read starts afresh', async () => {

@@ -3,7 +3,7 @@
 // long stops the worker and the file is refused in words. Where no worker can run, the core reads on the page.
 import type { Plugin } from 'obsidian';
 import { DocumentReader } from '@thoughtknot/core';
-import type { DocumentPort, DocumentRead } from '@thoughtknot/core';
+import type { DeckRead, DocumentPort, DocumentRead } from '@thoughtknot/core';
 import { documentWorker } from 'thoughtknot:document-worker';
 
 /** Whether this host can start a worker from a Blob: every Obsidian can, desktop and phone; a test may not. */
@@ -30,6 +30,11 @@ export class DocumentReads {
   /** The text of the document in `bytes`, or why it was refused. `key` is the file's size and time of change. */
   read(bytes: Uint8Array, place: string, key?: string): Promise<DocumentRead> {
     return this.reader.read(bytes, place, key);
+  }
+
+  /** The slides of the PowerPoint deck in `bytes`, or why it was refused. `key` is the file's size and time of change. */
+  readDeck(bytes: Uint8Array, place: string, key?: string): Promise<DeckRead> {
+    return this.reader.readDeck(bytes, place, key);
   }
 
   /** Stops the worker and lets its source go. */

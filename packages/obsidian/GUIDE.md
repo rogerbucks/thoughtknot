@@ -359,6 +359,9 @@ A .base file picks notes with its filters. The Graph view draws them as a graph,
   - Nothing is read until Import is pressed. Then the file's bytes are read from the vault, on the device.
   - The rows are written at the end of the note as a graph block (`importedBlock`), through `vault.process`. It is text
     that keeps no live link. A failure is said in a notice, the note left as it was.
+  - A PowerPoint deck (`import-deck.ts`) is read once when picked, in the document worker. Adding writes one board, a
+    frame to each slide. Its pictures are kept among the note's attachments under free names, by the vault's own writer.
+    The deck is never written. What was left out is said in a notice.
   - The file's tables are read by the core's `sqlite-read.ts`, in plain JavaScript: no SQL engine, no WebAssembly
     (Roger, 9 Nov 2026). It is read-only, every page is checked, and a file over the limits is refused whole.
 - `../host-commands.ts` — every command of the plugin is a command of the built-in plug-in `thoughtknot.obsidian`.

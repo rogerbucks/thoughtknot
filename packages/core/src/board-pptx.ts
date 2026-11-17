@@ -171,3 +171,19 @@ export function pptxBlock(made: PptxBoard, kept: ReadonlyMap<string, string>): {
     : made.notes;
   return { block: `\`\`\`gql\n${writeBoard({ ...made.board, items })}\n\`\`\``, notes };
 }
+
+/** Keeps one picture beside the note and says the path it was kept at; null when it could not be kept. */
+export type KeepPicture = (picture: KeptPicture) => Promise<string | null>;
+
+/**
+ * The block for the note, after each picture of the deck is kept by `keep`, one at a time. A picture that could not be
+ * kept is left out of the block, and the sentences say how many.
+ */
+export async function deckBlock(made: PptxBoard, keep: KeepPicture): Promise<{ block: string; notes: string[] }> {
+  const kept = new Map<string, string>();
+  for (const picture of made.pictures) {
+    const path = await keep(picture);
+    if (path) kept.set(picture.name, path);
+  }
+  return pptxBlock(made, kept);
+}

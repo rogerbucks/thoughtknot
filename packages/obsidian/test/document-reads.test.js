@@ -9,6 +9,7 @@ import { DocumentReader } from '../../core/src/document-reader.ts';
 import { documentWorker } from '../esbuild.config.mjs';
 import { document } from '../../core/test/docx-fixture.js';
 import { pdf } from '../../core/test/pdf-fixture.js';
+import { deck, sp } from '../../core/test/pptx-fixture.js';
 
 /** The bundle as main.js holds it: the text of the function `documentWorker`. */
 async function bundleText() {
@@ -54,6 +55,14 @@ test('the bundled worker reads a Word file and a PDF, and refuses a wrong file i
     assert.deepEqual(await reader.read(document(['Grow steadily.']), 'a.docx'), { text: 'Grow steadily.' });
     assert.deepEqual(await reader.read(pdf([['Alpha']]), 'b.pdf'), { text: '[page 1]\nAlpha' });
     assert.match((await reader.read(pdf([['x']]), 'c.docx')).refused, /not a Word document/);
+    const slides = await reader.readDeck(
+      deck([{ shapes: [sp({ ph: { type: 'title' }, paras: ['Plan'] })] }]),
+      'd.pptx',
+    );
+    assert.deepEqual(
+      slides.deck.slides.map((s) => s.title),
+      ['Plan'],
+    );
   } finally {
     reader.close();
   }

@@ -14,8 +14,8 @@ export type { Here, Together } from './board-together.ts';
 export type { Peer } from './board-presence.ts';
 export { boardFileBlock, boardFilesOf, boardFormatOf } from './board-exchange.ts';
 export type { BoardBlock, BoardFile, BoardFormat } from './board-exchange.ts';
-export { deckBoard, isPresentationPlace, pptxBlock, pptxBoard } from './board-pptx.ts';
-export type { KeptPicture, PptxBoard } from './board-pptx.ts';
+export { deckBlock, deckBoard, isPresentationPlace, pptxBlock, pptxBoard } from './board-pptx.ts';
+export type { KeepPicture, KeptPicture, PptxBoard } from './board-pptx.ts';
 export { pptxSlides } from './pptx-read.ts';
 export type { PptxRead, PptxRefusal } from './pptx-read.ts';
 export {
