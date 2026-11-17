@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pptx-types.test.js",
+  "test": "pptx_types > a limit passed carries why and the most that was allowed, for the sentence",
+  "seen_failing_first": false,
+  "evidence": "The module was split out of the reader and its tests already covered it; this test names it and asserts its own answers"
+}

@@ -514,4 +514,9 @@ export const TYPES_LATE = [
   'PictureDescription',
   'PictureEnding',
   'PictureKind',
+  // PowerPoint decks read as boards (board_exchange), 17 Nov 2026
+  'KeptPicture',
+  'PptxBoard',
+  'PptxRead',
+  'PptxRefusal',
 ];
