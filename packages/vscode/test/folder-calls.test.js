@@ -16,8 +16,22 @@ function disk(files = {}, types = {}) {
     asked,
     readText: async () => '',
     writeText: async () => {},
-    writeBytes: async () => {},
-    delete: async () => {},
+    created: [],
+    sizes: {},
+    taken: new Set(),
+    createBytes: async function (path, bytes) {
+      // a file made by another program just before this one: it is there from now on
+      if (this.taken.delete(path)) files[path] = PNG;
+      if (path in files) throw Object.assign(new Error('there'), { code: 'EEXIST' });
+      this.created.push(path);
+      files[path] = bytes;
+    },
+    sizeOf: async function (path) {
+      return this.sizes[path] ?? files[path]?.length ?? 0;
+    },
+    delete: async function (path) {
+      delete files[path];
+    },
     readDirectory: async () => [],
     createDirectory: async () => {},
     typeOf: async (path) => types[path] ?? (path in files ? 1 : null),
@@ -53,4 +67,36 @@ test('a file larger than a picture may be is not read as one, and a file not the
   assert.equal(refused.ok, false);
   assert.match(refused.error, /larger than a picture/);
   assert.deepEqual(await ask(d, 'none.png'), { kind: 'reply', id: 1, ok: false, error: 'ENOENT' });
+});
+
+// proves: board_images_kept
+test('a picture larger than a picture may be is refused by its size, before any of it is read', async () => {
+  const d = disk({ 'huge.png': PNG });
+  d.sizes['huge.png'] = PICTURE_MOST_BYTES + 1;
+  const refused = await ask(d, 'huge.png');
+  assert.equal(refused.ok, false);
+  assert.deepEqual(d.asked, []);
+});
+
+// proves: board_images_kept
+test('a file is created, not written: a name taken in between takes the next, and those made are taken away', async () => {
+  const d = disk();
+  const files = [
+    ['a.png', [...PNG]],
+    ['b.png', [...PNG]],
+  ];
+  d.taken.add('Plans/b.png');
+  const reply = await folderCalls(d)({ kind: 'call', id: 1, call: 'write_new', args: { into: 'Plans', files } });
+  assert.equal(reply.ok, true, reply.error);
+  assert.deepEqual(reply.value, ['a.png', 'b-2.png']);
+  // a.png was made, taken away when b.png was found taken, and made again with b-2.png
+  assert.deepEqual(d.created, ['Plans/a.png', 'Plans/a.png', 'Plans/b-2.png']);
+});
+
+// proves: board_images_kept
+test('a file that is a link, even one with nothing behind it, is never taken as a free name', async () => {
+  const d = disk({}, { 'Plans/a.png': 64 });
+  const files = [['a.png', [...PNG]]];
+  const reply = await folderCalls(d)({ kind: 'call', id: 1, call: 'write_new', args: { into: 'Plans', files } });
+  assert.deepEqual(reply.value, ['a-2.png']);
 });

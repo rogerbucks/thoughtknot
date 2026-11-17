@@ -36,6 +36,9 @@ export function pictureKind(bytes: Uint8Array): PictureKind | null {
   return null;
 }
 
+/** The names Windows keeps for its devices. */
+const DEVICE = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i;
+
 /** The most characters of a kept name's stem. */
 const STEM_MOST = 80;
 
@@ -53,7 +56,9 @@ export function pictureStem(given: string): string {
   // dashes made of anything else run together and sit inside the name, not at its ends
   const parts = stem.split('-').filter((p) => p !== '');
   const joined = parts.join('-').slice(0, STEM_MOST);
-  return joined === '' ? 'picture' : joined;
+  if (joined === '') return 'picture';
+  // Windows reads CON, NUL and the like as devices, whatever their ending: such a stem is given a word before it
+  return DEVICE.test(joined) ? `picture-${joined}` : joined;
 }
 
 /** The name a picture is kept under on its `n`th try: `plan.png`, then `plan-2.png`. */

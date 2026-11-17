@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PICTURE_MOST_BYTES } from '@thoughtknot/core';
+import { keepPicture } from '../server/note-attachments.ts';
 import { ask } from './editor-threats-support.js';
 import { bearer, served, tempVault, writing } from './editor-store-support.js';
 
@@ -142,6 +143,27 @@ describe('board_images_kept: a picture never leaves the vault, and never goes th
     const o = await store.open('Linked/anything.md');
     assert.equal(o.ok, false);
     assert.deepEqual(readdirSync(v.outside), ['secret.md']);
+  });
+});
+
+describe('board_images_kept: a note path that climbs out makes no folder', () => {
+  // proves: board_images_kept
+  test('a note path with .. in it is refused before any folder is made, above the vault or inside it', async () => {
+    const v = tempVault();
+    const above = join(v.top, 'above');
+    mkdirSync(above);
+    const r = await keepPicture(v.vault, '../above/note.md', 'a.png', PNG);
+    assert.equal(r.ok, false);
+    assert.deepEqual(readdirSync(above), []);
+    assert.equal((await keepPicture(v.vault, 'Notes/../note.md', 'a.png', PNG)).ok, false);
+    assert.equal(existsSync(join(v.vault, 'attachments')), false);
+  });
+
+  // proves: board_images_kept
+  test('a name that Windows reads as a device is kept under a word before it', async () => {
+    const { keep } = await opened();
+    assert.equal(JSON.parse((await keep('CON.png', PNG)).text).src, 'Notes/attachments/picture-CON.png');
+    assert.equal(JSON.parse((await keep('nul', PNG)).text).src, 'Notes/attachments/picture-nul.png');
   });
 });
 

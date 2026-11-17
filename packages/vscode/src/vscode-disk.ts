@@ -40,7 +40,22 @@ export function vscodeDisk(root: vscode.Uri): FolderDisk {
       if (!(await vscode.workspace.applyEdit(edit)) || !(await open.save())) throw new Error(word('server.no-answer'));
     },
     readBytes: (path) => call(() => fs.readFile(at(path))),
-    writeBytes: (path, bytes) => call(() => fs.writeFile(at(path), bytes)),
+    // made as a temporary file, then moved to its name without overwriting: a name taken in between is an error
+    createBytes: async (path, bytes) => {
+      const temp = at(
+        `${path}.${[...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16)).join('')}.tmp`,
+      );
+      await call(() => fs.writeFile(temp, bytes));
+      try {
+        await fs.rename(temp, at(path), { overwrite: false });
+      } catch (e) {
+        await Promise.resolve(fs.delete(temp)).catch(() => undefined);
+        throw e instanceof vscode.FileSystemError && e.code === 'FileExists'
+          ? Object.assign(new Error(e.message), { code: 'EEXIST' })
+          : asNotThere(e);
+      }
+    },
+    sizeOf: async (path) => (await call(() => fs.stat(at(path)))).size,
     delete: (path) => call(() => fs.delete(at(path))),
     readDirectory: (path) => call(() => fs.readDirectory(at(path))),
     createDirectory: (path) => call(() => fs.createDirectory(at(path))),

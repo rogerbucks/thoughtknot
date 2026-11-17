@@ -48,7 +48,7 @@ export const SERVER_SOURCE_WORDS = {
   'server.drafts-in-vault': 'The drafts folder must be outside the vault, in the mod’s own data folder.',
   'server.export.not-json': 'The request is not JSON.',
   'server.picture.needs-both': 'A picture is sent as its name and its bytes in base64, both.',
-  'server.picture.not-base64': 'The picture is not plain base64.',
+  'server.picture.not-encoded': 'The picture is not plain base64.',
   'server.picture.empty': 'The picture holds no bytes.',
   'server.picture.too-large': 'A picture may hold at most {most} bytes.',
   'server.picture.not-a-picture': 'Only a PNG, JPEG, GIF or WebP picture is kept, and an SVG is not.',

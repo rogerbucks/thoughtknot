@@ -67,3 +67,11 @@ export function pageAttachments(
     },
   };
 }
+
+/** The pictures of the note `id` as the page `win` keeps and shows them. */
+export const windowAttachments = (
+  win: Window & typeof globalThis,
+  token: string,
+  id: string,
+  notePath: string | null,
+): Pictures => pageAttachments(token, win.fetch.bind(win), (blob) => win.URL.createObjectURL(blob), id, notePath);

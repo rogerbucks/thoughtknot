@@ -14,7 +14,10 @@ export interface FolderDisk {
   readText(path: string): Promise<string>;
   writeText(path: string, text: string): Promise<void>;
   readBytes(path: string): Promise<Uint8Array>;
-  writeBytes(path: string, bytes: Uint8Array): Promise<void>;
+  /** Makes a new file, never writing over one: a file there already, a link among them, gives an error `EEXIST`. */
+  createBytes(path: string, bytes: Uint8Array): Promise<void>;
+  /** A file's size in bytes, asked of the disk before any of it is read. */
+  sizeOf(path: string): Promise<number>;
   delete(path: string): Promise<void>;
   /** Each entry of a folder, its name and its file type bits. */
   readDirectory(path: string): Promise<[string, number][]>;
@@ -44,6 +47,15 @@ export const isFolderCall = (message: unknown): message is FolderCall =>
   Number.isInteger((message as FolderCall).id) &&
   typeof (message as FolderCall).call === 'string';
 
+/** How many times the names of a file are planned again, when each time one was taken before it was made. */
+const MOST_ATTEMPTS = 20;
+
+/** Whether `e` says a file was there already, as VS Code (`FileExists`) or the system (`EEXIST`) says it. */
+const isTaken = (e: unknown): boolean => {
+  const code = (e as { code?: unknown } | null)?.code;
+  return code === 'EEXIST' || code === 'FileExists';
+};
+
 /** `name` with `n` before its ending, as the desktop app numbers a name taken: `a.svg`, `a-2.svg`, `a-3.svg`. */
 const numbered = (name: string, n: number) =>
   n === 1 ? name : /\.[^.]+$/.test(name) ? name.replace(/(\.[^.]+)$/, `-${n}$1`) : `${name}-${n}`;
@@ -66,30 +78,40 @@ export function folderCalls(disk: FolderDisk) {
   const writeNew = async (into: unknown, files: unknown): Promise<string[]> => {
     const folder = await checked(into, true);
     if (!Array.isArray(files) || files.length === 0) throw new Error('an export has files');
-    const planned: [string, Uint8Array][] = [];
+    const given: [string, Uint8Array][] = [];
     for (const file of files as unknown[]) {
       const [name, bytes] = (Array.isArray(file) ? file : []) as unknown[];
       if (typeof name !== 'string' || name.includes('/') || placeProblem(name))
         throw new Error('a file needs a plain name');
       if (!Array.isArray(bytes) || bytes.some((b) => !Number.isInteger(b) || b < 0 || b > 255))
         throw new Error('a file is bytes');
-      let n = 1;
-      const at = (k: number) => (folder ? `${folder}/${numbered(name, k)}` : numbered(name, k));
-      while ((await disk.typeOf(at(n))) !== null || planned.some(([p]) => p === at(n))) n++;
-      planned.push([at(n), Uint8Array.from(bytes as number[])]);
+      given.push([name, Uint8Array.from(bytes as number[])]);
     }
     if (folder) await disk.createDirectory(folder);
-    const written: string[] = [];
-    try {
-      for (const [path, bytes] of planned) {
-        await disk.writeBytes(path, bytes);
-        written.push(path);
+    // Each file is created, never written over. A name taken in the meantime shows in the create.
+    // Then the names are planned again, without those already made.
+    for (let attempt = 0; attempt < MOST_ATTEMPTS; attempt++) {
+      const planned: [string, Uint8Array][] = [];
+      for (const [name, bytes] of given) {
+        let n = 1;
+        const at = (k: number) => (folder ? `${folder}/${numbered(name, k)}` : numbered(name, k));
+        while ((await disk.typeOf(at(n))) !== null || planned.some(([p]) => p === at(n))) n++;
+        planned.push([at(n), bytes]);
       }
-    } catch (e) {
-      for (const path of written) await disk.delete(path).catch(() => undefined);
-      throw e;
+      const written: string[] = [];
+      try {
+        for (const [path, bytes] of planned) {
+          await disk.createBytes(path, bytes);
+          written.push(path);
+        }
+      } catch (e) {
+        for (const path of written) await disk.delete(path).catch(() => undefined);
+        if (!isTaken(e)) throw e;
+        continue;
+      }
+      return planned.map(([path]) => path.slice(path.lastIndexOf('/') + 1));
     }
-    return planned.map(([path]) => path.slice(path.lastIndexOf('/') + 1));
+    throw new Error('every name for this file is taken');
   };
 
   const commands: Record<string, (args: Record<string, unknown>) => Promise<unknown>> = {
@@ -105,7 +127,10 @@ export function folderCalls(disk: FolderDisk) {
     write_new: async ({ into, files }) => writeNew(into, files),
     // a picture's bytes as base64, which a message carries as text; none larger than a picture may be
     read_bytes: async ({ path }) => {
-      const bytes = await disk.readBytes(await checked(path));
+      const at = await checked(path);
+      if ((await disk.sizeOf(at)) > PICTURE_MOST_BYTES)
+        throw new Error('a file larger than a picture is not read as one');
+      const bytes = await disk.readBytes(at);
       if (bytes.length > PICTURE_MOST_BYTES) throw new Error('a file larger than a picture is not read as one');
       let binary = '';
       for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));

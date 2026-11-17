@@ -178,7 +178,13 @@ export function fakeVscode({
           Promise.all((await fs.readdir(uri.fsPath)).map(async (name) => [name, await typeOf(join(uri.fsPath, name))])),
         ),
         createDirectory: guarded((uri) => fs.mkdir(uri.fsPath, { recursive: true })),
-        stat: guarded(async (uri) => ({ type: await typeOf(uri.fsPath) })),
+        stat: guarded(async (uri) => ({ type: await typeOf(uri.fsPath), size: (await fs.stat(uri.fsPath)).size })),
+        rename: guarded(async (from, to, options) => {
+          if (!options?.overwrite && (await typeOf(to.fsPath).catch(() => null))) {
+            throw new FileSystemError('exists', 'FileExists');
+          }
+          await fs.rename(from.fsPath, to.fsPath);
+        }),
       },
     },
   };

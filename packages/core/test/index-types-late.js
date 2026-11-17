@@ -508,4 +508,6 @@ export const TYPES_LATE = [
   'DescribePlan',
   'ImageMeta',
   'PictureDescription',
+  'PictureEnding',
+  'PictureKind',
 ];

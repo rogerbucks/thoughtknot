@@ -48,6 +48,11 @@ describe('the name a picture is kept under', () => {
     assert.equal(pictureStem('???'), 'picture');
     assert.equal(pictureStem(''), 'picture');
     assert.ok(pictureStem('a'.repeat(500)).length <= 80);
+    // Windows reads these as devices whatever their ending, so each is given a word before it
+    for (const device of ['CON', 'nul', 'Aux', 'PRN', 'COM1', 'lpt9'])
+      assert.equal(pictureStem(`${device}.png`), `picture-${device}`);
+    assert.equal(pictureStem('CONSOLE.png'), 'CONSOLE');
+    assert.equal(pictureStem('COM10.png'), 'COM10');
     assert.equal(pictureName('plan', 'png', 1), 'plan.png');
     assert.equal(pictureName('plan', 'png', 2), 'plan-2.png');
     assert.equal(isKeptName('plan-2.png'), true);

@@ -10,15 +10,8 @@
 // - Earlier versions and GitHub reviews are not in the app yet: each is refused in words.
 import type { NoteStorage } from '@thoughtknot/core';
 import { REFUSED } from '@thoughtknot/core';
-import {
-  PICTURE_FOLDER,
-  PICTURE_MOST_BYTES,
-  isKeptName,
-  pictureKind,
-  pictureName,
-  pictureStem,
-  word,
-} from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
+import { appPicture } from './app-pictures.ts';
 
 /** How often the change stream reads the note again, in milliseconds. */
 export const FOLLOW_EVERY_MS = 2000;
@@ -106,55 +99,6 @@ export function appFetch(options: AppApiOptions, inner?: typeof fetch): typeof f
     return json(200, { written: await saveNew(folder, files) });
   };
 
-  /** The folder beside the note at `path` that its pictures are kept in. */
-  const pictureFolder = (path: string): string =>
-    path.includes('/') ? `${path.slice(0, path.lastIndexOf('/'))}/${PICTURE_FOLDER}` : PICTURE_FOLDER;
-
-  /** PUT: a picture kept beside the note, as a new file under a free name; the link is its path. GET: its bytes. */
-  const attachment = async (
-    method: string,
-    path: string,
-    name: string | undefined,
-    body: string,
-  ): Promise<Response> => {
-    const { saveNew, readPicture } = options;
-    if (!saveNew || !readPicture) return json(501, { why: word('app.pictures-not-yet') });
-    if (!(await storage.read(path))) return plain(404, word('server.note-not-open'));
-    const folder = pictureFolder(path);
-    if (method === 'GET' && name !== undefined) {
-      if (!isKeptName(name)) return json(404, { why: word('server.picture.none') });
-      const bytes = await readPicture(`${folder}/${name}`).catch(() => null);
-      const kind = bytes && bytes.length <= PICTURE_MOST_BYTES ? pictureKind(bytes) : null;
-      if (!bytes || !kind) return json(404, { why: word('server.picture.none') });
-      return new Response(bytes.slice(), { status: 200, headers: { 'content-type': kind.type } });
-    }
-    if (method !== 'PUT' || name !== undefined) return plain(405, word('server.not-this-method'));
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(body);
-    } catch {
-      return json(400, { why: word('server.export.not-json') });
-    }
-    const given = (parsed && typeof parsed === 'object' ? parsed : {}) as { name?: unknown; base64?: unknown };
-    if (typeof given.name !== 'string' || typeof given.base64 !== 'string')
-      return json(400, { why: word('server.picture.needs-both') });
-    if (given.base64.length > Math.ceil((PICTURE_MOST_BYTES * 4) / 3) + 4)
-      return json(413, { why: word('server.picture.too-large', { most: PICTURE_MOST_BYTES }) });
-    let bytes: Uint8Array;
-    try {
-      bytes = Uint8Array.from(atob(given.base64), (c) => c.charCodeAt(0));
-    } catch {
-      return json(400, { why: word('server.picture.not-base64') });
-    }
-    if (bytes.length === 0) return json(400, { why: word('server.picture.empty') });
-    if (bytes.length > PICTURE_MOST_BYTES)
-      return json(413, { why: word('server.picture.too-large', { most: PICTURE_MOST_BYTES }) });
-    const kind = pictureKind(bytes);
-    if (!kind) return json(415, { why: word('server.picture.not-a-picture') });
-    const [made] = await saveNew(folder, [{ name: pictureName(pictureStem(given.name), kind.ending, 1), bytes }]);
-    return made ? json(200, { src: `${folder}/${made}` }) : json(500, { why: word('server.no-answer') });
-  };
-
   const follow = (path: string): Response => {
     let timer: unknown = null;
     let sent: string | null = null;
@@ -182,7 +126,7 @@ export function appFetch(options: AppApiOptions, inner?: typeof fetch): typeof f
     const exported = /^export\/([^/]+)$/.exec(route)?.[1];
     if (exported) return exportOf(method, decodeURIComponent(exported), body);
     const pic = /^notes\/([^/]+)\/attachment(?:\/([^/]+))?$/.exec(route);
-    if (pic?.[1]) return attachment(method, decodeURIComponent(pic[1]), pic[2], body);
+    if (pic?.[1]) return appPicture(options, method, decodeURIComponent(pic[1]), pic[2], body);
     const m = /^notes\/([^/]+)(\/events|\/draft|\/versions|\/at\/.+|\/reviews(?:\/.*)?)?$/.exec(route);
     if (!m?.[1]) return plain(404, word('server.note-not-open'));
     const path = decodeURIComponent(m[1]);
@@ -205,10 +149,7 @@ export function appFetch(options: AppApiOptions, inner?: typeof fetch): typeof f
       init,
     );
     const { pathname } = new URL(request.url);
-    if (!pathname.startsWith('/api/')) {
-      if (!inner) return plain(404, word('server.note-not-open'));
-      return inner(input, init);
-    }
+    if (!pathname.startsWith('/api/')) return inner ? inner(input, init) : plain(404, word('server.note-not-open'));
     try {
       return await answer(request.method, pathname.slice('/api/'.length), request.headers, await request.text());
     } catch {

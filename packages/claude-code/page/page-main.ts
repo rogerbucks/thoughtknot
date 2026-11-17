@@ -21,7 +21,7 @@ import { withoutDrawnPictures } from '@thoughtknot/core';
 import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
-import { pageAttachments } from './board-attachments.ts';
+import { windowAttachments } from './board-attachments.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { boardsKept, seatsOf } from './board-section.ts';
 import { DARK, showGraph } from './graph-section.ts';
@@ -159,16 +159,9 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     // the graph as plain-language sentences, under the editor, made again with the note (cc_text_version)
     const addTextVersion = textVersionKept(graph, () => page.text);
     // the note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view)
-    const pictures = pageAttachments(
-      token,
-      win.fetch.bind(win),
-      (blob) => win.URL.createObjectURL(blob),
-      note,
-      target?.note ?? null,
-    );
+    const pictures = windowAttachments(win, token, note, target?.note ?? null);
     const addBoards = boardsKept(graph, page, note, () => win.matchMedia(DARK).matches, seatsOf(win, note), pictures);
-    // the plug-ins turned on in Obsidian, each in its own sealed worker, and the note's graph by a type one adds
-    // (plugin_outside_page)
+    // the plug-ins turned on in Obsidian, each in a sealed worker, and the graphs of a type one adds (plugin_outside_page)
     const plugins = await startPlugins(win, listed);
     let pluginPart: HTMLElement | null = null;
     const addPlugins = async () => {

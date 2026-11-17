@@ -44,7 +44,7 @@ export function pictureOf(body: string): { name: string; bytes: Uint8Array } | {
     return { status: 400, why: word('server.picture.needs-both') };
   const bytes = Buffer.from(base64, 'base64');
   // only canonical base64 decodes and encodes back to itself
-  if (bytes.toString('base64') !== base64) return { status: 400, why: word('server.picture.not-base64') };
+  if (bytes.toString('base64') !== base64) return { status: 400, why: word('server.picture.not-encoded') };
   if (bytes.length === 0) return { status: 400, why: word('server.picture.empty') };
   if (bytes.length > PICTURE_MOST_BYTES)
     return { status: 413, why: word('server.picture.too-large', { most: PICTURE_MOST_BYTES }) };
@@ -56,6 +56,8 @@ export function pictureOf(body: string): { name: string; bytes: Uint8Array } | {
  * last is made when it is not there. Null when a part is a link, is no folder, or leads outside the vault.
  */
 async function folderOf(root: string, parts: string[], make: boolean): Promise<string | null> {
+  // checked before any folder is made: a part that climbs out is never followed
+  if (parts.some((p) => p === '..' || p.includes('\0'))) return null;
   let at = root;
   for (const [i, part] of parts.entries()) {
     const next = join(at, part);
@@ -105,7 +107,8 @@ export async function keepPicture(root: string, inVault: string, given: string, 
       };
     }
     try {
-      await handle.write(bytes);
+      // a write may take less than all of the bytes: it goes on from where it stopped
+      for (let done = 0; done < bytes.length;) done += (await handle.write(bytes, done)).bytesWritten;
       await handle.sync();
     } catch (e) {
       await handle.close().catch(() => {});
@@ -119,6 +122,12 @@ export async function keepPicture(root: string, inVault: string, given: string, 
       };
     }
     await handle.close();
+    // the folder may have been swapped for a link after it was checked: a file that landed outside is taken away
+    const real = await fs.realpath(file).catch(() => null);
+    if (real !== join(folder, name)) {
+      await fs.unlink(file).catch(() => {});
+      return { ok: false, status: 403, why: word('server.picture.folder', { folder: PICTURE_FOLDER }) };
+    }
     return { ok: true, src: [...parts, name].join('/') };
   }
   return { ok: false, status: 500, why: word('server.picture.names-used') };
