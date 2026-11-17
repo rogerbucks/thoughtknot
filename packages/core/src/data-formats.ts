@@ -3,7 +3,7 @@
 // the same file, or an export (§16). Each is `built`, with the code that does it, or `planned`. The design is
 // wiki/Data-formats-design.md.
 // A format that needs a reader library says so: adding one is Roger's call (format_text_first, RUNTIME_ALLOWED).
-// Excel, Word, PDF and SQLite are read by small readers of ThoughtKnot's own, so none of them needs one.
+// Excel, Word, PowerPoint, PDF and SQLite are read by small readers of ThoughtKnot's own, so none of them needs one.
 
 /** Where a role of a format stands: built, by the code named, or planned. */
 export type RoleState = { built: string } | 'planned' | null;
@@ -58,7 +58,12 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
     reader: 'text',
     ...roles({ built: 'document-connector.ts' }, planned, planned, { built: 'compose-out.ts' }),
   },
-  { name: 'PowerPoint', extensions: ['pptx'], reader: 'library', ...roles(planned, planned, null, planned) },
+  {
+    name: 'PowerPoint',
+    extensions: ['pptx'],
+    reader: 'text',
+    ...roles({ built: 'board-pptx.ts' }, planned, null, planned),
+  },
   {
     name: 'PDF',
     extensions: ['pdf'],

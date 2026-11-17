@@ -34,11 +34,11 @@ describe('format_catalogue', () => {
       }
   });
 
-  test('a format needing a reader library says so, and a file is found by its extension', () => {
-    assert.equal(FORMAT_CATALOGUE.find((f) => f.name === 'PowerPoint').reader, 'library');
-    // Word, PDF, Excel and SQLite are read by code ThoughtKnot ships, as a text file is
+  test('a file is found by its extension, and the formats read by code ThoughtKnot ships say so', () => {
+    // Word, PowerPoint, PDF, Excel and SQLite are read by code ThoughtKnot ships, as a text file is
     for (const [name, built] of [
       ['Word', 'document-connector.ts'],
+      ['PowerPoint', 'board-pptx.ts'],
       ['PDF', 'document-connector.ts'],
       ['Excel', 'workbook-connector.ts'],
       ['SQLite', 'database-connector.ts'],

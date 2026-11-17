@@ -199,19 +199,24 @@ export function inflateZlib(src: Uint8Array, at: number, packed: number, limit: 
   return inflate(src.subarray(0, at + packed), at + 2, Math.min(limit, packed * 1032 + 64), false);
 }
 
-/** The text of the part `name` of the zip, or null when there is none; a part over the limit is refused. */
-export function partText(b: Uint8Array, zip: Map<string, ZipEntry>, name: string, most: number): string | null {
+/** The bytes of the part `name` of the zip, or null when there is none; a part over the limit is refused. */
+export function partBytes(b: Uint8Array, zip: Map<string, ZipEntry>, name: string, most: number): Uint8Array | null {
   const e = zip.get(name.replace(/^\//, '').toLowerCase());
   if (!e) return null;
   if (e.size > most) throw new TooBig();
   if (e.at + 30 > b.length || u32(b, e.at) !== 0x04034b50) throw new Damaged();
   const data = e.at + 30 + u16(b, e.at + 26) + u16(b, e.at + 28);
   if (data + e.packed > b.length) throw new Damaged();
-  let bytes: Uint8Array;
   if (e.method === 0) {
     if (e.packed !== e.size) throw new Damaged();
-    bytes = b.subarray(data, data + e.size);
-  } else if (e.method === 8) bytes = inflate(b.subarray(0, data + e.packed), data, e.size);
-  else throw new Damaged();
-  return utf8(bytes);
+    return b.subarray(data, data + e.size);
+  }
+  if (e.method === 8) return inflate(b.subarray(0, data + e.packed), data, e.size);
+  throw new Damaged();
+}
+
+/** The text of the part `name` of the zip, or null when there is none; a part over the limit is refused. */
+export function partText(b: Uint8Array, zip: Map<string, ZipEntry>, name: string, most: number): string | null {
+  const bytes = partBytes(b, zip, name, most);
+  return bytes === null ? null : utf8(bytes);
 }
