@@ -105,7 +105,8 @@ function owner(input) {
 /** The plugin's bundle, built in memory with the build's own options: its size, and what is in it. */
 export async function measureBundle() {
   const { default: esbuild } = await import('esbuild');
-  const { options, documentWorker, layoutWorker, pluginWorker, workerBuild } = await import('../packages/obsidian/esbuild.config.mjs');
+  const { options, documentWorker, layoutWorker, pluginWorker, workerBuild } =
+    await import('../packages/obsidian/esbuild.config.mjs');
   // the layout worker's bundle is built with the plugin (spec §9); only the writing of main.js is left out
   const built = await esbuild.build({
     ...options,
