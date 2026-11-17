@@ -9,7 +9,7 @@ import { indexedShelves } from './app-shelves.ts';
 import { startShared, type Shared } from './app-shared.ts';
 import { indexedKeeper } from './app-share-keeper.ts';
 import { githubButton, onComputer, storeOf } from './app-github.ts';
-import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
+import { tauriReadPicture, tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
 import { orInMemory, tauriPartsStore } from './tauri-parts-store.ts';
 
 const tauri = (globalThis as { __TAURI__?: { core: { invoke: Invoke } } }).__TAURI__;
@@ -50,7 +50,11 @@ if (tauri) {
       console.warn('ThoughtKnot: the store on disk failed; this session keeps huge notes in memory', e),
     );
   window.fetch = appFetch(
-    { storage: sharedStorage(tauriStorage(tauri.core.invoke), ready), saveNew: tauriSaveNew(tauri.core.invoke) },
+    {
+      storage: sharedStorage(tauriStorage(tauri.core.invoke), ready),
+      saveNew: tauriSaveNew(tauri.core.invoke),
+      readPicture: tauriReadPicture(tauri.core.invoke),
+    },
     window.fetch.bind(window),
   );
   // the link is made before the page runs, so it speaks the system's language itself, as app-start.ts does
