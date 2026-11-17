@@ -573,6 +573,7 @@ export const VALUES_LATE = [
   'metaCovers',
   'readDescription',
   // PowerPoint decks read as boards (board_exchange), 17 Nov 2026
+  'deckBlock',
   'deckBoard',
   'isPresentationPlace',
   'pptxBlock',

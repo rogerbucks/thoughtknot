@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../src/board.ts';
-import { deckBoard, isPresentationPlace, pptxBlock, pptxBoard } from '../src/board-pptx.ts';
+import { deckBlock, deckBoard, isPresentationPlace, pptxBlock, pptxBoard } from '../src/board-pptx.ts';
 import { slidesOf } from '../src/board-slides.ts';
 import { PNG, deck, frame, pic, sp } from './pptx-fixture.js';
 
@@ -145,6 +145,17 @@ describe('board_pptx', () => {
       deckBoard({ size: { w: 1, h: 1 }, slides: [], pictures: new Map(), left: {} }, 'ok', 'x.pptx').board.items.length,
       0,
     );
+  });
+
+  test('each picture is kept one at a time, the block links where it was kept, and one that could not be kept is said', async () => {
+    const made = pptxBoard(DECK, 'talk', 'x.pptx');
+    const seen = [];
+    const done = await deckBlock(made, async (p) => (seen.push(p.name), `attachments/${p.name}`));
+    assert.deepEqual(seen, ['x-1.png']);
+    assert.match(done.block, /attachments\/x-1\.png/);
+    const lost = await deckBlock(made, async () => null);
+    assert.doesNotMatch(lost.block, /Image/);
+    assert.match(lost.notes[0], /2 pictures that could not be saved/);
   });
 
   test('a presentation is told by its ending', () => {

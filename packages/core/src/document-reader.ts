@@ -7,6 +7,8 @@
 // - Where no worker can run, the same read runs on the page. It cannot be stopped there, so only the size limits hold.
 // - The last few texts are kept by a key the host gives (size and time of change), so a redraw does not read again.
 import { documentText } from './document-text.ts';
+import { pptxSlides } from './pptx-read.ts';
+import type { PptxRead } from './pptx-read.ts';
 import { word } from './words.ts';
 
 /** What the page asks the worker: the bytes of one file and its place, whose ending says Word or PDF. */
@@ -18,7 +20,10 @@ export interface DocumentRequest {
 
 /** What the worker says to one request: the text, why the file was refused, or that the reader failed. */
 export type DocumentReply =
-  { id: number; text: string } | { id: number; refused: string } | { id: number; error: string };
+  | { id: number; text: string }
+  | { id: number; deck: PptxRead }
+  | { id: number; refused: string }
+  | { id: number; error: string };
 
 /** The page's end of a worker, shaped as a browser's Worker is. */
 export interface DocumentPort {
@@ -37,6 +42,22 @@ export interface DocumentScope {
 /** What a read gives: the text, or the sentence saying why the file was not read. */
 export type DocumentRead = { text: string } | { refused: string };
 
+/** What a read of a PowerPoint deck gives: its slides, or the sentence saying why it was not read. */
+export type DeckRead = { deck: PptxRead } | { refused: string };
+
+/** Whether a place is a PowerPoint deck, by its ending: it is read into slides, not into text. */
+const isDeck = (place: string): boolean => /\.pptx$/i.test(place);
+
+/** Either kind of read, as the reader keeps it. */
+type Got = DocumentRead | DeckRead;
+
+/** One file read, as the worker or the page gives it: text, slides, or why not. */
+function readOf(bytes: Uint8Array, place: string): DocumentRead | DeckRead {
+  if (!isDeck(place)) return documentText(bytes, place);
+  const got = pptxSlides(bytes);
+  return 'slides' in got ? { deck: got } : { refused: got.refused };
+}
+
 /** The longest a worker may take over one file, in milliseconds. */
 export const DOCUMENT_READ_MS = 10_000;
 
@@ -47,7 +68,7 @@ const KEPT = 8;
 export function serveDocuments(scope: DocumentScope): void {
   scope.onmessage = ({ data }) => {
     try {
-      scope.postMessage({ id: data.id, ...documentText(data.bytes, data.place) });
+      scope.postMessage({ id: data.id, ...readOf(data.bytes, data.place) });
     } catch (e) {
       scope.postMessage({ id: data.id, error: e instanceof Error ? e.message : String(e) });
     }
@@ -67,7 +88,7 @@ export class DocumentReader {
   private port: DocumentPort | null = null;
   private next = 1;
   private tail: Promise<unknown> = Promise.resolve();
-  private readonly kept = new Map<string, DocumentRead>();
+  private readonly kept = new Map<string, Got>();
   private closed = false;
   private readonly options: DocumentReaderOptions;
 
@@ -80,6 +101,15 @@ export class DocumentReader {
    * the file (its size and time of change); with it, a file read once is not read again.
    */
   read(bytes: Uint8Array, place: string, key?: string): Promise<DocumentRead> {
+    return this.get(bytes, place, key) as Promise<DocumentRead>;
+  }
+
+  /** The slides of the PowerPoint deck in `bytes`, or why it was refused; kept by `key` as `read` keeps text. */
+  readDeck(bytes: Uint8Array, place: string, key?: string): Promise<DeckRead> {
+    return this.get(bytes, place, key) as Promise<DeckRead>;
+  }
+
+  private get(bytes: Uint8Array, place: string, key?: string): Promise<Got> {
     const had = key ? this.kept.get(`${place}\0${key}`) : undefined;
     if (had) return Promise.resolve(had);
     const run = this.tail.then(() => this.one(bytes, place));
@@ -97,7 +127,7 @@ export class DocumentReader {
     this.stop();
   }
 
-  private keep(key: string, read: DocumentRead): void {
+  private keep(key: string, read: Got): void {
     this.kept.delete(key);
     this.kept.set(key, read);
     if (this.kept.size > KEPT) this.kept.delete(this.kept.keys().next().value as string);
@@ -108,7 +138,7 @@ export class DocumentReader {
     this.port = null;
   }
 
-  private async one(bytes: Uint8Array, place: string): Promise<{ read: DocumentRead; failed?: true }> {
+  private async one(bytes: Uint8Array, place: string): Promise<{ read: Got; failed?: true }> {
     const { worker, clock } = this.options;
     if (this.closed)
       return { read: { refused: word('reading.document.worker-failed', { place, why: 'closed' }) }, failed: true };
@@ -123,7 +153,7 @@ export class DocumentReader {
         resolve({ read: this.stopped(place, e), failed: true });
         return;
       }
-      const done = (out: { read: DocumentRead; failed?: true }) => {
+      const done = (out: { read: Got; failed?: true }) => {
         clock.clearTimeout(timer);
         port.onmessage = port.onerror = null;
         resolve(out);
@@ -138,6 +168,7 @@ export class DocumentReader {
       port.onmessage = ({ data }) => {
         if (data.id !== id) return;
         if ('error' in data) done({ read: this.stopped(place, data.error), failed: true });
+        else if ('deck' in data) done({ read: { deck: data.deck } });
         else done({ read: 'text' in data ? { text: data.text } : { refused: data.refused } });
       };
       port.onerror = (e) => {
@@ -148,15 +179,15 @@ export class DocumentReader {
     });
   }
 
-  private onThePage(bytes: Uint8Array, place: string): DocumentRead {
+  private onThePage(bytes: Uint8Array, place: string): Got {
     try {
-      return documentText(bytes, place);
+      return readOf(bytes, place);
     } catch (e) {
       return this.stopped(place, e);
     }
   }
 
-  private stopped(place: string, why: unknown): DocumentRead {
+  private stopped(place: string, why: unknown): Got {
     const text = why instanceof Error ? why.message : typeof why === 'string' ? why : 'unknown';
     return { refused: word('reading.document.worker-failed', { place, why: text }) };
   }
