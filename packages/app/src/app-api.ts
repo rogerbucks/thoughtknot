@@ -5,11 +5,13 @@
 // - A write names the version it was typed against, and is refused (409) when the note changed, with the note as it
 //   now is. What was sent is kept as the note's draft, as the server keeps it.
 // - The change stream sends the note now, then each change another program makes, read again every few seconds.
-// - An export's files are written as new files beside the note, never over a file (`saveNew`, place.rs).
+// - An export's files are written as new files beside the note, never over a file (`saveNew`, place.rs). A picture of a
+//   board is kept the same way, in the folder `attachments` beside the note, once the host can read one back.
 // - Earlier versions and GitHub reviews are not in the app yet: each is refused in words.
 import type { NoteStorage } from '@thoughtknot/core';
 import { REFUSED } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
+import { appPicture } from './app-pictures.ts';
 
 /** How often the change stream reads the note again, in milliseconds. */
 export const FOLLOW_EVERY_MS = 2000;
@@ -25,6 +27,8 @@ export interface AppApiOptions {
   storage: NoteStorage;
   /** Writes an export's files as new files in a folder; gives the names written. None: exports are refused. */
   saveNew?: (folder: string, files: NewFile[]) => Promise<string[]>;
+  /** Reads a picture kept beside a note, by its path in the folder. A host that cannot has none, and keeps no picture. */
+  readPicture?: (path: string) => Promise<Uint8Array>;
   setTimeout?: (run: () => void, ms: number) => unknown;
   clearTimeout?: (timer: unknown) => void;
 }
@@ -121,6 +125,8 @@ export function appFetch(options: AppApiOptions, inner?: typeof fetch): typeof f
     if (route === 'settings') return method === 'GET' ? json(200, {}) : plain(405, word('server.not-this-method'));
     const exported = /^export\/([^/]+)$/.exec(route)?.[1];
     if (exported) return exportOf(method, decodeURIComponent(exported), body);
+    const pic = /^notes\/([^/]+)\/attachment(?:\/([^/]+))?$/.exec(route);
+    if (pic?.[1]) return appPicture(options, method, decodeURIComponent(pic[1]), pic[2], body);
     const m = /^notes\/([^/]+)(\/events|\/draft|\/versions|\/at\/.+|\/reviews(?:\/.*)?)?$/.exec(route);
     if (!m?.[1]) return plain(404, word('server.note-not-open'));
     const path = decodeURIComponent(m[1]);
@@ -143,10 +149,7 @@ export function appFetch(options: AppApiOptions, inner?: typeof fetch): typeof f
       init,
     );
     const { pathname } = new URL(request.url);
-    if (!pathname.startsWith('/api/')) {
-      if (!inner) return plain(404, word('server.note-not-open'));
-      return inner(input, init);
-    }
+    if (!pathname.startsWith('/api/')) return inner ? inner(input, init) : plain(404, word('server.note-not-open'));
     try {
       return await answer(request.method, pathname.slice('/api/'.length), request.headers, await request.text());
     } catch {

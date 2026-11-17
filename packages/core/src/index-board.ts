@@ -14,6 +14,16 @@ export type { Here, Together } from './board-together.ts';
 export type { Peer } from './board-presence.ts';
 export { boardFileBlock, boardFilesOf, boardFormatOf } from './board-exchange.ts';
 export type { BoardBlock, BoardFile, BoardFormat } from './board-exchange.ts';
+export {
+  PICTURE_BODY_LIMIT,
+  PICTURE_FOLDER,
+  PICTURE_MOST_BYTES,
+  isKeptName,
+  pictureKind,
+  pictureName,
+  pictureStem,
+} from './picture-keep.ts';
+export type { PictureEnding, PictureKind } from './picture-keep.ts';
 export { BOARD_PICTURE_FORMATS, boardPicturesOf, pictureSize, slidePicturesOf } from './board-pictures.ts';
 export type { BoardPicture, BoardPictureFormat } from './board-pictures.ts';
 export { picturesPdf } from './board-pdf.ts';

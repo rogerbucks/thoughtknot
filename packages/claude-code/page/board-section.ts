@@ -3,6 +3,7 @@
 // by pointer, touch and keyboard, offline. The list above it switches between the note's boards (board_many). Each edit goes through the page's own version-checked write.
 import { arrangerOf, gqlBlocks, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
+import type { Pictures } from '@thoughtknot/core/display/board/board-images';
 import {
   boardFromGraph,
   draftFor,
@@ -91,6 +92,7 @@ export function boardSection(
   dark: boolean,
   seatFor?: SeatFor,
   again?: () => void,
+  pictures?: Pictures,
 ): HTMLElement | null {
   const written = gqlBlocks(note.text).filter((b) => boardOf(b.text));
   // a note with graphs and no board opens on a starter board, written to the note only once it is changed
@@ -135,6 +137,7 @@ export function boardSection(
   const own = {
     palette: dark ? PALETTES.dark : PALETTES.light,
     key: `${key}\n${name}`,
+    images: pictures,
   };
   // a board proposed is shown in place of the board in front, until it is kept or dropped (board_proposed)
   const draft = draftFor(key);
@@ -190,12 +193,13 @@ export function boardsKept(
   key: string,
   dark: () => boolean,
   seatFor?: SeatFor,
+  pictures?: Pictures,
 ): () => void {
   let boards: HTMLElement | null = null;
   const kept = keptIn(parent.ownerDocument.defaultView);
   const draw = () => {
     boards?.remove();
-    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw);
+    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw, pictures);
     if (!boards) return;
     // whiteboard files in and out: a small bar under the boards, closed until it is opened (board_exchange)
     const win = parent.ownerDocument.defaultView;

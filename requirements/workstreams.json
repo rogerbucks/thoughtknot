@@ -764,6 +764,7 @@
       "board_nested",
       "board_proposed",
       "board_images",
+      "board_images_kept",
       "board_format",
       "board_routes"
     ]
