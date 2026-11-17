@@ -761,6 +761,8 @@
       "board_main_screen",
       "board_ink",
       "board_many",
+      "board_nested",
+      "board_proposed",
       "board_images",
       "board_format",
       "board_routes"

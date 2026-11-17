@@ -33,10 +33,11 @@ function itemsOf(h: CopyHooks): string[] {
   return chosen.length ? chosen : focus ? [focus] : [];
 }
 
-/** The items just made, chosen, the keyboard on the first. */
-function made(h: CopyHooks, ids: string[]): void {
+/** The items just made, chosen, the keyboard on the first. `said` comes last, so the count is what stays said. */
+function made(h: CopyHooks, ids: string[], said: string): void {
   h.sel.set(ids);
   if (ids[0]) h.choose(ids[0]);
+  h.say(said);
 }
 
 /** Whether the key was a copy, paste or duplicate, done. */
@@ -50,13 +51,11 @@ export function copyKey(e: KeyboardEvent, h: CopyHooks): boolean {
     h.say(word('board.copied', { count: clip.items.length }));
   } else if (key === 'v' && copied && !h.readOnly) {
     const { change, ids } = pasteClip(h.board(), copied, h.centre());
-    h.say(word('board.pasted', { count: ids.length }));
-    void h.write(change).then(() => made(h, ids));
+    void h.write(change).then(() => made(h, ids, word('board.pasted', { count: ids.length })));
   } else if (key === 'd' && !h.readOnly) {
     const r = duplicateItems(h.board(), itemsOf(h));
     if (!r) return false;
-    h.say(word('board.duplicated', { count: r.ids.length }));
-    void h.write(r.change).then(() => made(h, r.ids));
+    void h.write(r.change).then(() => made(h, r.ids, word('board.duplicated', { count: r.ids.length })));
   } else return false;
   e.preventDefault();
   return true;

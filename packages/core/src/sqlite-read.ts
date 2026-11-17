@@ -13,6 +13,8 @@ export interface SqliteTable {
   name: string;
   columns: string[];
   rows: SqliteValue[][];
+  /** Each row's rowid, its key in the file, in the order of `rows`. */
+  rowids?: number[];
 }
 
 /** A table or view of the file's schema, with its root page; `unread` says why it cannot be read. */
@@ -328,11 +330,12 @@ export function sqliteTable(bytes: Uint8Array, name: string): SqliteTable | Sqli
     if (!entry) return { why: 'no-table', refused: word('reading.sqlite.no-table', { name }) };
     if (entry.unread) return { why: 'unreadable-table', refused: entry.unread };
     const { columns, rowid } = columnsOf(entry.sql);
-    const rows = tableRows(l, entry.root, SQLITE_LIMITS.rows).map(([id, values]) =>
+    const read = tableRows(l, entry.root, SQLITE_LIMITS.rows);
+    const rows = read.map(([id, values]) =>
       // a column added later is missing from older rows; the rowid column is stored as its rowid
       columns.map((_, i) => (i === rowid ? id : (values[i] ?? null))),
     );
-    return { name, columns, rows };
+    return { name, columns, rows, rowids: read.map(([id]) => id) };
   } catch (e) {
     return refusalOf(e);
   }

@@ -39,12 +39,12 @@ const swapIn = {
   },
 };
 
-// The layout worker (spec §9, layout_contained). src/layout-worker/worker-entry.ts is bundled on its own, the Graphviz
-// WebAssembly inside it. It is handed to the plugin as the body of one function, `layoutWorker`, from the module
+// The layout worker (spec §9, layout_contained). src/layout-worker/worker-entry.ts is bundled on its own, the plugin's
+// own layout engine inside it. It is handed to the plugin as the body of one function, `layoutWorker`, from the module
 // 'thoughtknot:layout-worker'. main.js holds it once. The worker is started from the function's own text. The page
 // calls the function where no worker can run (src/layout-worker/layout-worker.ts says why). Rebuilt with every build, and
 // watched with the rest in --watch. The worker's last build is kept in `workerBuild`, so scripts/quality-metrics.mjs can
-// say what is inside that one function, the engine among it.
+// say what is inside that one function.
 export const workerBuild = { metafile: null };
 export const layoutWorker = {
   name: 'layout-worker',

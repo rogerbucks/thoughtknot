@@ -10,7 +10,7 @@ import type { TAbstractFile } from 'obsidian';
 import type { BlockContext } from '../block-context';
 import type { Graph } from '@thoughtknot/graph-spec';
 import {
-  connect,
+  connectCache,
   databasePlace,
   DOCUMENT_LIMITS,
   dataSetTables,
@@ -20,12 +20,14 @@ import {
   namesSharedSchema,
   placeKey,
   READ_LIMITS,
+  readAsBytes,
   readSource,
   SQLITE_LIMITS,
   WORKBOOK_LIMITS,
   workbookPlace,
 } from '@thoughtknot/core';
 import type {
+  DataSetFile,
   GraphDrawing,
   GraphSource,
   JoinedRead,
@@ -157,6 +159,17 @@ async function tableText(plugin: ThoughtKnotPlugin, place: string, from: string)
   return 'text' in r ? r.text : null;
 }
 
+/**
+ * What a data set's box shows, read from `place` for the note at `from` (ES§67, format_content_node). That is a
+ * workbook's, database's or document's bytes, or a text file's text. Or null when it cannot be read.
+ */
+async function dataSetFile(plugin: ThoughtKnotPlugin, place: string, from: string): Promise<DataSetFile> {
+  if (!readAsBytes(place)) return tableText(plugin, place, from);
+  const kind = databasePlace(place) ? 'database' : workbookPlace(place) ? 'workbook' : 'document';
+  const r = await bytesOf(plugin, { graph: '', kind, target: place, block: 0 }, from);
+  return 'bytes' in r ? r.bytes : null;
+}
+
 /** `drawing` with each data set of `graph` drawn as its table, read from its place (ES§67, format_content_node). */
 export async function withTables<D extends GraphDrawing | undefined>(
   plugin: ThoughtKnotPlugin,
@@ -164,7 +177,7 @@ export async function withTables<D extends GraphDrawing | undefined>(
   graph: Graph | undefined,
   from: string,
 ): Promise<D> {
-  const tables = drawing ? await dataSetTables(graph, (place) => tableText(plugin, place, from)) : [];
+  const tables = drawing ? await dataSetTables(graph, (place) => dataSetFile(plugin, place, from)) : [];
   return tables.length ? { ...drawing, tables } : drawing;
 }
 
@@ -202,7 +215,8 @@ export async function readFromVault(
     source.kind === 'text' ||
     source.kind === 'document' ||
     source.kind === 'database' ||
-    source.kind === 'workbook'
+    source.kind === 'workbook' ||
+    source.kind === 'graphml'
   )
     return readPlaces(plugin, source, from);
   const held = await lookUp(plugin, source, from);
@@ -210,6 +224,9 @@ export async function readFromVault(
   if ('refused' in read || !read.texts.some(namesSharedSchema)) return read;
   return readSource(source, held, await plugin.sharedSchemas());
 }
+
+/** What each file of a FROM list broke into, kept by the file's hash, so an unchanged file is not read again (ES§63). */
+const derived = connectCache();
 
 /**
  * The places of a FROM list, each read as one source is and joined as the mesh joins documents (connector_many_sources).
@@ -223,9 +240,9 @@ async function readPlaces(
   const reads = await Promise.all(
     (source.places ?? [source]).map(async (place) => {
       const held = await lookUp(plugin, place, from);
-      const read = connect(place, held);
+      const read = derived.connect(place, held);
       if ('refused' in read || !read.read.texts.some(namesSharedSchema)) return read;
-      return connect(place, held, await plugin.sharedSchemas());
+      return derived.connect(place, held, await plugin.sharedSchemas());
     }),
   );
   return joinPlaces(source.graph, reads);

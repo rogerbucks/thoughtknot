@@ -119,6 +119,19 @@ describe('the tool rail', () => {
   });
 
   // proves: board_tools
+  test('a board drawn afresh after a join is still on Connect, and one drawn after a tool made its item is on Choose', async () => {
+    const first = rail(false, 'the same board');
+    first.r.pick('connect');
+    first.r.press(BOARD, 'a', [0, 0], first.to);
+    first.r.press(BOARD, 'b', [0, 0], first.to);
+    const again = rail(false, 'the same board'); // as a host draws it after the join is written
+    assert.equal(again.r.tool, 'connect');
+    assert.equal(again.fold.getAttribute('data-tool'), 'connect');
+    again.r.pick('sticky');
+    again.r.press(BOARD, null, [500, 500], again.to);
+    assert.equal(rail(false, 'the same board').r.tool, 'choose');
+  });
+
   test('offers only Choose and Pan on a board that may only be looked at, and Pan pans', () => {
     const { r, tool, to } = rail(true);
     assert.equal(tool('sticky'), null);

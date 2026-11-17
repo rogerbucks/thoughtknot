@@ -20,7 +20,8 @@ import { parsedSvg } from '../graph-view/drawing-svg';
 import { ArrangeBar } from './board-arrange-bar.ts';
 import { BoardSpace, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
-import { bindWheel, outlined } from './board-wheel.ts';
+import { outlined, outlineIn } from './board-wheel.ts';
+import { bindNest } from './board-nest.ts';
 import { ToolRail } from './board-tool-rail.ts';
 import { Presenter } from './board-present.ts';
 import { LayerList } from './board-layer-list.ts';
@@ -34,6 +35,7 @@ import { bindDrop } from './board-images.ts';
 import type { BoardHost } from './board-host.ts';
 import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts';
 import { listProblems } from './board-problems.ts';
+import { recorded, undoKey } from './board-undo.ts';
 
 export { boardEditInNote, boardOf };
 export type { BoardHost };
@@ -42,7 +44,7 @@ let boardsShown = 0;
 
 /** The board in `source` opened in `el`. */
 export function showBoard(el: HTMLElement, source: string, host: BoardHost): void {
-  new BoardView(el, source, host);
+  new BoardView(el, source, recorded(host, source));
 }
 
 /** One board open in a host: its parts, its view and where the keyboard is on it. */
@@ -59,8 +61,9 @@ class BoardView {
   private readonly rail: ToolRail;
   private readonly format: FormatBar | null = null;
   private readonly layers: LayerList | null;
-  private readonly sel = new BoardSelection((n) => this.bar?.chosen(n));
-  private seen = ''; // the shared board's text as last read, to tell when someone else changed it
+  private readonly sel = new BoardSelection({ changed: (n) => this.bar?.chosen(n), key: () => this.host.key });
+  /** The text of the shared board as last read, to tell when someone else has changed it. */
+  private seen = '';
   private frame: Box;
   private readonly space: BoardSpace;
   private readonly zoom: Zoom;
@@ -104,13 +107,10 @@ class BoardView {
       this.format = new FormatBar(root, this.vp, host.key, host.palette, this.hooks(), (ids) => this.sel.set(ids));
     this.layers = this.readOnly ? null : new LayerList(root, this.vp, host.key, this.hooks());
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
-    this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
-    this.editor.hidden = true;
+    this.editor = root.createDiv({ cls: 'thoughtknot-board-edit', attr: { hidden: '' } });
     listProblems(root, source);
     this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
-    const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
-    outline.createEl('summary', { text: word('board.outline') });
-    this.list = outline.createEl('ul');
+    this.list = outlineIn(root);
     this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
@@ -119,6 +119,7 @@ class BoardView {
     new Presenter(root, this.vp, this.hooks(), this.zoom, this.space);
     this.draw();
     if (was) this.zoom.restore(...placeFrom(was, this.frame.x, this.frame.y));
+    else this.space.open(this.board);
     born(host.key, this.vp, this, this.said, !!was?.focused);
     this.bind();
     this.rail.held((id) => openEditor(this.fields(), id)); // a sticky just made, its board drawn afresh
@@ -178,6 +179,7 @@ class BoardView {
       write: (c) => this.write(c),
       say: (w) => this.say(w),
       centre: () => this.space.centre(),
+      live: () => current(this.host.key, this.vp, this).fields(),
       focus: (id) => {
         this.cursor = { ...this.cursor, focus: id };
         this.reveal();
@@ -198,16 +200,16 @@ class BoardView {
       readOnly: this.readOnly,
       svg: () => this.svg,
       chosen: () => this.sel.list(),
+      space: this.space,
     };
   }
 
   /** The hooks the lists under the board work by. */
   private peopleHooks(together: Together) {
-    const { palette } = this.host;
     return {
       board: () => this.board,
       together,
-      palette,
+      palette: this.host.palette,
       parse: (svg: string) => parsedSvg({ svg } as Drawn),
       mayEdit: !this.readOnly,
       show: (spot: [number, number]) =>
@@ -262,12 +264,11 @@ class BoardView {
 
   private bind(): void {
     const { vp, zoom } = this;
+    bindNest(vp, zoom, this.space, () => [this.board, this.frame, this.cursor.focus], this.host);
     vp.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
     vp.addEventListener('pointerdown', (e: PointerEvent) => this.down(e));
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
-    vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
-    vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
-    bindWheel(vp, zoom, (e) => this.space.point(e));
+    for (const type of ['pointerup', 'pointercancel']) vp.addEventListener(type, (e) => this.lift(e as PointerEvent));
     bindDrop(vp, this.hooks(), this.host.images, (e) => this.space.onBoard(this.space.point(e)));
     new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
@@ -276,7 +277,7 @@ class BoardView {
   private key(e: KeyboardEvent): void {
     if (e.target !== this.vp) return;
     if (e.key === 'Escape' && (this.rail.cancel() || this.sel.clear())) return void this.draw();
-    if (copyKey(e, this.hooks())) return;
+    if (copyKey(e, this.hooks()) || undoKey(e, this.host.key, this.hooks())) return;
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     if (isGroupKey(e) && !this.readOnly) return void groupNotes(this.board, this.write.bind(this), this.say.bind(this));
     const step = boardKey(this.board, this.cursor, press, this.space.centre(), this.readOnly);

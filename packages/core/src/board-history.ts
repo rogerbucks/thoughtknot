@@ -92,7 +92,7 @@ export function undoPlan(history: History, text: string, person: string): UndoPl
     if (!same(cur, op.after)) clashes.push(op.id);
     else if (!op.before) changes.push({ kind: 'remove', id: op.id });
     else if (!op.after) changes.push({ kind: 'add', item: op.before });
-    else changes.push({ kind: 'put', item: op.before });
+    else changes.push(...itemBack(op.after, op.before));
   }
   for (const l of entry.links)
     if (!l.added)
@@ -102,7 +102,55 @@ export function undoPlan(history: History, text: string, person: string): UndoPl
           : { kind: 'connect', from: l.from, to: l.to, label: l.label },
       );
   if (clashes.length) return { refused: word('board.history.clash', { ids: clashes.join(', ') }) };
-  return { entry, changes };
+  return { entry, changes: movedAsOne(changes) };
+}
+
+/** An item without what an edit to the item alone can set: what is left tells whether more than that changed. */
+function rest(item: BoardItem): string {
+  const { w: _w, h: _h, text: _text, layer: _layer, locked: _locked, style: _style, group: _group, ...left } = item;
+  return itemGql({ ...left, x: 0, y: 0 });
+}
+
+/**
+ * The edits that put an item back as it `was`. Its place, size, text, layer, lock, style and group are each set back
+ * by itself. So the item's own text alone is written, and the rest of the block stays as written. Anything else that
+ * changed, or a property that was not there before, puts the whole item back.
+ */
+function itemBack(now: BoardItem, was: BoardItem): BoardChange[] {
+  const { id } = was;
+  const whole: BoardChange[] = [{ kind: 'put', item: was }];
+  if (rest(now) !== rest(was)) return whole;
+  const out: BoardChange[] = [];
+  if (now.x !== was.x || now.y !== was.y) out.push({ kind: 'move', id, x: was.x, y: was.y });
+  if (now.w !== was.w || now.h !== was.h) {
+    if (was.w === undefined || was.h === undefined) return whole;
+    out.push({ kind: 'size', id, w: was.w, h: was.h });
+  }
+  if (now.text !== was.text) {
+    if (was.text === undefined) return whole;
+    out.push({ kind: 'text', id, text: was.text });
+  }
+  if (now.layer !== was.layer) {
+    if (was.layer === undefined) return whole;
+    out.push({ kind: 'layer', id, layer: was.layer });
+  }
+  if (now.style !== was.style) out.push({ kind: 'style', id, style: was.style ?? null });
+  if (now.group !== was.group) out.push({ kind: 'group', id, group: was.group ?? null });
+  if (now.locked !== was.locked) {
+    if (was.locked === false || now.locked === false) return whole;
+    out.unshift({ kind: 'lock', id, locked: !!was.locked }); // first: a locked item may not be moved back
+  }
+  return out;
+}
+
+/** Several items moved back are one edit, as the arrangement that moved them was. */
+function movedAsOne(changes: BoardChange[]): BoardChange[] {
+  const moves = changes.filter((c) => c.kind === 'move');
+  if (moves.length < 2) return changes;
+  const at = changes.indexOf(moves[0] as BoardChange);
+  const others = changes.filter((c) => c.kind !== 'move');
+  others.splice(at, 0, { kind: 'moves', moves: moves.map(({ id, x, y }) => ({ id, x, y })) });
+  return others;
 }
 
 /** The block with a plan carried out, all or none: the first edit that is refused leaves the block as it was. */

@@ -77,4 +77,36 @@ describe('the Arrange by graph button', () => {
       env.uninstall();
     }
   });
+
+  // proves: board_arranged_by_graph
+  test('the view follows the items arranged when they would end out of sight, and they all come into view', async () => {
+    const { env, el, buttons, at } = await open();
+    try {
+      const vp = el.querySelector('.thoughtknot-board .thoughtknot-viewport');
+      const key = (k, more = {}) => vp.dispatch('keydown', { key: k, target: vp, ...more });
+      /** Where an item's corner is in the viewport, in pixels. */
+      const corner = (id) => {
+        const svg = el.querySelector('svg.thoughtknot-svg');
+        const [fx, fy, fw] = svg.getAttribute('viewBox').split(' ').map(Number);
+        const scale = Number(svg.getAttribute('width')) / fw;
+        const [x, y] = at(id);
+        return [
+          parseFloat(vp.cssProps['--thoughtknot-x']) + (x - fx) * scale,
+          parseFloat(vp.cssProps['--thoughtknot-y']) + (y - fy) * scale,
+        ];
+      };
+      for (let i = 0; i < 6; i++) key('ArrowLeft', { shiftKey: true }); // the view goes far to the right of the items
+      assert.ok(corner('a')[0] > 600, 'the items are out of sight before the press');
+      buttons()[0].dispatch('click', { target: buttons()[0] });
+      await until(() => at('a').join() !== '0,0', 8000);
+      await until(() => !buttons()[1].hidden, 8000);
+      key('Shift'); // a reach for the board ends the glide at once, everything where it goes
+      for (const id of ['a', 'b', 'c']) {
+        const [x, y] = corner(id);
+        assert.ok(x >= 0 && x < 600 && y >= 0 && y < 420, `${id} is in view, at ${x}, ${y}`);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
 });

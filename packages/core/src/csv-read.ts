@@ -30,6 +30,8 @@ export interface CsvTable {
   quotedEmpty: Set<string>;
   /** Rows (0-based) holding more cells than the header has columns, with how many more. */
   uneven: { row: number; extra: number }[];
+  /** Each row's own key in its file, such as a database table's rowid, when the file has one. */
+  keys?: string[];
 }
 
 /** Why a CSV file was not read, as a sentence naming it and what to do. */

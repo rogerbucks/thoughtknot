@@ -119,7 +119,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   a Blob URL of main.js's own copy of the worker's bundle. Only where the first worker cannot start is a graph laid out
   on the page's thread, with lower limits. Each is said once in the console, as is drawing paused after three layouts in
   a row fail. The module says why it is built so.
-- `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into
+- `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, the layout engine and all, into
   the function `layoutWorker` of the module `thoughtknot:layout-worker` (typed in `bundled-worker.d.ts`).
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long, or
   drawing is paused. It shows an icon, and the limit and numbers in words.
@@ -350,12 +350,8 @@ A .base file picks notes with its filters. The Graph view draws them as a graph,
   - Nothing is read until Import is pressed. Then the file's bytes are read from the vault, on the device.
   - The rows are written at the end of the note as a graph block (`importedBlock`), through `vault.process`. It is text
     that keeps no live link. A failure is said in a notice, the note left as it was.
-- `sqlite.ts` — `sqliteQuery`: runs the queries on a SQLite file's bytes, in memory, with sql.js. The engine's
-  WebAssembly is inside main.js, so nothing is fetched.
-  - The database is opened query-only, so a query that writes fails. The file itself is never written.
-  - A query of more than 10,000 rows fails, saying how to narrow it.
-  - The plugin's `queryDatabase` calls it, so a test can stand in its own.
-- `sql-js.d.ts` — the types of the parts of sql.js the import uses.
+  - The file's tables are read by the core's `sqlite-read.ts`, in plain JavaScript: no SQL engine, no WebAssembly
+    (Roger, 9 Nov 2026). It is read-only, every page is checked, and a file over the limits is refused whole.
 - `../host-commands.ts` — every command of the plugin is a command of the built-in plug-in `thoughtknot.obsidian`.
   `addCommands` adds them to the registry, and `offerCommands` gives each to Obsidian under the id it always had, so
   hotkeys last. A command with a check (`available`) is offered only while it holds.

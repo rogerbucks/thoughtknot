@@ -306,6 +306,10 @@ export const VALUES_LATE = [
   'gqlConnector',
   'joinPlaces',
   'placeKey',
+  // what a file breaks into, kept by its hash (ES§63, connector_derived_kept_apart), 16 Nov 2026
+  'CONNECT_CACHE_MOST',
+  'cacheKey',
+  'connectCache',
   // layouts a plug-in adds (§68, layout_plugins), 28 Oct 2026
   'layoutContract',
   'offerLayouts',
@@ -392,6 +396,8 @@ export const VALUES_LATE = [
   'proposeMapping',
   'readCsv',
   'dataSetTables',
+  'nodeTableOf',
+  'readAsBytes',
   'dataSetsOf',
   'keptOf',
   'keptWords',
@@ -532,6 +538,8 @@ export const VALUES_LATE = [
   // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
   'starterBoard',
   'withStarter',
+  // a board asked of an AI in plain words (ES§45, board_proposed), 15 Nov 2026
+  'boardMakeAsk',
   // the board layers shown over a graph's views (ES§70, board_layers_over), 15 Nov 2026
   'layersOver',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026

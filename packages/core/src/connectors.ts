@@ -25,6 +25,7 @@ import { tableConnector } from './csv-connector.ts';
 import { textConnector } from './text-connector.ts';
 import { databaseConnector } from './database-connector.ts';
 import { documentConnector } from './document-connector.ts';
+import { graphmlConnector } from './graphml-connector.ts';
 import { workbookConnector } from './workbook-connector.ts';
 import { word } from './words.ts';
 
@@ -37,6 +38,8 @@ export interface Citation {
   row?: number;
   /** For a table: the column a link was read from. */
   column?: string;
+  /** For a database table: the row's own key in the file, its rowid. */
+  key?: string;
 }
 
 /** One GQL statement a place breaks into, with where it was read. */
@@ -113,6 +116,7 @@ export const CONNECTORS: readonly Connector[] = [
   documentConnector,
   databaseConnector,
   workbookConnector,
+  graphmlConnector,
 ];
 
 /** The connector that reads this kind of place. */
@@ -215,12 +219,16 @@ function citedWords(list: Citation[]): string {
     .map((c) =>
       c.row === undefined
         ? word('reading.source.cited', { place: c.place, line: String(c.line), version: short(c.version) })
-        : word(c.column ? 'reading.source.cited-cell' : 'reading.source.cited-row', {
-            place: c.place,
-            row: String(c.row),
-            column: c.column ?? '',
-            version: short(c.version),
-          }),
+        : word(
+            c.column ? 'reading.source.cited-cell' : c.key ? 'reading.source.cited-key' : 'reading.source.cited-row',
+            {
+              place: c.place,
+              row: String(c.row),
+              key: c.key ?? '',
+              column: c.column ?? '',
+              version: short(c.version),
+            },
+          ),
     )
     .join('; ');
 }

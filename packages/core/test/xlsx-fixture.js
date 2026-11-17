@@ -82,7 +82,7 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
  * A workbook of `sheets` ({ name: rows }); a row is an array of cells: text, a number, `{ date: serial }`, `{ bool }`,
  * `{ inline: text }`, `{ error }`, or null for no cell. Shared strings and one date style are used as Excel does.
  */
-export function workbook(sheets, { date1904 = false, stored = false } = {}) {
+export function workbook(sheets, { date1904 = false, stored = false, extra = {} } = {}) {
   const strings = [];
   const shared = (s) => {
     if (!strings.includes(s)) strings.push(s);
@@ -121,5 +121,5 @@ export function workbook(sheets, { date1904 = false, stored = false } = {}) {
   };
   names.forEach((n, i) => (parts[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(sheets[n])));
   parts['xl/sharedStrings.xml'] = `<sst>${strings.map((s) => `<si><t>${esc(s)}</t></si>`).join('')}</sst>`;
-  return zip(parts, { stored });
+  return zip({ ...parts, ...extra }, { stored });
 }

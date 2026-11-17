@@ -13,7 +13,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { KEYS, gpgSign, signingPlan } from '../scripts/desktop-build.mjs';
+import { KEYS, gpgSign, retrying, signingPlan } from '../scripts/desktop-build.mjs';
 import { jobs, read } from './repository/repo.js';
 
 const all = (kind) => Object.fromEntries(KEYS[kind].map((k) => [k, `${k.toLowerCase()}-value`]));
@@ -181,3 +181,17 @@ test(
     assert.ok(guide.includes(fingerprint), `docs/app-signing.md gives the fingerprint ${fingerprint}`);
   },
 );
+
+describe('a bundle that fails on a dropped connection', () => {
+  test('is tried again until one passes, and no more than three times', () => {
+    let calls = 0;
+    assert.equal(retrying(() => ({ status: ++calls < 3 ? 1 : 0 })).status, 0);
+    assert.equal(calls, 3);
+    calls = 0;
+    assert.equal(retrying(() => ({ status: (calls++, 1) })).status, 1);
+    assert.equal(calls, 3);
+    calls = 0;
+    retrying(() => ({ status: (calls++, 0) }));
+    assert.equal(calls, 1);
+  });
+});

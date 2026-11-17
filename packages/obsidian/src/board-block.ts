@@ -37,7 +37,7 @@ export function renderBoardBlock(
         }
       : undefined,
     arrange: writable ? arrangerOf(async () => (await noteText(plugin.app, path)) ?? '', line.name) : undefined,
-    views: viewerOf(async () => (await noteText(plugin.app, path)) ?? ''),
+    views: viewerOf(async () => (await noteText(plugin.app, path)) ?? '', PALETTES.obsidian),
     images: boardPictures(plugin.app, path, writable ? (to, bytes) => vaultOps(plugin).write(to, bytes) : undefined),
   });
   return true;

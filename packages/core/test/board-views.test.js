@@ -66,3 +66,31 @@ describe('a view on a board', () => {
     assert.match(svg, /matrix view of people/);
   });
 });
+
+describe('a view of a board on a board', () => {
+  const OUTER =
+    "// graph: ideas · BOARD\n(v:View {x: 0, y: 0, w: 400, h: 300, board: 'plan'}),\n(lost:View {x: 0, y: 400, board: 'nowhere'})";
+  const WITH = [
+    '```gql',
+    OUTER,
+    '```',
+    '```gql',
+    "// graph: plan · BOARD\n(b:Sticky {x: 0, y: 0, text: 'Book it'})",
+    '```',
+  ].join('\n');
+  const outer = readBoard(OUTER).board;
+
+  // proves: board_nested
+  test('shows that board as written now, is said by its name, and says so when the board is gone', async () => {
+    const r = await drawBoardView(WITH, outer, 'v', PALETTES.dark);
+    assert.match(r.svg, /data-item="b"/, 'the inner board’s own items are in the picture');
+    assert.match(r.svg, /Book it/);
+    assert.match(boardSvg(outer, PALETTES.light), /Board plan/, 'named on its frame');
+    assert.match((await drawBoardView(WITH, outer, 'lost')).refused, /nowhere/);
+    assert.equal(
+      (await drawBoardView(WITH, outer, 'v')).refused,
+      'Board plan',
+      'with no colours given, its name alone',
+    );
+  });
+});

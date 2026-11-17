@@ -99,14 +99,14 @@
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "1895bfd84cf9d04bd98a605dd13fa0f6d49daaa786edf7c47fdf9f84413fa117",
-      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "sha256": "7fe3f1999a94a3b1ce15e93d7c96afa4c1faa28c8b4b5993ba01603db294971d",
+      "reason": "A board opens with its text at 11 px on its first frame (review ruling D1), so the starter board is drawn larger",
       "day": "2026-11-15"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "a5b1f2380427608d408d3a36b374230a1863fbfccffbec9472832d1f760f0032",
-      "reason": "jsdom 31 writes computed paint differently: no stroke is none, the svg is a block, and a mixed colour can be one step of 255 off. Checked: no reference differs in any other way.",
+      "sha256": "3d01043dd5ef6c6e73e3e76a3660c2083413ea61e35e555fcf6ec0c1e4cb6428",
+      "reason": "A board opens with its text at 11 px on its first frame (review ruling D1), so the starter board is drawn larger",
       "day": "2026-11-15"
     },
     {

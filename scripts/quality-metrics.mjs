@@ -102,7 +102,7 @@ function owner(input) {
   return dirname(relative(ROOT, resolve(ROOT, 'packages/obsidian', input))); // the build runs from the plugin's folder
 }
 
-/** The plugin's bundle, built in memory with the build's own options: its size, without the engine, and what is in it. */
+/** The plugin's bundle, built in memory with the build's own options: its size, and what is in it. */
 export async function measureBundle() {
   const { default: esbuild } = await import('esbuild');
   const { options, layoutWorker, pluginWorker, workerBuild } = await import('../packages/obsidian/esbuild.config.mjs');
@@ -122,13 +122,11 @@ export async function measureBundle() {
         if (!input.startsWith('layout-worker:'))
           bytes.set(owner(input), (bytes.get(owner(input)) ?? 0) + bytesInOutput);
   };
-  // the worker's function is counted by what is inside it, so the engine there is still the engine
+  // the worker's function is counted by what is inside it, so its share is named by its own modules
   add(built.metafile);
   add(workerBuild.metafile);
-  // Graphviz is gone (layout_own_engine), so nothing is taken off: the metric stays until the baseline drops it
-  const viz = bytes.get('@viz-js/viz') ?? 0;
   return {
-    metrics: { bundle_bytes: total, bundle_bytes_without_viz: total - viz },
+    metrics: { bundle_bytes: total },
     details: {
       bundle: [...bytes]
         .filter(([, b]) => b > 0)

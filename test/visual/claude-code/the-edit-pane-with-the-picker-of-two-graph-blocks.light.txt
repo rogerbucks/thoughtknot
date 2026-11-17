@@ -1,4 +1,4 @@
-<svg viewBox="0 0 1000 360" width="600" height="216" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:block;visibility:visible">
+<svg viewBox="0 0 1000 360" width="880" height="316.8" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:block;visibility:visible">
   <defs paint="display:inline">
     <marker id="p1" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="10" refY="5" orient="auto-start-reverse">
       <path d="M0 0L10 5L0 10z">
