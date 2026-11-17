@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pptx-shapes.test.js",
+  "test": "pptx_shapes > a size in EMU is whole pixels at 96 to the inch, and a missing or bad one is 0",
+  "seen_failing_first": false,
+  "evidence": "The module was split out of the reader and its tests already covered it; this test names it and asserts its own answers"
+}
