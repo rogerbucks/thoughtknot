@@ -92,5 +92,7 @@ export const APP_SOURCE_WORDS = {
   'app.move.changed': 'These notes changed while they were copied: {paths}. Nothing was moved, so try again.',
   'app.move.cannot': 'Could not move the notes: {why}',
   'app.not-yet': 'This is not in the app yet. Open the note in Obsidian or the browser editor for it.',
+  'app.pictures-not-yet':
+    'Pictures cannot be kept in the desktop app yet. Use Obsidian, VS Code or the browser editor.',
   ...VSCODE_SOURCE_WORDS,
 } as const;

@@ -39,6 +39,7 @@ export function vscodeDisk(root: vscode.Uri): FolderDisk {
       edit.replace(open.uri, new vscode.Range(open.positionAt(0), open.positionAt(open.getText().length)), text);
       if (!(await vscode.workspace.applyEdit(edit)) || !(await open.save())) throw new Error(word('server.no-answer'));
     },
+    readBytes: (path) => call(() => fs.readFile(at(path))),
     writeBytes: (path, bytes) => call(() => fs.writeFile(at(path), bytes)),
     delete: (path) => call(() => fs.delete(at(path))),
     readDirectory: (path) => call(() => fs.readDirectory(at(path))),

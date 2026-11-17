@@ -3,6 +3,7 @@
 // in the extension, each call is checked by place.ts before the disk is asked. Then it is answered from the disk handed
 // in, which is VS Code's file system over the folder (extension.ts). So this file imports no vscode, and the tests
 // hand in a folder of their own.
+import { PICTURE_MOST_BYTES } from '@thoughtknot/core';
 import { linkFree, placeProblem, SYMBOLIC_LINK } from './place.ts';
 
 /** VS Code's file type bit for a folder (`FileType.Directory`). */
@@ -12,6 +13,7 @@ const DIRECTORY = 2;
 export interface FolderDisk {
   readText(path: string): Promise<string>;
   writeText(path: string, text: string): Promise<void>;
+  readBytes(path: string): Promise<Uint8Array>;
   writeBytes(path: string, bytes: Uint8Array): Promise<void>;
   delete(path: string): Promise<void>;
   /** Each entry of a folder, its name and its file type bits. */
@@ -101,6 +103,14 @@ export function folderCalls(disk: FolderDisk) {
         .map(([name, type]) => [name, !!(type & DIRECTORY)]),
     make_dir: async ({ path }) => disk.createDirectory(await checked(path)),
     write_new: async ({ into, files }) => writeNew(into, files),
+    // a picture's bytes as base64, which a message carries as text; none larger than a picture may be
+    read_bytes: async ({ path }) => {
+      const bytes = await disk.readBytes(await checked(path));
+      if (bytes.length > PICTURE_MOST_BYTES) throw new Error('a file larger than a picture is not read as one');
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      return btoa(binary);
+    },
   };
 
   /** The answer to `message`. A call by an unknown name is refused in words. */

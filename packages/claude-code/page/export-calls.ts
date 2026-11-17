@@ -25,7 +25,8 @@ export interface ExportTarget {
 /** The names written, or why nothing was, in words. */
 export type Saved = { written: string[] } | { stopped: string };
 
-const base64 = (bytes: Uint8Array): string => {
+/** The bytes as base64, which a request carries as text. */
+export const base64 = (bytes: Uint8Array): string => {
   let binary = '';
   for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(binary);

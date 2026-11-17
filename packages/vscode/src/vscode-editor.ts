@@ -42,7 +42,13 @@ window.addEventListener('message', (e: MessageEvent<FolderReply>) => {
 });
 
 window.fetch = appFetch(
-  { storage: workspaceStorage(tauriFiles(invoke)), saveNew: tauriSaveNew(invoke) },
+  {
+    storage: workspaceStorage(tauriFiles(invoke)),
+    saveNew: tauriSaveNew(invoke),
+    // a picture comes back from the extension as base64, which a message can carry
+    readPicture: async (path) =>
+      Uint8Array.from(atob((await invoke('read_bytes', { path })) as string), (c) => c.charCodeAt(0)),
+  },
   window.fetch.bind(window),
 );
 

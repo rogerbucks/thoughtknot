@@ -18,7 +18,7 @@ import {
   type ServerOptions,
   type ServerResponse,
 } from 'node:http';
-import { currentLanguage, word } from '@thoughtknot/core';
+import { PICTURE_BODY_LIMIT, currentLanguage, word } from '@thoughtknot/core';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
@@ -68,6 +68,8 @@ export interface ApiAnswer {
   status: number;
   text: string;
   headers?: Record<string, string>;
+  /** A picture's bytes, sent as they are with the answer's own type, in place of text. */
+  bytes?: Uint8Array;
   feed?: ApiFeed;
 }
 
@@ -230,7 +232,14 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       return send(
         res,
         413,
-        word(limit === BODY_LIMIT ? 'server.too-large.note' : 'server.too-large.export', { most: limit }),
+        word(
+          limit === BODY_LIMIT
+            ? 'server.too-large.note'
+            : limit === PICTURE_BODY_LIMIT
+              ? 'server.too-large.picture'
+              : 'server.too-large.export',
+          { most: limit },
+        ),
         { connection: 'close' },
       );
     }
@@ -238,6 +247,10 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     // checked again after the body is read, so no call reaches the API once a stop has begun
     if (stopped !== null) return send(res, 503, word('server.stopped-unwritten'), { connection: 'close' });
     const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers, as });
+    if (answer.bytes) {
+      res.writeHead(answer.status, { ...SECURITY_HEADERS, ...answer.headers, 'content-length': answer.bytes.length });
+      return void res.end(answer.bytes);
+    }
     if (!answer.feed) return send(res, answer.status, answer.text, answer.headers);
     res.writeHead(answer.status, { ...SECURITY_HEADERS, ...answer.headers });
     const end = answer.feed((text) => void (res.destroyed || res.write(text)));
