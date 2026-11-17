@@ -50,11 +50,13 @@ export interface SourceFault {
 
 /**
  * What the host found at a source's place: the text read there, or why there is none. It may be unreadable or missing.
- * Or it may be larger than `READ_LIMITS.bytes`, so it was never read; `tooLarge` keeps its size in bytes.
+ * Or it may be larger than `READ_LIMITS.bytes`, so it was never read; `tooLarge` keeps its size in bytes. A Word
+ * document or a PDF may come as `document`: its text, already read by the host in a worker (document-reader.ts).
  */
 export type Fetched =
   | { found: string; text: string; mapping?: string }
   | { found: string; bytes: Uint8Array; mapping?: string }
+  | { found: string; document: string }
   | { found: string; unreadable: string }
   | { found: string; tooLarge: number }
   | { missing: true; elsewhere?: readonly string[] };
@@ -267,7 +269,7 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
     return { source, from: fetched.found, texts: [], lines: [], reading };
   }
   // a database's bytes are read only by its connector (database-connector.ts), never as graph text
-  if ('bytes' in fetched)
+  if ('bytes' in fetched || 'document' in fetched)
     return refuse(source, 'unreadable', word('reading.source.unreadable', { name, why: '', graph }));
   const blocks = kind === 'note' ? gqlBlocks(fetched.text) : [{ text: fileBlock(fetched.text), line: 0 }];
   const texts = blocks.map((b) => b.text);

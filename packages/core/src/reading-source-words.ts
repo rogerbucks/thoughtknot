@@ -174,6 +174,10 @@ export const READING_SOURCE_WORDS = {
   // a Word document or a PDF read as plain text, only as a proposal (document-connector.ts)
   'reading.document.proposal-only':
     '{place} is a document: only its text is read, and it becomes a graph only as a proposal for a person to accept. Each thing cites a line of that text.',
+  // a document read in a worker under a time limit (document-reader.ts)
+  'reading.document.too-slow':
+    '{place} took more than {seconds} seconds to read, so it was not read. It may be damaged. Try saving it again.',
+  'reading.document.worker-failed': '{place} could not be read, because its reader stopped ({why}).',
   // a SQLite database read as tables in plain JavaScript (sqlite-read.ts)
   'reading.sqlite.not-sqlite': 'This file is not a SQLite database, so it was not read.',
   'reading.sqlite.too-large': 'This database is larger than {most} bytes, so it was not read.',

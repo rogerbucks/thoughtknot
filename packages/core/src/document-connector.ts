@@ -14,6 +14,15 @@ export const documentConnector: Connector = {
   kinds: ['document'],
   connect(source, fetched) {
     const place = placeKey(source);
+    // read already by the host, in a worker under a time limit (document-reader.ts)
+    if ('document' in fetched)
+      return proseConnected(
+        source,
+        place,
+        fetched.found,
+        fetched.document,
+        word('reading.document.proposal-only', { place }),
+      );
     if (!('bytes' in fetched)) {
       const said = readSource(source, fetched);
       if ('refused' in said) return said;
