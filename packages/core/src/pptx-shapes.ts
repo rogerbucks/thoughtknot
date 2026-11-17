@@ -9,6 +9,7 @@ import type { Rels, XNode } from './pptx-xml.ts';
 import { partBytes } from './zip-read.ts';
 
 const EMU = 9525;
+/** A size in EMU (the unit a deck is written in) as whole pixels, 96 to the inch. */
 export const px = (v: string | undefined): number => Math.round((Number(v) || 0) / EMU);
 
 /** A move and a scale: a point goes to its place times the scale, plus the move. Groups of shapes make these. */
