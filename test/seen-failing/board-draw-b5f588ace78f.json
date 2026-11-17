@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/board-draw.test.js",
+  "test": "drawing and formatting on the browser editor’s page > draws a stroke with the Pen as one Ink item, keeps drawing until Escape, and the Eraser rubs it out",
+  "seen_failing_first": false,
+  "evidence": "moved unchanged from board-section.test.js, where it was written first"
+}
