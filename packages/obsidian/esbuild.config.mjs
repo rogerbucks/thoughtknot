@@ -76,6 +76,40 @@ export const layoutWorker = {
   },
 };
 
+// The document worker (ES§67 format_untrusted_files). src/document-worker/worker-entry.ts is bundled on its own, as the
+// layout worker is, and is the body of one function, `documentWorker`, from 'thoughtknot:document-worker'. A Word file or
+// a PDF is read in it under a time limit (src/document-worker/document-reads.ts).
+export const documentWorker = {
+  name: 'document-worker',
+  setup(build) {
+    build.onResolve({ filter: /^thoughtknot:document-worker$/ }, (a) => ({
+      path: a.path,
+      namespace: 'document-worker',
+    }));
+    build.onLoad({ filter: /.*/, namespace: 'document-worker' }, async () => {
+      const inner = await esbuild.build({
+        absWorkingDir: here,
+        entryPoints: ['src/document-worker/worker-entry.ts'],
+        bundle: true,
+        platform: 'browser',
+        format: 'iife',
+        globalName: 'thoughtknotDocumentWorker',
+        target: 'es2022',
+        legalComments: 'inline',
+        write: false,
+        metafile: true,
+        logLevel: 'warning',
+      });
+      return {
+        contents: `export function documentWorker(scope) {\n${inner.outputFiles[0].text}\n}\n`,
+        loader: 'js',
+        resolveDir: here,
+        watchFiles: Object.keys(inner.metafile.inputs).map((f) => join(here, f)),
+      };
+    });
+  },
+};
+
 // The worker an outside plug-in runs in (spec §54, plugin_outside_file). src/outside/plugin-worker-entry.ts is bundled on
 // its own, as the layout worker is. It is the body of one function, `pluginWorker`, from 'thoughtknot:plugin-worker'.
 // The worker's script is that function's text, run on `self` first, then the plug-in's file.
@@ -126,7 +160,7 @@ export const options = {
   minifySyntax: true,
   logLevel: 'info',
   write: false,
-  plugins: [layoutWorker, pluginWorker, swapIn],
+  plugins: [layoutWorker, pluginWorker, documentWorker, swapIn],
 };
 
 // --watch (npm run dev): rebuild on every save, for installing into a test vault. Only when run, never when imported.

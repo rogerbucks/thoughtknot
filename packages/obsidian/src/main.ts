@@ -43,6 +43,7 @@ import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { ThoughtKnotSettingTab, watchVaultPreset } from './settings/settings';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 export { obsidianHost } from './obsidian-host';
+import { DocumentReads } from './document-worker/document-reads';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { TriedTypes } from './tried-types';
@@ -288,6 +289,12 @@ export default class ThoughtKnotPlugin extends Plugin {
   }
 
   private layouts: Layouts | null = null;
+  private documents: DocumentReads | null = null;
+
+  /** The Word and PDF reader, one worker reused, started on first use; none once the plugin is unloaded (ES§67). */
+  documentReads(): DocumentReads {
+    return (this.documents ??= new DocumentReads());
+  }
   private unloaded = false;
 
   /**
@@ -328,6 +335,8 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.unloaded = true;
     this.layouts?.close();
     this.layouts = null;
+    this.documents?.close();
+    this.documents = null;
     this.outside.stopAll();
   }
 

@@ -11,7 +11,6 @@ import {
   boardFormatOf,
   columnsOf,
   documentBlock,
-  documentText,
   importedBlock,
   isDbFile,
   isDocumentPlace,
@@ -275,7 +274,7 @@ class ImportDialog extends Modal {
     } else if (db && isDocumentPlace(db.path)) {
       // a document is read once here, so a file that cannot be read is said now; the block that draws it reads it again
       const bytes = new Uint8Array(await this.app.vault.readBinary(db));
-      const read = documentText(bytes, db.path);
+      const read = await this.plugin.documentReads().read(bytes, db.path, `${db.stat.size}:${db.stat.mtime}`);
       if ('refused' in read) this.refused = read.refused;
       else {
         [this.bytes, this.doc] = [bytes, true];
