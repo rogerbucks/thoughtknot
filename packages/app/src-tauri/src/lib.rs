@@ -1,5 +1,5 @@
 // The desktop app (spec §41, standalone_app): one window, and the notes of one folder the person picks. The window
-// runs the browser editor's page, which reads and writes notes through the ten folder commands below, and sends a
+// runs the browser editor's page, which reads and writes notes through the eleven folder commands below, and sends a
 // note to GitHub through the one gh command, and nothing else.
 // - Nothing is fetched: the window's pages come from inside the app, and its policy allows no other origin.
 // - Every path a command takes is relative to the picked folder. A path that climbs out (`..`), starts at a root, names
@@ -228,6 +228,12 @@ fn write_new(
     folder: State<'_, Folder>,
 ) -> Result<Vec<String>, String> {
     place::write_new(&folder.root()?, &into, &files)
+}
+
+/// A picture kept beside a note, as bytes. Only a PNG, JPEG, GIF or WebP file of the right size, never through a link.
+#[tauri::command]
+fn read_bytes(path: String, folder: State<'_, Folder>) -> Result<Vec<u8>, String> {
+    place::read_picture(&folder.root()?, &path)
 }
 
 /// Runs the person's own gh for one call to a GitHub repository they picked (spec §48, github_repo_access). Only the
@@ -480,6 +486,7 @@ pub fn run() {
         remove_file,
         make_dir,
         write_new,
+        read_bytes,
         pick_target,
         swap_folders,
         run_gh,

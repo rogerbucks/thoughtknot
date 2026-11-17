@@ -9,6 +9,7 @@ fn main() {
         "remove_file",
         "make_dir",
         "write_new",
+        "read_bytes",
         "pick_target",
         "swap_folders",
         "run_gh",
