@@ -42,9 +42,9 @@
     "jsdom": "31.0.0",
     "obsidian": "1.14.4",
     "prettier": "3.9.10",
-    "sql.js": "1.15.2",
+    "sql.js": "1.16.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.1"
+    "typescript-eslint": "8.72.2"
   },
   "overrides": {
     "moment": "2.31.0",
