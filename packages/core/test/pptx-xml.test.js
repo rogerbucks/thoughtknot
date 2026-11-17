@@ -1,5 +1,5 @@
 // The XML parts of a PowerPoint file as small trees (ES§67 format_untrusted_files). A tree is cut at a depth and at a
-// count of nodes, and a relationship that leaves the zip or points to the web is never followed.
+// A tree is cut at a depth and at a count of nodes. A relationship that leaves the zip or points to the web is never followed.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { deep, kid, kidsOf, relsName, relsOf, resolvePart, xmlTree } from '../src/pptx-xml.ts';
