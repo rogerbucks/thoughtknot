@@ -1,6 +1,7 @@
 // Word files and PDFs read off the page's thread (ES§67 format_untrusted_files). One worker, started on the first read
 // from a Blob URL of the bundle's own text, as the layout worker is (layout-worker.ts says why). A read that takes too
 // long stops the worker and the file is refused in words. Where no worker can run, the core reads on the page.
+import type { Plugin } from 'obsidian';
 import { DocumentReader } from '@thoughtknot/core';
 import type { DocumentPort, DocumentRead } from '@thoughtknot/core';
 import { documentWorker } from 'thoughtknot:document-worker';
@@ -52,4 +53,20 @@ export class DocumentReads {
     w.onerror = (e) => port.onerror?.(e.message || e);
     return port;
   }
+}
+
+const reads = new WeakMap<Plugin, DocumentReads>();
+
+/** The plug-in's document reads, one worker reused, started on first use and closed when the plug-in unloads. */
+export function documentReadsOf(plugin: Plugin): DocumentReads {
+  let got = reads.get(plugin);
+  if (!got) {
+    const made = (got = new DocumentReads());
+    reads.set(plugin, made);
+    plugin.register(() => {
+      made.close();
+      reads.delete(plugin);
+    });
+  }
+  return got;
 }
