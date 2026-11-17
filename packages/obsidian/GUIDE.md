@@ -113,6 +113,15 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - `stillToRewrite` is asked again just before the write. It refuses the same way when that pane changed while the note
     was read.
 
+### `src/document-worker/` — Word files and PDFs read off the page's thread (ES§67 format_untrusted_files)
+
+- `document-reads.ts` — `DocumentReads`: a Word file or a PDF read in one Web Worker. It starts from a Blob URL of main.js's
+  own copy of the bundle. A read that takes over 10 seconds stops the worker and refuses the file in words. Where no
+  worker can start, the core reads on the page. `documentReadsOf` gives each plug-in its own, closed on unload.
+- `worker-entry.ts` — what runs inside the worker: the core's `serveDocuments`. `esbuild.config.mjs` bundles it into the
+  function `documentWorker` of the module `thoughtknot:document-worker` (typed in `bundled-worker.d.ts`).
+- The draw path (`sources/source-read.ts`) and the Import dialog read through it, and give `connect` the text.
+
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 
 - `layout-worker.ts` — `Layouts`: every graph, and every export, laid out in one Web Worker. The worker is started from

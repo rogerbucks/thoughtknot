@@ -11,7 +11,6 @@ import {
   boardFormatOf,
   columnsOf,
   documentBlock,
-  documentText,
   importedBlock,
   isDbFile,
   isDocumentPlace,
@@ -26,6 +25,7 @@ import {
 } from '@thoughtknot/core';
 import type { DbRow, SqliteEntry, SqliteTable, WordKey } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { documentReadsOf } from '../document-worker/document-reads';
 import { noteToRewrite } from '../reading-view';
 import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
@@ -275,7 +275,7 @@ class ImportDialog extends Modal {
     } else if (db && isDocumentPlace(db.path)) {
       // a document is read once here, so a file that cannot be read is said now; the block that draws it reads it again
       const bytes = new Uint8Array(await this.app.vault.readBinary(db));
-      const read = documentText(bytes, db.path);
+      const read = await documentReadsOf(this.plugin).read(bytes, db.path, `${db.stat.size}:${db.stat.mtime}`);
       if ('refused' in read) this.refused = read.refused;
       else {
         [this.bytes, this.doc] = [bytes, true];

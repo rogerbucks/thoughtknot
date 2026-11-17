@@ -37,6 +37,7 @@ import type {
 } from '@thoughtknot/core';
 import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { documentReadsOf } from '../document-worker/document-reads';
 import { vaultSourceRegistry } from './host-sources';
 import { noteText } from '../storage/plugin-notes';
 import { freePath, vaultOps } from '../export/vault-write';
@@ -112,8 +113,14 @@ async function bytesOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: str
   if (file.stat.size > most) return { found: file.path, tooLarge: file.stat.size };
   try {
     const bytes = new Uint8Array(await plugin.app.vault.readBinary(file));
-    // a document is the whole file: it has no table or sheet, so no mapping beside it
-    if (doc) return { found: file.path, bytes };
+    // a document is the whole file: it has no table or sheet, so no mapping beside it. It is read in a worker under a
+    // time limit, so a hostile file never holds the page; `connect` is given its text (document-reader.ts)
+    if (doc) {
+      const read = await documentReadsOf(plugin).read(bytes, file.path, `${file.stat.size}:${file.stat.mtime}`);
+      return 'text' in read
+        ? { found: file.path, document: read.text }
+        : { found: file.path, unreadable: read.refused };
+    }
     const found = `${file.path}#${at.table}`;
     const mapping = await fromVault(plugin, { kind: 'file', target: mappingPlace(found) }, from);
     return 'text' in mapping ? { found, bytes, mapping: mapping.text } : { found, bytes };
