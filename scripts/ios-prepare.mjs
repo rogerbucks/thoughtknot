@@ -3,19 +3,19 @@
 // by `cargo tauri ios init` and is not committed, so these steps run again before every build:
 //
 // 1. App icons. Apple rejects an App Store icon that has an alpha channel (ITMS-90717), and iOS rounds the corners
-//    itself. So the iPhone icons are drawn from the site's icon as a full square: `cargo tauri icon` makes every size,
-//    and each one is flattened onto the icon's purple and written back with no alpha channel. Desktop and website
+//    itself. So the iPhone icons are drawn from the site's icon as a full square. `cargo tauri icon` makes every size.
+//    Each one is then flattened onto the icon's purple and written back with no alpha channel. Desktop and website
 //    icons are left as they are.
 // 2. Privacy manifest. `packages/app/src-tauri/ios/PrivacyInfo.xcprivacy` is copied into the app's folder, which
 //    project.yml already bundles.
-// 3. Build number. Every upload needs a higher CFBundleVersion than the last, so the build number is the count of
-//    commits on the checked-out branch: it only grows along main. It goes to Tauri as `bundle.iOS.bundleVersion`.
+// 3. Build number. Every upload needs a higher CFBundleVersion than the last. So the build number is the count of
+//    commits on the checked-out branch, which only grows along main. It goes to Tauri as `bundle.iOS.bundleVersion`.
 //
 // Usage:
 //   node scripts/ios-prepare.mjs             do steps 1 and 2, and print the build number.
 //   node scripts/ios-prepare.mjs --build     also run `cargo tauri ios build` for app-store-connect with that number.
-//   add --root DIR                           to work on another checkout of the repo, such as the main one from a
-//                                            worktree, since only the checkout that ran `ios init` has gen/.
+//   add --root DIR                           to work on another checkout, such as the main one from a worktree.
+//                                            Only the checkout that ran `ios init` has gen/.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
