@@ -12,6 +12,8 @@ import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
 import { commentedMore } from './board-comments.ts';
+import { formatPatch, type Format } from './board-format.ts';
+import { routedAs, type RouteSet } from './board-route.ts';
 import type { CommentOp } from './board-comments.ts';
 import { isLayerChange, layerEdit, lockedOn, type LayerChange } from './board-layers.ts';
 import { hiddenMore } from './board-session.ts';
@@ -28,6 +30,8 @@ export type BoardChange =
   | { kind: 'layer'; id: string; layer: number }
   | { kind: 'lock'; id: string; locked: boolean }
   | { kind: 'style'; id: string; style: string | null }
+  /** The look of several items changed at once, as the format bar changes it: one change, one undo. */
+  | { kind: 'formats'; ids: string[]; set: Partial<Format> }
   | { kind: 'group'; id: string; group: string | null }
   | { kind: 'vote'; id: string; person: string; reaction: string | null }
   | { kind: 'hide'; id: string; person: string; hidden: boolean }
@@ -38,6 +42,8 @@ export type BoardChange =
   | { kind: 'remove'; id: string }
   | { kind: 'connect'; from: string; to: string; label?: string }
   | { kind: 'disconnect'; from: string; to: string }
+  /** The route or arrowheads of several connectors changed at once, as the format bar changes them. */
+  | { kind: 'routes'; links: { from: string; to: string }[]; set: RouteSet }
   | { kind: 'put'; item: BoardItem }
   | LayerChange
   | SlideChange;
@@ -73,6 +79,12 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
     if (!open.length) return { refused: word('board.edit.locked') };
     return { text: open.reduce((t, m) => moveItem(t, m.id, m.x, m.y), text) };
   }
+  if (change.kind === 'formats') {
+    // each item by its own text alone; a locked one keeps its look
+    const open = change.ids.map(find).filter((i): i is BoardItem => !!i && (undoing || !i.locked));
+    if (!open.length) return { refused: word('board.edit.locked') };
+    return { text: open.reduce((t, item) => itemChanged(t, item, formatPatch(item, change.set)), text) };
+  }
   if (isItemSet(change)) {
     const set = change;
     const item = find(set.id);
@@ -105,6 +117,10 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
     const was = board.items[at];
     if (was && locked(was) && !undoing) return { refused: word('board.edit.locked') };
     board.items[at] = change.item;
+  } else if (change.kind === 'routes') {
+    const is = (c: Connector) => change.links.some((l) => l.from === c.from && l.to === c.to);
+    if (!board.connectors.some(is)) return { refused: word('board.edit.gone', { id: 'connector' }) };
+    board.connectors = board.connectors.map((c) => (is(c) ? routedAs(c, change.set) : c));
   } else if (change.kind === 'disconnect') {
     const { from, to } = change;
     if (!board.connectors.some((c) => c.from === from && c.to === to))

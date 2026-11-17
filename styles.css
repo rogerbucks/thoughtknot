@@ -154,6 +154,14 @@
   .thoughtknot-stage-card.is-chosen {
     outline-color: Highlight;
   }
+  /* a colour's swatch on a board loses its colour, so it shows the colour's name instead */
+  .thoughtknot-board-swatch {
+    border-radius: 0;
+    padding: 0 var(--gn-space-1);
+  }
+  .thoughtknot-board-swatch::after {
+    content: attr(aria-label);
+  }
   /* the bars over the cards keep their edge */
   .thoughtknot-stage-cards-chosen,
   .thoughtknot-stage-cards-sets {
@@ -2943,6 +2951,39 @@ button.thoughtknot-stage-card-pin {
   display: inline-flex;
   vertical-align: top;
 }
+/* The format bar sits on the same row; its looks wrap under it on a narrow board. */
+.thoughtknot-board-bar + .thoughtknot-board-format,
+.thoughtknot-board-tools + .thoughtknot-board-format {
+  display: inline-flex;
+  flex-wrap: wrap;
+  vertical-align: top;
+  margin-inline-start: var(--gn-space-2);
+}
+.thoughtknot-board-format,
+.thoughtknot-board-format-looks,
+.thoughtknot-board-format-looks > [role='group'] {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-board-format-looks {
+  column-gap: var(--gn-space-3);
+}
+.thoughtknot-board-format-looks[hidden],
+.thoughtknot-board-format-looks > [hidden] {
+  display: none;
+}
+.thoughtknot-board-format [aria-disabled='true'] {
+  opacity: 0.6;
+}
+.thoughtknot-board-swatch {
+  background: var(--thoughtknot-swatch);
+  border: 2px solid var(--thoughtknot-swatch-edge);
+  border-radius: 50%;
+  padding: 0;
+}
+.thoughtknot-board-format button[aria-pressed='true'],
 .thoughtknot-board-tools button[aria-pressed='true'] {
   outline: 2px solid var(--gn-text-normal);
   outline-offset: -2px;
@@ -3058,6 +3099,23 @@ button.thoughtknot-stage-card-pin {
   stroke-width: 1;
   stroke-dasharray: 4 3;
   pointer-events: none;
+}
+/* While a pen, highlighter or eraser is in use a drag draws: no scroll or pan by touch, and a cross to aim with. */
+.thoughtknot-board .thoughtknot-viewport.is-inking {
+  touch-action: none;
+  cursor: crosshair;
+}
+.thoughtknot-board .thoughtknot-ink-preview {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.thoughtknot-board [data-item].is-erased {
+  opacity: 0.25; /* a stroke the eraser has crossed, until it lifts */
+}
+.thoughtknot-board .thoughtknot-viewport.is-inking [data-item] {
+  cursor: crosshair;
 }
 .thoughtknot-board-tools button,
 .thoughtknot-board-layers button,

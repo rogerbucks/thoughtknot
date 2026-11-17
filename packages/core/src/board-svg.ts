@@ -13,6 +13,9 @@ import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { clashOf } from './board-clash.ts';
 import { orderOn, seenBoard, shownOn } from './board-layers.ts';
 import { glyphNamed } from './board-glyphs.ts';
+import { DASHES, TEXT_SCALE, formatOf } from './board-format.ts';
+import { inkSvg } from './board-ink.ts';
+import { connectorRun } from './board-route.ts';
 import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
 import { STYLE } from './layout.ts';
@@ -148,17 +151,6 @@ export function boardOutline(all: Board): OutlineLine[] {
   return lines;
 }
 
-/** Where the line from a box's centre toward a point leaves the box. */
-function edgeOf(box: Box, toward: [number, number]): [number, number] {
-  const cx = box.x + box.w / 2,
-    cy = box.y + box.h / 2;
-  const dx = toward[0] - cx,
-    dy = toward[1] - cy;
-  if (!dx && !dy) return [cx, cy];
-  const t = Math.min(dx ? box.w / 2 / Math.abs(dx) : Infinity, dy ? box.h / 2 / Math.abs(dy) : Infinity);
-  return [cx + dx * t, cy + dy * t];
-}
-
 /** An item's text broken into lines that fit its width, at about six tenths of the font size a character. */
 function linesOf(text: string, width: number, size: number): string[] {
   const most = Math.max(4, Math.floor(width / (0.6 * size)));
@@ -183,15 +175,22 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const hue = own ?? HUES[item.kind];
   const fill = item.kind === 'Frame' || !hue ? 'none' : palette.fill(hue);
   const stroke = hue ? palette.blend(hue, STYLE.line_mix) : palette.edge;
-  const dash = item.kind === 'Frame' || item.kind === 'Ink' ? ' stroke-dasharray="6 4"' : '';
+  const look = formatOf(item);
+  // its own line where it has one; else a frame, and a stroke with no points, are dashed
+  const dashes = look.line ? DASHES[look.line] : item.kind === 'Frame' || item.kind === 'Ink' ? DASHES.dashed : '';
+  const inkLine = look.line ? DASHES[look.line] : '';
+  const ink =
+    item.kind === 'Ink' ? inkSvg(item, hue ? palette.blend(hue, STYLE.line_mix) : palette.text, inkLine) : null;
+  const dash = dashes ? ` stroke-dasharray="${dashes}"` : '';
   const corner =
     item.kind === 'Card' || item.kind === 'Frame' || item.kind === 'View' ? 8 : item.kind === 'Shape' ? box.h / 2 : 2;
   const shape =
-    item.kind === 'Text'
+    ink ??
+    (item.kind === 'Text'
       ? ''
-      : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`;
+      : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`);
   const quiet = item.kind === 'Frame' || item.kind === 'View';
-  const size = quiet ? STYLE.kind_font_size : STYLE.font_size;
+  const size = (quiet ? STYLE.kind_font_size : STYLE.font_size) * TEXT_SCALE[look.size];
   const pad = 8;
   const rows =
     item.kind === 'Card'
@@ -212,7 +211,7 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
     ? `<text x="${num(box.x + box.w / 2)}" y="${num(box.y + box.h / 2)}" font-size="${num(Math.min(box.w, box.h) * 0.7)}" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${glyph.char}</text>`
     : '';
   const words = text
-    ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${quiet ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
+    ? `<text font-family="${STYLE.font}" font-size="${num(size)}"${look.bold ? ' font-weight="bold"' : ''} fill="${quiet ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
     : '';
   const open = openThreads(item);
   const talk = open
@@ -225,7 +224,8 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const flag = clashOf(item)
     ? `<g aria-hidden="true" data-clash="${escaped(clashOf(item) ?? '')}"><path d="M${num(box.x + box.w - 18)} ${num(box.y + 4)}h14l-7 12z" fill="${palette.text}"/><text x="${num(box.x + box.w - 11)}" y="${num(box.y + 14)}" font-size="9" text-anchor="middle" fill="${palette.page ?? '#fff'}">!</text></g>`
     : '';
-  const slot = item.kind === 'View' ? ` data-view="${escaped(item.id)}"` : '';
+  const slot =
+    item.kind === 'View' || item.kind === 'Image' ? ` data-${item.kind.toLowerCase()}="${escaped(item.id)}"` : '';
   return `<g data-item="${escaped(item.id)}"${slot} role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}${flag}</g>`;
 }
 
@@ -256,18 +256,30 @@ export function boardSvg(board: Board, palette: Palette, view?: Box): string {
     .sort((a, b) => order(a.item) - order(b.item) || (a.item.layer ?? 0) - (b.item.layer ?? 0) || a.at - b.at)
     .map(({ item }) => item);
   const near = new Set(shown.map((i) => i.id));
+  // what a connector goes round: every item but a frame, which holds others, and a stroke
+  const inWay = seenBoard(board)
+    .items.filter((i) => i.kind !== 'Frame' && i.kind !== 'Ink')
+    .map((i) => boxes.get(i.id) as Box);
   const lines = seenBoard(board).connectors.flatMap((c) => {
     const a = boxes.get(c.from),
       b = boxes.get(c.to);
     if (!a || !b || (!near.has(c.from) && !near.has(c.to))) return [];
-    const [x1, y1] = edgeOf(a, [b.x + b.w / 2, b.y + b.h / 2]);
-    const [x2, y2] = edgeOf(b, [a.x + a.w / 2, a.y + a.h / 2]);
+    const run = connectorRun(
+      c,
+      a,
+      b,
+      inWay.filter((o) => o !== a && o !== b),
+    );
     const label = c.label
-      ? `<text x="${num((x1 + x2) / 2)}" y="${num((y1 + y2) / 2 - 4)}" font-family="${STYLE.font}" font-size="${num(STYLE.kind_font_size)}" text-anchor="middle" fill="${palette.muted}">${isolated(escaped(c.label))}</text>`
+      ? `<text x="${num(run.mid[0])}" y="${num(run.mid[1] - 4)}" font-family="${STYLE.font}" font-size="${num(STYLE.kind_font_size)}" text-anchor="middle" fill="${palette.muted}">${isolated(escaped(c.label))}</text>`
       : '';
-    return [
-      `<g data-connector="${escaped(`${c.from}-${c.to}`)}"><line x1="${num(x1)}" y1="${num(y1)}" x2="${num(x2)}" y2="${num(y2)}" stroke="${palette.edge}" marker-end="url(#board-arrow)"/>${label}</g>`,
-    ];
+    const tips =
+      (c.tips === 'none' ? '' : ' marker-end="url(#board-arrow)"') +
+      (c.tips === 'both' ? ' marker-start="url(#board-arrow)"' : '');
+    const shape = run.line
+      ? `<line x1="${num(run.line[0][0])}" y1="${num(run.line[0][1])}" x2="${num(run.line[1][0])}" y2="${num(run.line[1][1])}" stroke="${palette.edge}"${tips}/>`
+      : `<path d="${run.path}" fill="none" stroke="${palette.edge}"${tips}/>`;
+    return [`<g data-connector="${escaped(`${c.from}-${c.to}`)}">${shape}${label}</g>`];
   });
   const frame = view ?? boardFrame(board);
   const box = `${num(frame.x)} ${num(frame.y)} ${num(frame.w)} ${num(frame.h)}`;

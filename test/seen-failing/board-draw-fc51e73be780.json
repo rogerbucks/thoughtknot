@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/board-draw.test.js",
+  "test": "drawing and formatting on the browser editor’s page > formats the items chosen from the Format bar: one press colours both, and the bar stays as it was",
+  "seen_failing_first": false,
+  "evidence": "moved unchanged from board-section.test.js, where it was written first"
+}

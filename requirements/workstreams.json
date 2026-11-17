@@ -759,9 +759,13 @@
       "board_slides",
       "board_view_items",
       "board_main_screen",
+      "board_ink",
       "board_many",
       "board_nested",
-      "board_proposed"
+      "board_proposed",
+      "board_images",
+      "board_format",
+      "board_routes"
     ]
   },
   "B2": {

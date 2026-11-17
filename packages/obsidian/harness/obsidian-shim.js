@@ -142,9 +142,17 @@ export class TFile {
 // One note in memory, as the vault; changes are reported as Obsidian reports them.
 export const files = new Map();
 const listeners = [];
+// the pictures kept, each by its path, as the address the page shows it from
+const pictures = new Map();
 const vault = {
   getFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
-  getResourcePath: (f) => `app://local/${f.path}`,
+  // a picture dropped on a board is kept in memory, and shown from there
+  getResourcePath: (f) => pictures.get(f.path) ?? `app://local/${f.path}`,
+  createBinary: async (path, data) => {
+    const type = { svg: 'image/svg+xml', jpg: 'image/jpeg' }[path.split('.').pop()] ?? `image/${path.split('.').pop()}`;
+    pictures.set(path, URL.createObjectURL(new Blob([data], { type })));
+    return new TFile(path);
+  },
   read: async (f) => files.get(f.path),
   // As Obsidian's: an awaited read, then the edit and an awaited write. A test may change the note between them: it
   // sets inProcess, which runs once in that gap (risk CODE-5). The edit is given the note as it stands after the gap.
@@ -166,7 +174,7 @@ const vault = {
   cachedRead: async (f) => files.get(f.path),
   getMarkdownFiles: () => [...files.keys()].map((p) => new TFile(p)),
   getFiles: () => [...files.keys()].map((p) => new TFile(p)),
-  getAbstractFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
+  getAbstractFileByPath: (p) => (files.has(p) || pictures.has(p) ? new TFile(p) : null),
   create: async (p, t) => {
     files.set(p, t);
     return new TFile(p);
@@ -221,7 +229,17 @@ const metadataCache = {
   getFirstLinkpathDest: (link) => vault.getAbstractFileByPath(link) ?? vault.getAbstractFileByPath(`${link}.md`),
 };
 // a note a broken link names is made in the vault's root, as Obsidian's default puts a new note
-const fileManager = { getNewFileParent: () => ({ path: '/' }) };
+const fileManager = {
+  getNewFileParent: () => ({ path: '/' }),
+  // where a new attachment goes: a folder of attachments, a number added when the name is taken
+  getAvailablePathForAttachment: async (name) => {
+    const dot = name.lastIndexOf('.');
+    let path = `attachments/${name}`;
+    for (let n = 1; vault.getAbstractFileByPath(path); n++)
+      path = `attachments/${name.slice(0, dot)} ${n}${name.slice(dot)}`;
+    return path;
+  },
+};
 export const app = { vault, workspace, metadataCache, fileManager };
 export class ItemView extends Component {
   constructor(leaf) {

@@ -9,6 +9,7 @@ import { itemBox } from '../../board-svg.ts';
 import { viewSpace } from '../../view-types/board-views.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 import { drawHandle } from './board-drag.ts';
+import { paintImages, type Pictures } from './board-images.ts';
 
 /** What draws a View item of a board: an SVG picture its own size, or why not, in words. */
 export type Viewer = (board: Board, id: string) => Promise<{ svg: string } | { refused: string }>;
@@ -68,14 +69,15 @@ export function paintViews(svg: SVGSVGElement, board: Board, viewer: Viewer | un
   }
 }
 
-/** The marks the board draws over its picture once drawn: the views painted in, and the handle on the item in focus. */
+/** The marks the board draws over its picture once drawn: the views and pictures painted in, and the focus's handle. */
 export function paintOver(
   svg: SVGSVGElement,
   board: Board,
   focus: string | null,
   readOnly: boolean,
-  host: { views?: Viewer; key: string },
+  host: { views?: Viewer; images?: Pictures; key: string },
 ): void {
   paintViews(svg, board, host.views, host.key);
+  paintImages(svg, board, host.images);
   if (!readOnly) drawHandle(svg, board, focus);
 }

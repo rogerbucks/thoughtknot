@@ -12,6 +12,9 @@ import { boardOutline, itemBox, type Box } from '../../board-svg.ts';
 /** How tall a board's viewport is in a note, in pixels. */
 export const HEIGHT = 420;
 
+/** How wide the last board measured was. A host that draws a board afresh builds it off the page, with no width yet. */
+let lastWidth = 600;
+
 /** A spot in the viewport, in pixels. */
 export type Point = { x: number; y: number };
 
@@ -21,18 +24,21 @@ export class BoardSpace {
   private readonly zoom: () => Zoom;
   private readonly frame: () => Box;
 
+  /** The board itself while it is shown over the whole screen, as a slide show is; then the view is as tall as it. */
+  full: HTMLElement | null = null;
+
   constructor(vp: HTMLElement, zoom: () => Zoom, frame: () => Box) {
     this.vp = vp;
     this.zoom = zoom;
     this.frame = frame;
   }
 
-  /** The board itself while it is shown over the whole screen, as a slide show is; then the view is as tall as it. */
-  full: HTMLElement | null = null;
-
+  /** The viewport's size. Before it is on the page it has no width: then it is as wide as the last board measured. */
   size() {
+    const width = this.vp.getBoundingClientRect().width;
+    if (width) lastWidth = width;
     const height = this.full?.getBoundingClientRect().height || HEIGHT;
-    return { width: this.vp.getBoundingClientRect().width || 600, height };
+    return { width: width || lastWidth, height };
   }
 
   /** A box of the board as a part of the whole board, as the zoom wants it. */

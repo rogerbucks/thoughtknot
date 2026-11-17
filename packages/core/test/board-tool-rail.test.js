@@ -45,7 +45,7 @@ function rail(readOnly = false, key = `board ${(keys += 1)}`) {
   const bar = root.querySelector('.thoughtknot-board-tools');
   const tool = (name) => bar.querySelector(`button[data-tool="${name}"]:not(.thoughtknot-board-tools-fold)`);
   const fold = bar.querySelector('.thoughtknot-board-tools-fold');
-  return { window, r, to, done, bar, tool, fold };
+  return { window, r, to, done, bar, tool, fold, vp };
 }
 
 beforeEach(() => installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} }));
@@ -86,8 +86,8 @@ describe('the tool rail', () => {
     assert.equal(window.document.activeElement, tool('choose'));
     key(tool('choose'), 'ArrowLeft');
     key(fold, 'ArrowLeft');
-    assert.equal(window.document.activeElement, tool('connect'), 'round from the first to the last');
-    key(tool('connect'), 'Escape');
+    assert.equal(window.document.activeElement, tool('eraser'), 'round from the first to the last');
+    key(tool('eraser'), 'Escape');
     assert.equal(fold.getAttribute('aria-expanded'), 'false');
     assert.equal(window.document.activeElement, fold);
   });
@@ -138,5 +138,20 @@ describe('the tool rail', () => {
     assert.ok(tool('hand'));
     r.pick('hand');
     assert.equal(r.press(BOARD, 'a', [0, 0], to), 'pan');
+  });
+
+  // proves: board_ink
+  test('keeps the Pen in use when its board is drawn afresh after a stroke, until another tool is picked', () => {
+    const first = rail(false, 'the drawn board');
+    first.tool('pen').click();
+    assert.ok(first.vp.classList.contains('is-inking'), 'a drag on the board now draws');
+    assert.deepEqual(first.r.press(BOARD, null, [5, 5], first.to), 'pass', 'a press alone makes nothing');
+    const again = rail(false, 'the drawn board');
+    assert.equal(again.r.tool, 'pen', 'the board drawn afresh is still on the Pen');
+    assert.equal(again.tool('pen').getAttribute('aria-pressed'), 'true');
+    assert.ok(again.r.cancel(), 'Escape lets go of it');
+    assert.ok(!again.vp.classList.contains('is-inking'));
+    assert.equal(rail(false, 'the drawn board').r.tool, 'choose', 'and it stays let go');
+    assert.equal(rail(true, 'the drawn board').tool('pen'), null, 'a board only looked at has no pen');
   });
 });

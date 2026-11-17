@@ -8,7 +8,7 @@ import { word } from '@thoughtknot/core';
 
 import type { Board } from '../../board.ts';
 import type { BoardChange } from '../../board-edit.ts';
-import { BOARD_TOOLS, opensText, toolPress, type BoardTool } from '../../board-tools.ts';
+import { BOARD_TOOLS, INK_TOOLS, opensText, toolPress, type BoardTool } from '../../board-tools.ts';
 import { button } from '../button.ts';
 import { setIcon } from '../host.ts';
 
@@ -22,6 +22,9 @@ const ICONS: Record<BoardTool, string> = {
   frame: 'frame',
   view: 'network',
   connect: 'move-up-right',
+  pen: 'pencil',
+  highlighter: 'highlighter',
+  eraser: 'eraser',
 };
 
 /** What the rail needs of its board to act on a press. */
@@ -41,6 +44,9 @@ const opened = new Map<string, boolean>();
 /** The tool in use on each board, by its host's key: Connect stays for the next join when the board is drawn afresh. */
 const inUse = new Map<string, BoardTool>();
 
+/** The pen, highlighter or eraser each board was left on, by its host's key: a stroke is written, then the board is drawn afresh. */
+const drawing = new Map<string, BoardTool>();
+
 /** The rail: which tool is in use, and the item a join started on. */
 export class ToolRail {
   tool: BoardTool = 'choose';
@@ -59,6 +65,7 @@ export class ToolRail {
     this.key = key;
     this.said = said;
     this.readOnly = readOnly;
+    this.tool = readOnly ? 'choose' : (drawing.get(key) ?? 'choose');
     const rail = el.createDiv({
       cls: 'thoughtknot-board-tools',
       attr: { role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': word('board.tools') },
@@ -154,6 +161,9 @@ export class ToolRail {
   }
 
   private paint(): void {
+    this.vp.classList.toggle('is-inking', INK_TOOLS.has(this.tool)); // a drag draws, so the touch is the pen's alone
+    if (INK_TOOLS.has(this.tool)) drawing.set(this.key, this.tool);
+    else drawing.delete(this.key);
     for (const [tool, b] of this.tools) b.setAttribute('aria-pressed', String(tool === this.tool));
     const now = word(`board.tool.${this.tool}`);
     this.fold.setAttribute('aria-label', word(this.isOpen() ? 'board.tools.hide' : 'board.tools.show', { tool: now }));
