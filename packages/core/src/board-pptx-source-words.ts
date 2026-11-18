@@ -29,4 +29,8 @@ export const BOARD_PPTX_SOURCE_WORDS = {
   },
   'reading.pptx.look':
     'Colours, fonts, backgrounds, animations, transitions, picture crops and turns were not kept: the words, pictures and places were.',
+  'page.import-document.done':
+    'Added the text of {file} to the note. It is text only: pictures and layout are left out.',
+  'page.import-document.copied': 'Text copied from {file}.',
+  'page.import-deck.done': 'Added the board {graph}, a frame to each slide, from {file}.',
 } as const;

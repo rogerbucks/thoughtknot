@@ -74,15 +74,10 @@ export const PAGE_SOURCE_WORDS = {
   'page.board-first.graph': 'Show the graph first',
   'page.board-first.board': 'Show the board first',
   'page.board-exchange': 'Import or export boards',
-  'page.board-exchange.import':
-    'Import a JSON Canvas file, an Excalidraw drawing, a Word document, a PDF or a PowerPoint deck',
+  'page.board-exchange.import': 'Import a whiteboard file, a Word file, a PDF or a deck',
   'page.board-exchange.as': 'Export the boards as',
   'page.board-exchange.run': 'Export',
   'page.board-exchange.imported': 'Added the board {graph}, copied from {file}.',
-  'page.import-document.done':
-    'Added the text of {file} to the note. It is text only: pictures and layout are left out.',
-  'page.import-document.copied': 'Text copied from {file}.',
-  'page.import-deck.done': 'Added the board {graph}, a frame to each slide, from {file}.',
   'page.board-exchange.done': 'Boards handed over as files: {count}.',
   'page.too-large': 'This note is too large to read here.',
   'page.text-only': 'This graph is shown as text only: it is over what is drawn here.',
