@@ -1,6 +1,7 @@
-// The page's document import, called directly with a stand-in window, note and host (editor spec ES§45, board_exchange;
-// ES§67, format_untrusted_files). The page as built is proved in document-import.test.js; here each way a file is taken
-// is run on its own: no worker, a worker, a deck with its pictures kept, a deck whose pictures cannot be kept, a refusal.
+// The page's document import, called directly with a stand-in window, note and host (editor spec ES§45,
+// board_exchange; ES§67, format_untrusted_files). document-import.test.js proves the page as built. Here each way a
+// file is taken runs on its own. They are: no worker, a worker, a deck with pictures kept, a deck with none, and a
+// refusal.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { installHost } from '@thoughtknot/core/display/host';
