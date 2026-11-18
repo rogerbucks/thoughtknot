@@ -142,6 +142,10 @@ after a module nor listed here, and on a listed file that is missing.
   `@thoughtknot/core/hosts/<module>`) are imported by no gate or other core module. They are not exported by the entry,
   and import only types from the core (editor spec §19, model_ceiling).
 
+## The desktop app
+
+- `packages/app/test/app-deck-import.test.js` — a PowerPoint deck imported in the desktop app's window: the page, the document worker and the app's folder calls together keep its picture.
+
 ## The Claude Code editor: build, server and page
 
 - `packages/claude-code/test/board-draw.test.js` — drawing with the Pen and Eraser and the Format bar on the page's board, tried through the page and its server.
