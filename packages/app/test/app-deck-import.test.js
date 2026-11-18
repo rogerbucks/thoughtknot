@@ -1,7 +1,7 @@
 // A PowerPoint deck brought into a note in the desktop app's window (editor spec ES§45, board_exchange; ES§67,
-// format_untrusted_files). The window runs the browser editor's page over the app's own folder calls. The deck is read
-// in the document worker, becomes a board with a frame to each slide, and its picture is kept beside the note by the
-// app's own write and read calls, as the Rust does. The deck is never written.
+// format_untrusted_files). The window runs the browser editor's page over the app's own folder calls. The document
+// worker reads the deck, and it becomes a board with a frame to each slide. The app's write and read calls keep its
+// picture beside the note, as the Rust does. The deck is never written.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
