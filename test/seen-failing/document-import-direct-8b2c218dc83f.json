@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/document-import-direct.test.js",
+  "test": "importDocument > a Word file is read on the page where there is no worker, and written as fenced text",
+  "seen_failing_first": false,
+  "evidence": "These tests add coverage for code the earlier commit already wrote and proved through the built page; they pass first by design."
+}

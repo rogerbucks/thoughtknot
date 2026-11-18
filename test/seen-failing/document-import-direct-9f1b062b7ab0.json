@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/document-import-direct.test.js",
+  "test": "importDocument > where the window has a Worker, the read goes to the worker file by its path and is answered",
+  "seen_failing_first": false,
+  "evidence": "These tests add coverage for code the earlier commit already wrote and proved through the built page; they pass first by design."
+}
