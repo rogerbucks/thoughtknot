@@ -36,13 +36,11 @@ function nest(g: Element, board: Board, id: string, svg: string): void {
 function said(g: Element, box: { x: number; y: number; w: number; h: number }, why: string): void {
   if (g.getAttribute('data-refused') === why) return;
   g.setAttribute('data-refused', why);
-  const t = g.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'text');
-  t.setAttribute('class', 'thoughtknot-board-view-refused');
+  const t = g.createSvg('text', { cls: 'thoughtknot-board-view-refused' });
   t.setAttribute('x', String(box.x + box.w / 2));
   t.setAttribute('y', String(box.y + box.h / 2));
   t.setAttribute('text-anchor', 'middle');
   t.textContent = why;
-  g.appendChild(t);
 }
 
 /** Paints the View items of `board` in `svg`, each from what `viewer` draws; a view it cannot draw says why. */
