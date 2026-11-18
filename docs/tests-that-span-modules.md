@@ -841,6 +841,8 @@ after a module nor listed here, and on a listed file that is missing.
   builds with no key, and its vault key is kept in the phone's secure store (spec §40, android_app, ios_app).
 - `test/mobile-checked.test.js` — the plug-in loads and draws a graph as on Obsidian mobile, asking for nothing from
   Node or Electron. The nightly builds the Android app and the iPhone and iPad app (spec §40, mobile_checked).
+- `test/ios-prepare.test.js` — the iPhone build's App Store icons have no alpha channel. Its build number only grows
+  along main (ES§40, ios_app).
 - `test/standalone-app.test.js` — the built desktop app, driven through tauri-driver. It lists, draws and writes
   notes. Its window refuses any other address (spec §41, standalone_app).
 - `test/vscode-plugin.test.js` — the built VS Code extension, against a stand-in for VS Code. Its tab draws a note
