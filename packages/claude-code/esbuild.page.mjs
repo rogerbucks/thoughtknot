@@ -2,6 +2,7 @@
 // own origin. Nothing is fetched from anywhere.
 // - `page.js` is the page.
 // - `layout-worker.js` is the worker the core's layout runs in, with the Graphviz engine inside it.
+// - `document-worker.js` is the worker a Word file, a PDF or a PowerPoint deck is read in, under a time limit.
 // - `page.css` holds the theme (theme-css.ts) and the display layer's styles. Those are the plugin's styles.css, which
 //   reads the same design tokens. It also holds the page's own styles with the tokens' mapping, and one rule per icon
 //   file.
@@ -70,6 +71,13 @@ export async function buildPage(out) {
     format: 'iife',
     legalComments: 'inline',
   });
+  const documents = await esbuild.build({
+    ...common,
+    entryPoints: ['page/document-worker-entry.ts'],
+    outfile: join(out, 'document-worker.js'),
+    format: 'iife',
+    legalComments: 'inline',
+  });
   // the start of each plug-in worker's script: one function, run on `self`, that seals it (page/plugin-worker-entry.ts).
   // It is text, not a page file, so the server reads it by name and serves it only before a plug-in turned on
   const start = await esbuild.build({
@@ -92,5 +100,5 @@ export async function buildPage(out) {
   // the page itself last: a server takes a folder holding index.html for a built one, so it comes once the rest is
   // written
   cpSync(join(here, 'page/index.html'), join(out, 'index.html'));
-  return { page: page.metafile, worker: worker.metafile };
+  return { page: page.metafile, worker: worker.metafile, documents: documents.metafile };
 }
