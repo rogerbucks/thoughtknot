@@ -203,7 +203,7 @@ export function boardsKept(
     if (!boards) return;
     // whiteboard files in and out: a small bar under the boards, closed until it is opened (board_exchange)
     const win = parent.ownerDocument.defaultView;
-    if (win) boards.append(exchangeBar(win, note));
+    if (win) boards.append(exchangeBar(win, note, pictures));
     // the board is the main screen: it comes first, unless this person chose the graph first (board_main_screen)
     const first = boardFirst(kept);
     const turn = (board: boolean) => () => {

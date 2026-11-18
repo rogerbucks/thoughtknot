@@ -74,7 +74,7 @@ export const PAGE_SOURCE_WORDS = {
   'page.board-first.graph': 'Show the graph first',
   'page.board-first.board': 'Show the board first',
   'page.board-exchange': 'Import or export boards',
-  'page.board-exchange.import': 'Import a JSON Canvas file or an Excalidraw drawing',
+  'page.board-exchange.import': 'Import a whiteboard file, a Word file, a PDF or a deck',
   'page.board-exchange.as': 'Export the boards as',
   'page.board-exchange.run': 'Export',
   'page.board-exchange.imported': 'Added the board {graph}, copied from {file}.',

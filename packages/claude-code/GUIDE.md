@@ -594,6 +594,15 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
 - `note-calls.ts` — the page's two other calls on its note. They are the change stream, and the user's decision written
   (the whole note, `If-Match` its version, the page's token alone). Kept apart so `server-calls.ts` stays read only.
 
+### Importing documents
+
+- `document-import.ts`, `document-worker-entry.ts` — Word, PDF and PowerPoint files brought into the note, from the
+  import bar under the boards. The core's `DocumentReader` reads the file in a worker, served at `/document-worker.js`.
+  Where no worker can start, it reads on the page.
+  - A deck becomes a board with a frame to each slide. Its pictures are kept beside the note where the host keeps pictures.
+  - A Word file or a PDF becomes its text, in a fence under a heading. So nothing in it can pass for a graph block.
+  - VS Code's tab, the desktop app and the phone app run this page, so each gets it from here.
+
 ### Proposals, changes and reviews
 
 - `proposal-review.ts`, `proposal-card.ts` (workstream C7) — the proposals a note holds, and the user's accept or

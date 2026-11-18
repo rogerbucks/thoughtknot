@@ -1,7 +1,8 @@
 // Whiteboard files in and out on the browser editor's page (editor spec ES§45, board_exchange). It is the page VS
 // Code's tab, the desktop app and the phone app run. A small bar under the boards, closed until it is opened.
-// - In: a JSON Canvas file or an Excalidraw drawing is read here and copied into the note as a board. Nothing leaves
-//   the page, and the file is never written.
+// - In: a JSON Canvas file or an Excalidraw drawing is read here and copied into the note as a board. A Word file, a
+//   PDF or a PowerPoint deck comes in the same way (document-import.ts). Nothing leaves the page, and the file is
+//   never written.
 // - Out: the boards of the note are handed over as files to keep: JSON Canvas, Excalidraw, SVG, PNG, or one PDF.
 // The readers and writers are the core's own. What a format cannot hold is said in a sentence.
 import {
@@ -18,7 +19,9 @@ import {
 } from '@thoughtknot/core';
 import type { PdfPage } from '@thoughtknot/core';
 import { notice } from '@thoughtknot/core/display/host';
+import type { Pictures } from '@thoughtknot/core/display/board/board-images';
 import type { BoardNote } from './board-section.ts';
+import { importDocument, isImportable } from './document-import.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 
 type Win = Window & typeof globalThis;
@@ -99,7 +102,7 @@ async function handOver(win: Win, note: string, format: string): Promise<string>
 }
 
 /** The bar: closed until opened, it takes a whiteboard file in, and hands the note's boards over as files. */
-export function exchangeBar(win: Win, note: BoardNote): HTMLElement {
+export function exchangeBar(win: Win, note: BoardNote, pictures?: Pictures): HTMLElement {
   const doc = win.document;
   const bar = doc.createElement('details');
   bar.setAttribute('class', 'gn-board-exchange');
@@ -117,10 +120,11 @@ export function exchangeBar(win: Win, note: BoardNote): HTMLElement {
   taking.textContent = word('page.board-exchange.import');
   const input = doc.createElement('input');
   input.type = 'file';
-  input.accept = '.canvas,.excalidraw,.md';
+  input.accept = '.canvas,.excalidraw,.md,.docx,.pdf,.pptx';
   input.addEventListener('change', () => {
     const file = input.files?.[0];
-    if (file)
+    if (file && isImportable(file.name)) void importDocument(win, note, file, pictures).then(say, failed);
+    else if (file)
       void file
         .text()
         .then((text) => bringIn(note, file.name, text))
