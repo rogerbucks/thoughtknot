@@ -12,6 +12,7 @@ import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { DRAWING_SOURCE_WORDS } from './drawing-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
+import { BOARD_PPTX_SOURCE_WORDS } from './board-pptx-source-words.ts';
 import { EDITING_SOURCE_WORDS } from './editing-source-words.ts';
 import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
@@ -365,6 +366,7 @@ export const SOURCE_WORDS = {
   ...SERVER_SOURCE_WORDS,
   // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
+  ...BOARD_PPTX_SOURCE_WORDS,
   ...STYLE_SOURCE_WORDS,
   // the graph spec reader's own problems, a message and a fix for each code (reader-source-words.ts)
   ...READER_SOURCE_WORDS,

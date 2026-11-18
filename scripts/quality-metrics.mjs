@@ -102,14 +102,15 @@ function owner(input) {
   return dirname(relative(ROOT, resolve(ROOT, 'packages/obsidian', input))); // the build runs from the plugin's folder
 }
 
-/** The plugin's bundle, built in memory with the build's own options: its size, without the engine, and what is in it. */
+/** The plugin's bundle, built in memory with the build's own options: its size, and what is in it. */
 export async function measureBundle() {
   const { default: esbuild } = await import('esbuild');
-  const { options, layoutWorker, pluginWorker, workerBuild } = await import('../packages/obsidian/esbuild.config.mjs');
+  const { options, documentWorker, layoutWorker, pluginWorker, workerBuild } =
+    await import('../packages/obsidian/esbuild.config.mjs');
   // the layout worker's bundle is built with the plugin (spec §9); only the writing of main.js is left out
   const built = await esbuild.build({
     ...options,
-    plugins: [layoutWorker, pluginWorker],
+    plugins: [layoutWorker, pluginWorker, documentWorker],
     metafile: true,
     logLevel: 'silent',
     write: false,
@@ -119,16 +120,14 @@ export async function measureBundle() {
   const add = (metafile) => {
     for (const out of Object.values(metafile.outputs))
       for (const [input, { bytesInOutput }] of Object.entries(out.inputs))
-        if (!input.startsWith('layout-worker:'))
+        if (!input.startsWith('layout-worker:') && !input.startsWith('document-worker:'))
           bytes.set(owner(input), (bytes.get(owner(input)) ?? 0) + bytesInOutput);
   };
-  // the worker's function is counted by what is inside it, so the engine there is still the engine
+  // the worker's function is counted by what is inside it, so its share is named by its own modules
   add(built.metafile);
   add(workerBuild.metafile);
-  // Graphviz is gone (layout_own_engine), so nothing is taken off: the metric stays until the baseline drops it
-  const viz = bytes.get('@viz-js/viz') ?? 0;
   return {
-    metrics: { bundle_bytes: total, bundle_bytes_without_viz: total - viz },
+    metrics: { bundle_bytes: total },
     details: {
       bundle: [...bytes]
         .filter(([, b]) => b > 0)

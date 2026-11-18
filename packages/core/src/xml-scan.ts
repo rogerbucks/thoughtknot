@@ -6,7 +6,8 @@ import { Damaged } from './zip-read.ts';
 // ---- the XML --------------------------------------------------------------------------------------------------
 
 /** One piece of XML: a tag opening (with its attributes), a tag closing, or text. */
-export type Tok = { open: string; attrs: Record<string, string>; shut: boolean } | { close: string } | { text: string };
+export type Tok =
+  { open: string; attrs: Record<string, string>; shut: boolean; at?: number } | { close: string } | { text: string };
 
 const ENTITIES = new Map([
   ['amp', '&'],
@@ -84,6 +85,7 @@ export function* tokens(xml: string): Generator<Tok> {
       }
       if (j >= xml.length) throw new Damaged();
       const t = tagOf(xml.slice(i + 1, j));
+      if ('open' in t) t.at = i;
       yield t;
       if ('open' in t && t.shut) yield { close: t.open };
       i = j + 1;

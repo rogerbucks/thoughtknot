@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pptx-types.test.js",
+  "test": "pptx_types > the limits are finite, and a picture limit is not above the part limit",
+  "seen_failing_first": false,
+  "evidence": "The module was split out of the reader and its tests already covered it; this test names it and asserts its own answers"
+}

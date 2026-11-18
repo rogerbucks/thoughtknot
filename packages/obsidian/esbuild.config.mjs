@@ -39,12 +39,12 @@ const swapIn = {
   },
 };
 
-// The layout worker (spec §9, layout_contained). src/layout-worker/worker-entry.ts is bundled on its own, the Graphviz
-// WebAssembly inside it. It is handed to the plugin as the body of one function, `layoutWorker`, from the module
+// The layout worker (spec §9, layout_contained). src/layout-worker/worker-entry.ts is bundled on its own, the plugin's
+// own layout engine inside it. It is handed to the plugin as the body of one function, `layoutWorker`, from the module
 // 'thoughtknot:layout-worker'. main.js holds it once. The worker is started from the function's own text. The page
 // calls the function where no worker can run (src/layout-worker/layout-worker.ts says why). Rebuilt with every build, and
 // watched with the rest in --watch. The worker's last build is kept in `workerBuild`, so scripts/quality-metrics.mjs can
-// say what is inside that one function, the engine among it.
+// say what is inside that one function.
 export const workerBuild = { metafile: null };
 export const layoutWorker = {
   name: 'layout-worker',
@@ -68,6 +68,40 @@ export const layoutWorker = {
       const code = inner.outputFiles[0].text;
       return {
         contents: `export function layoutWorker(scope) {\n${code}\nreturn thoughtknotLayoutWorker;\n}\n`,
+        loader: 'js',
+        resolveDir: here,
+        watchFiles: Object.keys(inner.metafile.inputs).map((f) => join(here, f)),
+      };
+    });
+  },
+};
+
+// The document worker (ES§67 format_untrusted_files). src/document-worker/worker-entry.ts is bundled on its own, as the
+// layout worker is, and is the body of one function, `documentWorker`, from 'thoughtknot:document-worker'. A Word file or
+// a PDF is read in it under a time limit (src/document-worker/document-reads.ts).
+export const documentWorker = {
+  name: 'document-worker',
+  setup(build) {
+    build.onResolve({ filter: /^thoughtknot:document-worker$/ }, (a) => ({
+      path: a.path,
+      namespace: 'document-worker',
+    }));
+    build.onLoad({ filter: /.*/, namespace: 'document-worker' }, async () => {
+      const inner = await esbuild.build({
+        absWorkingDir: here,
+        entryPoints: ['src/document-worker/worker-entry.ts'],
+        bundle: true,
+        platform: 'browser',
+        format: 'iife',
+        globalName: 'thoughtknotDocumentWorker',
+        target: 'es2022',
+        legalComments: 'inline',
+        write: false,
+        metafile: true,
+        logLevel: 'warning',
+      });
+      return {
+        contents: `export function documentWorker(scope) {\n${inner.outputFiles[0].text}\n}\n`,
         loader: 'js',
         resolveDir: here,
         watchFiles: Object.keys(inner.metafile.inputs).map((f) => join(here, f)),
@@ -126,7 +160,7 @@ export const options = {
   minifySyntax: true,
   logLevel: 'info',
   write: false,
-  plugins: [layoutWorker, pluginWorker, swapIn],
+  plugins: [layoutWorker, pluginWorker, documentWorker, swapIn],
 };
 
 // --watch (npm run dev): rebuild on every save, for installing into a test vault. Only when run, never when imported.

@@ -65,6 +65,7 @@ export function fakeInvoke(root, picked = null, own = null, target = null) {
       [roots.open, roots.target] = [roots.target, roots.open];
       return basename(roots.open);
     },
+    read_bytes: async (args) => new Uint8Array(await fs.readFile(at(args.path, args))),
     write_new: async ({ into, files }) => {
       await fs.mkdir(at(into), { recursive: true });
       for (let n = 1; ; n++) {

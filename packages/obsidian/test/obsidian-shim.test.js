@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import esbuild from 'esbuild';
-import { layoutWorker, pluginWorker } from '../esbuild.config.mjs';
+import { documentWorker, layoutWorker, pluginWorker } from '../esbuild.config.mjs';
 import { fakeDocument, installGlobals } from './host/fake-dom.js';
 import { root } from './host/load-plugin.js';
 
@@ -48,7 +48,7 @@ test('the plugin loads on the shim, and reads the vault as it does in Obsidian',
     platform: 'browser',
     target: 'es2022',
     alias: { obsidian: `${harness}/obsidian-shim.js` },
-    plugins: [layoutWorker, pluginWorker],
+    plugins: [layoutWorker, pluginWorker, documentWorker],
     logLevel: 'silent',
   });
   const { Plugin, files } = await import(pathToFileURL(join(out, 'bundle.mjs')).href);

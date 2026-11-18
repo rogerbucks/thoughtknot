@@ -18,7 +18,7 @@ import {
   type ServerOptions,
   type ServerResponse,
 } from 'node:http';
-import { currentLanguage, word } from '@thoughtknot/core';
+import { PICTURE_BODY_LIMIT, currentLanguage, word } from '@thoughtknot/core';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
@@ -68,6 +68,8 @@ export interface ApiAnswer {
   status: number;
   text: string;
   headers?: Record<string, string>;
+  /** A picture's bytes, sent as they are with the answer's own type, in place of text. */
+  bytes?: Uint8Array;
   feed?: ApiFeed;
 }
 
@@ -142,16 +144,31 @@ const realEvery: Every = (ms, check) => {
  * Sends an answer with the headers every answer carries; nothing in it ever repeats the token. A refusal given as
  * words is sent as JSON {why}, as every route's own refusals are (risk API-4).
  */
-function send(res: ServerResponse, status: number, text: string, headers: Record<string, string> = {}): void {
+function send(
+  res: ServerResponse,
+  status: number,
+  text: string | Uint8Array,
+  headers: Record<string, string> = {},
+): void {
   const json = /^application\/json/.test(headers['content-type'] ?? '');
   if (status >= 400 && !json) {
     res.writeHead(status, { ...SECURITY_HEADERS, ...headers, 'content-type': 'application/json; charset=utf-8' });
-    res.end(refusalText(text));
+    res.end(refusalText(typeof text === 'string' ? text : ''));
     return;
   }
   res.writeHead(status, { ...SECURITY_HEADERS, 'content-type': 'text/plain; charset=utf-8', ...headers });
   res.end(status === 204 ? undefined : text);
 }
+
+/** The word that says a request body was too large, by the limit it passed. */
+const tooLargeWord = (
+  limit: number,
+): 'server.too-large.note' | 'server.too-large.picture' | 'server.too-large.export' =>
+  limit === BODY_LIMIT
+    ? 'server.too-large.note'
+    : limit === PICTURE_BODY_LIMIT
+      ? 'server.too-large.picture'
+      : 'server.too-large.export';
 
 /** Sends one of the page's files with the headers every answer carries, under its own policy where it has one. */
 function sendFile(res: ServerResponse, file: PageFile): void {
@@ -227,18 +244,13 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     const body = method === 'PUT' ? await readBody(req, limit) : '';
     if (body === null) {
       await drained(req);
-      return send(
-        res,
-        413,
-        word(limit === BODY_LIMIT ? 'server.too-large.note' : 'server.too-large.export', { most: limit }),
-        { connection: 'close' },
-      );
+      return send(res, 413, word(tooLargeWord(limit), { most: limit }), { connection: 'close' });
     }
     if (!api) return send(res, 404, word('server.not-found'));
     // checked again after the body is read, so no call reaches the API once a stop has begun
     if (stopped !== null) return send(res, 503, word('server.stopped-unwritten'), { connection: 'close' });
     const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers, as });
-    if (!answer.feed) return send(res, answer.status, answer.text, answer.headers);
+    if (!answer.feed) return send(res, answer.status, answer.bytes ?? answer.text, answer.headers);
     res.writeHead(answer.status, { ...SECURITY_HEADERS, ...answer.headers });
     const end = answer.feed((text) => void (res.destroyed || res.write(text)));
     if (res.destroyed) end();

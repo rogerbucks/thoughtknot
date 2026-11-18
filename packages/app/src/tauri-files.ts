@@ -42,6 +42,12 @@ export function tauriFiles(invoke: Invoke, { target = false }: FolderChoice = {}
 export const tauriStorage = (invoke: Invoke, choice: FolderChoice = {}): NoteStorage =>
   workspaceStorage(tauriFiles(invoke, choice));
 
+/** Reads a kept picture's bytes from the picked folder (`read_bytes`); Rust refuses anything but a plain picture file. */
+export const tauriReadPicture =
+  (invoke: Invoke) =>
+  async (path: string): Promise<Uint8Array> =>
+    Uint8Array.from((await invoke('read_bytes', { path })) as number[]);
+
 /** Writes an export's files as new files in `folder`, never over one (`write_new`); gives the names written. */
 export const tauriSaveNew =
   (invoke: Invoke) =>

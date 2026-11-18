@@ -24,6 +24,7 @@ describe('Obsidian’s commands', () => {
         'export-boards-pdf',
         'export-boards-png',
         'export-boards-svg',
+        'export-slides-pdf',
         'fit',
         'full-screen',
         'import-from-database',

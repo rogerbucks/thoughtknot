@@ -843,7 +843,7 @@
     "python/graph_spec/tests/test_view_parity.py": 3,
     "python/graph_spec/tests/test_work.py": 1,
     "python/graph_spec/tests/type_cases.json": 1,
-    "quality/accepted.json": 2,
+    "quality/accepted.json": 1,
     "quality/baseline.json": 8,
     "quality/plain-docs.json": 1,
     "quality/risks.json": 1,

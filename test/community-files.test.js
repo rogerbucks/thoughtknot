@@ -55,7 +55,6 @@ const REGENERATING = [
   'node scripts/tests-first.mjs --update',
   'node scripts/tests-first.mjs --excuse',
   'node scripts/plain-docs.mjs',
-  'node scripts/public-api.mjs --update',
   'node scripts/notices.mjs',
   'node scripts/readme-status.mjs --write',
   'node scripts/fixed-sleeps.mjs --tighten',

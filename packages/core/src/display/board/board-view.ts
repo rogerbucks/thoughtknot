@@ -3,10 +3,10 @@
 // A mouse or pen drags an item to move it. The keyboard does everything else (board-keys.ts), and each step is said in
 // a live region. The outline under it lists the whole board as text.
 //
-// Every edit goes to the host as a change to the board block, and the board is drawn again from what was written. The
-// view stays where it was, and so does every item not changed: nothing jumps (nodes stay put, never disorient). A host
-// that draws the block afresh after a write gets the same view and focus back, kept by its `key`.
-import { word, Zoom, type Drawn, type Palette, type View } from '@thoughtknot/core';
+// Every edit goes to the host as a change to the board block. The board is drawn again from what was written, and
+// the view and every item not changed stay put (nodes stay put, never disorient). A host that draws the block afresh
+// after a write gets the same view and focus back, kept by its `key`.
+import { word, Zoom, type Drawn, type View } from '@thoughtknot/core';
 
 import { boardOf, readBoard, type Board, type BoardItem } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
@@ -17,40 +17,34 @@ import { BoardPeople } from './board-people.ts';
 import { openCapture, openEditor, type FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
-import { ArrangeBar, type ArrangeHooks } from './board-arrange-bar.ts';
-import { BoardSpace, HEIGHT, type Point } from './board-space.ts';
+import { ArrangeBar } from './board-arrange-bar.ts';
+import { BoardSpace, type Point } from './board-space.ts';
 import { BoardSelection } from './board-select.ts';
-import { bindWheel, outlined } from './board-wheel.ts';
+import { outlined, outlineIn } from './board-wheel.ts';
+import { bindNest } from './board-nest.ts';
 import { ToolRail } from './board-tool-rail.ts';
+import { Presenter } from './board-present.ts';
+import { LayerList } from './board-layer-list.ts';
+import { lockedOn } from '../../board-layers.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
-import { paintOver, type Viewer } from './board-view-items.ts';
+import { paintOver } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
+import { BoardInk } from './board-ink.ts';
+import { FormatBar } from './board-format-bar.ts';
+import { bindDrop } from './board-images.ts';
+import type { BoardHost } from './board-host.ts';
 import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts';
 import { listProblems } from './board-problems.ts';
+import { recorded, undoKey } from './board-undo.ts';
 
 export { boardEditInNote, boardOf };
-
-/** What a board needs of its host. */
-export interface BoardHost {
-  /** The colours to draw in. */
-  palette: Palette;
-  /** Writes an edit to the board block in the note; resolves to the block as now written, or why it was refused. */
-  write?: (change: BoardChange) => Promise<{ text: string } | { refused: string }>;
-  /** What names this board in its host, such as its note and name, so its view is kept when it is drawn again. */
-  key: string;
-  /** The seat of this person at a shared board: the others are drawn over it, and the edits go through it. */
-  together?: Together;
-  /** Where the linked items go by the graph; with it the board offers an Arrange by graph button. */
-  arrange?: ArrangeHooks['arrange'];
-  /** Draws each View item's graph live from the note; without it a view shows only its frame. */
-  views?: Viewer;
-}
+export type { BoardHost };
 
 let boardsShown = 0;
 
 /** The board in `source` opened in `el`. */
 export function showBoard(el: HTMLElement, source: string, host: BoardHost): void {
-  new BoardView(el, source, host);
+  new BoardView(el, source, recorded(host, source));
 }
 
 /** One board open in a host: its parts, its view and where the keyboard is on it. */
@@ -62,19 +56,19 @@ class BoardView {
   private readonly said: HTMLElement;
   private readonly editor: HTMLElement;
   private readonly list: HTMLElement;
-  /** The others at a shared board, and the clashes to settle. */
   private readonly people: BoardPeople | null;
   private readonly bar: ArrangeBar | null = null;
   private readonly rail: ToolRail;
-  private readonly sel = new BoardSelection((n) => this.bar?.chosen(n));
+  private readonly format: FormatBar | null = null;
+  private readonly layers: LayerList | null;
+  private readonly sel = new BoardSelection({ changed: (n) => this.bar?.chosen(n), key: () => this.host.key });
   /** The text of the shared board as last read, to tell when someone else has changed it. */
   private seen = '';
   private frame: Box;
   private readonly space: BoardSpace;
   private readonly zoom: Zoom;
   private svg: SVGSVGElement | null = null;
-  /** An item a mouse or pen is dragging, by its body or its handle. */
-  private readonly drag = new BoardDrag();
+  private readonly drag = new BoardDrag(); // an item a mouse or pen is dragging, by its body or handle
   /** A press on an item that does not drag it: if it lifts where it came down, it is a tap, which chooses the item. */
   private tap: { pointer: number; id: string; from: Point } | null = null;
 
@@ -108,22 +102,24 @@ class BoardView {
     const text = word(this.readOnly ? 'board.help-read' : 'board.help');
     root.createEl('p', { cls: 'thoughtknot-board-help', text, attr: { id: helpId } });
     this.rail = new ToolRail(root, this.vp, host.key, (w) => this.say(w), this.readOnly);
-    if (host.arrange && !this.readOnly)
-      this.bar = new ArrangeBar(root, this.vp, host.arrange, this.arranging(), host.key);
+    if (host.arrange && !this.readOnly) this.bar = new ArrangeBar(root, this.vp, host.arrange, this.hooks(), host.key);
+    if (!this.readOnly)
+      this.format = new FormatBar(root, this.vp, host.key, host.palette, this.hooks(), (ids) => this.sel.set(ids));
+    this.layers = this.readOnly ? null : new LayerList(root, this.vp, host.key, this.hooks());
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
-    this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
-    this.editor.hidden = true;
+    this.editor = root.createDiv({ cls: 'thoughtknot-board-edit', attr: { hidden: '' } });
     listProblems(root, source);
     this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
-    const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
-    outline.createEl('summary', { text: word('board.outline') });
-    this.list = outline.createEl('ul');
+    this.list = outlineIn(root);
     this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.space.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
+    new BoardInk(this.vp, host.palette, this.rail, this.space, this.zoom, this.hooks(), this.readOnly);
     host.together?.watch(() => this.othersChanged());
+    new Presenter(root, this.vp, this.hooks(), this.zoom, this.space);
     this.draw();
     if (was) this.zoom.restore(...placeFrom(was, this.frame.x, this.frame.y));
+    else this.space.open(this.board);
     born(host.key, this.vp, this, this.said, !!was?.focused);
     this.bind();
     this.rail.held((id) => openEditor(this.fields(), id)); // a sticky just made, its board drawn afresh
@@ -140,7 +136,7 @@ class BoardView {
     this.vp.setCssProps({
       '--thoughtknot-x': `${v.x}px`,
       '--thoughtknot-y': `${v.y}px`,
-      '--thoughtknot-height': `${HEIGHT}px`,
+      '--thoughtknot-height': `${this.space.size().height}px`,
       '--thoughtknot-touch': this.zoom.touchAction(),
     });
     this.vp.toggleClass('is-zoomed', this.zoom.zoomedIn());
@@ -150,6 +146,7 @@ class BoardView {
 
   /** The board drawn again, the view kept on the same spot of the board even when its edges moved. */
   private draw(): void {
+    if (this.svg && !this.vp.isConnected) return; // the host drew the board afresh: that one is the board now
     const was = this.frame,
       v = this.zoom.view();
     this.frame = boardFrame(this.board);
@@ -163,8 +160,10 @@ class BoardView {
       g.toggleClass('is-focused', g.getAttribute('data-item') === this.cursor.focus);
     outlined(this.list, this.board);
     this.sel.paint(next, this.board.items);
+    this.layers?.paint();
     paintOver(next, this.board, this.cursor.focus, this.readOnly, this.host);
     this.apply(this.zoom.view());
+    this.format?.show(this.cursor.focus);
     this.people?.paint(next);
     this.people?.refresh();
     this.people?.tell(undefined, this.cursor.focus, true);
@@ -180,6 +179,7 @@ class BoardView {
       write: (c) => this.write(c),
       say: (w) => this.say(w),
       centre: () => this.space.centre(),
+      live: () => current(this.host.key, this.vp, this).fields(),
       focus: (id) => {
         this.cursor = { ...this.cursor, focus: id };
         this.reveal();
@@ -187,7 +187,8 @@ class BoardView {
     };
   }
 
-  private copying() {
+  /** What the bars over the board and the copy keys work by. */
+  private hooks() {
     return {
       board: () => this.board,
       sel: this.sel,
@@ -197,26 +198,18 @@ class BoardView {
       say: this.say.bind(this),
       choose: this.choose.bind(this),
       readOnly: this.readOnly,
-    };
-  }
-
-  private arranging() {
-    return {
-      write: this.write.bind(this),
-      say: this.say.bind(this),
-      board: () => this.board,
       svg: () => this.svg,
       chosen: () => this.sel.list(),
+      space: this.space,
     };
   }
 
   /** The hooks the lists under the board work by. */
   private peopleHooks(together: Together) {
-    const { palette } = this.host;
     return {
       board: () => this.board,
       together,
-      palette,
+      palette: this.host.palette,
       parse: (svg: string) => parsedSvg({ svg } as Drawn),
       mayEdit: !this.readOnly,
       show: (spot: [number, number]) =>
@@ -242,7 +235,8 @@ class BoardView {
   }
 
   /** Writes an edit (also for the tool rail), then draws what was written; a refusal is said and changes nothing. */
-  async write(change: BoardChange): Promise<void> {
+  async write(made: BoardChange): Promise<void> {
+    const change = this.layers?.placed(made) ?? made; // a new item goes into the layer picked
     this.bar?.forget();
     this.apply(this.zoom.view()); // kept before the host may draw the board afresh
     const t = this.host.together;
@@ -270,12 +264,12 @@ class BoardView {
 
   private bind(): void {
     const { vp, zoom } = this;
+    bindNest(vp, zoom, this.space, () => [this.board, this.frame, this.cursor.focus], this.host);
     vp.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
     vp.addEventListener('pointerdown', (e: PointerEvent) => this.down(e));
     vp.addEventListener('pointermove', (e: PointerEvent) => this.move(e));
-    vp.addEventListener('pointerup', (e: PointerEvent) => this.lift(e));
-    vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
-    bindWheel(vp, zoom, (e) => this.space.point(e));
+    for (const type of ['pointerup', 'pointercancel']) vp.addEventListener(type, (e) => this.lift(e as PointerEvent));
+    bindDrop(vp, this.hooks(), this.host.images, (e) => this.space.onBoard(this.space.point(e)));
     new ResizeObserver(() => zoom.resize(this.space.size())).observe(vp);
   }
 
@@ -283,7 +277,7 @@ class BoardView {
   private key(e: KeyboardEvent): void {
     if (e.target !== this.vp) return;
     if (e.key === 'Escape' && (this.rail.cancel() || this.sel.clear())) return void this.draw();
-    if (copyKey(e, this.copying())) return;
+    if (copyKey(e, this.hooks()) || undoKey(e, this.host.key, this.hooks())) return;
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     if (isGroupKey(e) && !this.readOnly) return void groupNotes(this.board, this.write.bind(this), this.say.bind(this));
     const step = boardKey(this.board, this.cursor, press, this.space.centre(), this.readOnly);
@@ -329,7 +323,7 @@ class BoardView {
       return void this.draw();
     }
     const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
-    if (item && pointer !== 'touch' && e.button === 0 && !this.readOnly && !item.locked) {
+    if (item && pointer !== 'touch' && e.button === 0 && !this.readOnly && !lockedOn(this.board, item)) {
       const onHandle = !!(e.target as Element | null)?.closest?.('[data-handle]');
       this.drag.start(e.pointerId, item.id, this.space.point(e), onHandle);
       this.vp.setPointerCapture(e.pointerId);

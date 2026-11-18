@@ -77,10 +77,10 @@ Rust (src-tauri/)
 
 ## The Rust, `src-tauri/`
 
-- Twenty-eight commands, and no others. Ten are folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
-  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`). One is `run_gh`. Six are `mesh_`
+- Twenty-eight commands, and no others. Eleven are folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+  `write_text`, `remove_file`, `make_dir`, `write_new`, `read_bytes`, `pick_target`, `swap_folders`). One is `run_gh`. Six are `mesh_`
   ones and eight are `crdt_` ones. One is `machine_found`, which only looks for a mesh VPN address (`found.rs`). The last
-  two are `parts_write` and `parts_read`, the store of notes read in parts (`parts.rs`). The same twenty-eight are
+  two are `parts_write` and `parts_read`, the store of notes read in parts (`parts.rs`). The same twenty-nine are
   named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against

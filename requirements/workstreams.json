@@ -755,9 +755,18 @@
       "board_item_plugins",
       "board_tools",
       "board_handles",
+      "board_layers",
+      "board_slides",
       "board_view_items",
       "board_main_screen",
-      "board_many"
+      "board_ink",
+      "board_many",
+      "board_nested",
+      "board_proposed",
+      "board_images",
+      "board_images_kept",
+      "board_format",
+      "board_routes"
     ]
   },
   "B2": {
@@ -1316,6 +1325,7 @@
       "sketch_pinned",
       "sketch_pin_hidden",
       "sketch_every_view",
+      "board_layers_over",
       "sketch_checked",
       "sketch_toggle",
       "sketch_click_rule",

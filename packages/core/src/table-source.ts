@@ -10,6 +10,8 @@ import { word } from './words.ts';
 export interface NodeTable {
   header: readonly string[];
   rows: readonly (readonly string[])[];
+  /** A page of text, such as a .txt file, a Word document or a PDF: one wide column, each row one of its lines. */
+  page?: boolean;
 }
 
 /** How much of a table a node shows, at most. */
@@ -23,12 +25,15 @@ export const TABLE_NODE_LIMIT: TableNodeLimit = { rows: 8, columns: 6 };
 
 /** The widest a cell is, in letters. A longer cell is cut with an ellipsis. */
 const CELL_LETTERS = 18;
+/** The widest a line of a page is, in letters. A page has one column, so it is given the room of a few. */
+export const PAGE_LETTERS = 48;
 
 /** The last line: how many rows the table has, and what the node leaves out. */
-export function tableTail(count: number, more: { rows: number; columns: number }): string {
-  if (count === 0) return word('reading.table.node-no-rows');
-  const parts = [word('reading.table.node-rows', { count })];
-  if (more.rows > 0) parts.push(word('reading.table.node-more-rows', { count: more.rows }));
+export function tableTail(count: number, more: { rows: number; columns: number }, page = false): string {
+  if (count === 0) return word(page ? 'reading.table.node-no-lines' : 'reading.table.node-no-rows');
+  const parts = [word(page ? 'reading.table.node-lines' : 'reading.table.node-rows', { count })];
+  if (more.rows > 0)
+    parts.push(word(page ? 'reading.table.node-more-lines' : 'reading.table.node-more-rows', { count: more.rows }));
   if (more.columns > 0) parts.push(word('reading.table.node-more-columns', { count: more.columns }));
   return parts.join(' · ');
 }
@@ -43,10 +48,10 @@ function cut(text: string, most: number): string {
 const BOX_LABEL = '[label=<<table ';
 
 /** One table row of cells, each escaped and cut to fit. A header row is bold. */
-function row(cells: readonly string[], columns: number, header: boolean): string {
+function row(cells: readonly string[], columns: number, header: boolean, letters = CELL_LETTERS): string {
   const size = STYLE.kind_font_size;
   const cell = (text: string) => {
-    const shown = GraphLayout.escape(cut(text, CELL_LETTERS));
+    const shown = GraphLayout.escape(cut(text, letters));
     return `<td align="left"><font point-size="${size}">${header ? `<b>${shown}</b>` : shown}</font></td>`;
   };
   return `<tr>${Array.from({ length: columns }, (_, c) => cell(cells[c] ?? '')).join('')}</tr>`;
@@ -57,10 +62,11 @@ export function tableRows(table: NodeTable, limit: TableNodeLimit = TABLE_NODE_L
   const columns = Math.max(1, Math.min(table.header.length, limit.columns));
   const shown = table.rows.slice(0, limit.rows);
   const more = { rows: table.rows.length - shown.length, columns: table.header.length - columns };
+  const letters = table.page ? PAGE_LETTERS : CELL_LETTERS;
   const grid =
     `<table border="0" cellborder="1" cellspacing="0" cellpadding="2">` +
-    `${row(table.header, columns, true)}${shown.map((r) => row(r, columns, false)).join('')}</table>`;
-  const tail = GraphLayout.escape(tableTail(table.rows.length, more));
+    `${row(table.header, columns, true)}${shown.map((r) => row(r, columns, false, letters)).join('')}</table>`;
+  const tail = GraphLayout.escape(tableTail(table.rows.length, more, table.page));
   return (
     `<tr><td cellpadding="0" height="${STYLE.caption_gap}"></td></tr><tr><td cellpadding="0">${grid}</td></tr>` +
     `<tr><td cellpadding="0"><font point-size="${STYLE.kind_font_size}"><i>${tail}</i></font></td></tr>`

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-undo.test.js",
+  "test": "undo and redo on a board > other keys, and a board that cannot be changed, are left alone",
+  "seen_failing_first": false,
+  "evidence": "The module's own test, added once redo took the module past 100 lines. Redo was seen failing first in board-block.test.js, in the commit that made it."
+}

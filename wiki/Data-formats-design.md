@@ -58,7 +58,7 @@ Planned. S = source, C = content node, E = export, V = display.
 | SQLite | yes | table | | | Local file only (db_import_on_request). |
 | Excel | yes | sheet | yes | yes | Needs a reader library. Roger's call. |
 | Word | yes | page | yes | yes | Needs a reader library. Roger's call. |
-| PowerPoint | yes | slide | yes | | Needs a reader library. Roger's call. |
+| PowerPoint | yes | slide | yes | | Read by our own code into a board, a frame to a slide, with its pictures and notes. |
 | PDF | text and links | page | | yes | Needs a reader library. Roger's call. |
 | Images | alt text and EXIF | picture | | yes | Pictures are shown, not read as graphs. |
 | HTML | yes | page | yes | sandboxed | Display is future work. |
@@ -81,5 +81,5 @@ Planned. S = source, C = content node, E = export, V = display.
 
 ## Still open
 
-- Which reader library for Excel, Word, PowerPoint and PDF. Each adds a runtime dependency.
+- Which reader library for any format that our own code does not read. Each adds a runtime dependency.
 - The wave for sandboxed HTML display, and the sandbox used in Obsidian.

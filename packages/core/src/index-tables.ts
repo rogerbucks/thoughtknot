@@ -1,18 +1,22 @@
 // The names the core's entry exports for tables of data (editor spec §63, CN2; §52, E1). A CSV file is read through
 // its connector and the mapping written beside it. Kept apart from index.ts so each file stays short.
 export { tableConnector, tableStatements } from './csv-connector.ts';
+// what a file breaks into, kept by the file's hash (connector_derived_kept_apart)
+export { CONNECT_CACHE_MOST, cacheKey, connectCache, type ConnectCache } from './connect-cache.ts';
 export { kindOf as tableKindOf, mappingOf, mappingPlace, mappingText, proposeMapping } from './csv-mapping.ts';
 export type { ColumnMap, ColumnRole, TableMapping } from './csv-mapping.ts';
 export { CSV_LIMITS, readCsv } from './csv-read.ts';
 export type { CsvLimits, CsvRefusal, CsvTable } from './csv-read.ts';
 export { tableMeasures } from './csv-measures.ts';
-export { dataSetTables } from './data-set-tables.ts';
+export { dataSetTables, nodeTableOf, readAsBytes, type DataSetFile } from './data-set-tables.ts';
 export { dataSetsOf } from './data-set-reference.ts';
 export { keptOf, keptWords, linkEdit, snapshotEdit, snapshotPlace } from './data-set-kept.ts';
 export type { KeptEdit, KeptSet } from './data-set-kept.ts';
 export { pickedLinks, pickedThings } from './db-import.ts';
 export { databasePlace, workbookPlace } from './sources.ts';
 export { DOCUMENT_LIMITS, documentText, isDocumentPlace } from './document-text.ts';
+export { DocumentReader, DOCUMENT_READ_MS, serveDocuments } from './document-reader.ts';
+export type { DocumentPort, DocumentScope, DeckRead, DocumentRead, DocumentReaderOptions } from './document-reader.ts';
 export { workbookSheets, workbookTable, WORKBOOK_LIMITS } from './xlsx-read.ts';
 export type { WorkbookRefusal } from './xlsx-read.ts';
 export { columnsOf, sqliteEntries, sqliteTable, SQLITE_LIMITS } from './sqlite-read.ts';

@@ -39,6 +39,9 @@ export const DB_SOURCE_WORDS = {
     'The board is copied into this note as text. Nothing stays linked to the file, and the file is never written.',
   'import.board.done': 'Added the board {graph}, copied from {file}, to {note}.',
   'import.board.not-board': '{file} is not a JSON Canvas file or an Excalidraw drawing, so no board was written.',
+  'import.deck.copy':
+    'Each slide is copied into this note as a frame of one board, with its text, pictures and speaker notes. The pictures are kept beside the note. The file is never written.',
+  'import.deck.done': 'Added the board {graph}, a frame to each slide of {file}, to {note}.',
   'import.cancel': 'Cancel',
   'import.done': 'Imported {graph} from {file} into {note}.',
   'import.failed': 'The import from {file} failed, so nothing was written: {why}',

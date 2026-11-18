@@ -95,11 +95,22 @@ export function sha256(text: string): string {
   return digest;
 }
 
+/** SHA-256 of the bytes, such as a file's, in sixty-four lowercase hexadecimal digits. */
+export function sha256Bytes(data: Uint8Array): string {
+  const bytes = new Uint8Array(Math.ceil((data.length + 9) / 64) * 64);
+  bytes.set(data);
+  return rounds(bytes, data.length);
+}
+
 /** The SHA-256 rounds over the text's padded bytes. */
 function digestOf(text: string): string {
   const length = utf8Length(text);
-  const padded = Math.ceil((length + 9) / 64) * 64;
-  const bytes = utf8Into(text, padded);
+  return rounds(utf8Into(text, Math.ceil((length + 9) / 64) * 64), length);
+}
+
+/** The SHA-256 rounds over `bytes`, the message of `length` bytes with room for its padding after it. */
+function rounds(bytes: Uint8Array, length: number): string {
+  const padded = bytes.length;
   bytes[length] = 0x80;
   // the length in bits, as a 64-bit big-endian number: a text sent is far below 2^53 bits
   const bits = length * 8;

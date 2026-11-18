@@ -226,6 +226,10 @@ export class FakeElement {
       stopPropagation() {
         this.stopped = true;
       },
+      // no listener after this one hears it, on this element or any other
+      stopImmediatePropagation() {
+        this.stopped = true;
+      },
       ...init,
     };
     const path = [];

@@ -6,7 +6,7 @@ import esbuild from 'esbuild';
 import { copyFileSync, cpSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { layoutWorker, pluginWorker } from '../esbuild.config.mjs';
+import { documentWorker, layoutWorker, pluginWorker } from '../esbuild.config.mjs';
 import { iconsCss } from '../../../scripts/site-demo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url)),
@@ -35,7 +35,7 @@ await esbuild.build({
   alias: { obsidian: join(here, 'demo-shim.js') },
   loader: { '.md': 'text' },
   // the layout worker's own bundle, made as the plugin's build makes it (spec §9, layout_contained)
-  plugins: [layoutWorker, pluginWorker, ...(note ? [noteIn(note)] : [])],
+  plugins: [layoutWorker, pluginWorker, documentWorker, ...(note ? [noteIn(note)] : [])],
   logLevel: 'warning',
 });
 copyFileSync(join(here, '..', '..', '..', 'styles.css'), join(out, 'styles.css'));

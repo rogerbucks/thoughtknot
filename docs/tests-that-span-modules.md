@@ -144,6 +144,7 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The Claude Code editor: build, server and page
 
+- `packages/claude-code/test/board-draw.test.js` — drawing with the Pen and Eraser and the Format bar on the page's board, tried through the page and its server.
 - `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.
 - `packages/claude-code/test/editor-threats.test.js` — the browser editor's server against its threat model, each
   threat tried on the running server (editor spec §26, test_cc_threats). The threats are:

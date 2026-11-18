@@ -1,0 +1,140 @@
+// Zooming through boards (editor spec §45, board_nested). A view of a board sits on a board as an item. A zoom in on
+// it, once it fills most of the view, goes on into that board, which opens just where its picture was. A zoom out of a
+// board entered this way, once all of it is in view, comes back out. The wheel, the minus key and a pinch all do it.
+// Enter on such an item goes in too, and the trail above the board is the way back by a press. Kept apart so
+// board-view.ts stays small.
+import type { Zoom } from '@thoughtknot/core';
+
+import { readBoard, type Board } from '../../board.ts';
+import { NO_CURSOR } from '../../board-keys.ts';
+import { entering, nestedBoardOf, placeInside } from '../../board-nest.ts';
+import { boardFrame, type Box } from '../../board-svg.ts';
+import { viewSpace } from '../../view-types/board-views.ts';
+import { fromTrackpad } from '../../render/render-tilt.ts';
+import { seed } from './board-kept.ts';
+import type { BoardSpace, Point } from './board-space.ts';
+import { bindWheel } from './board-wheel.ts';
+
+/** What a board needs of its host to go into the boards on it, and back out. */
+export interface NestHost {
+  /** How many boards deep this one was entered: 0 for a board opened from the list. */
+  depth: number;
+  /** The block of another board of the note, or nothing when the note has none of that name. */
+  text: (name: string) => string | undefined;
+  /** What names another board of the note in the host: the key its view is kept by. */
+  keyOf: (name: string) => string;
+  /** Puts the board `name` in front, entered from this one. */
+  enter: (name: string) => void;
+  /** Puts the board this one was entered from back in front. */
+  leave: () => void;
+}
+
+/** What a host that lets boards nest gives its board. */
+export interface Nested {
+  /** Goes into the boards on this one, and back out; without it a view of a board is only a picture. */
+  nest?: NestHost;
+}
+
+/** How far two fingers come together, as a part of how far apart they began, before a pinch goes back out. */
+const PINCH_OUT = 0.8;
+
+/** How long after a wheel, key or pinch a change of zoom still counts as the person's own, in milliseconds. */
+const OWN_MS = 400;
+
+/**
+ * Gives the viewport's wheel, double click and touch to `zoom`, and goes into and out of boards as the person zooms.
+ * `drawn` gives the board as drawn, its frame and the item in focus.
+ */
+export function bindNest(
+  vp: HTMLElement,
+  zoom: Zoom,
+  space: BoardSpace,
+  drawn: () => [board: Board, frame: Box, focus: string | null],
+  host: Nested,
+): void {
+  const nest = host.nest;
+  const now = () => {
+    const [board, frame, focus] = drawn();
+    return { board, frame, focus };
+  };
+  if (nest) {
+    let at: Point | null = null,
+      gone = false,
+      own = 0,
+      scale = zoom.view().scale;
+    const middle = (): Point => ({ x: space.size().width / 2, y: space.size().height / 2 });
+    // the inner board opens where its picture was, with the keyboard on it
+    const goIn = (id: string, name: string): boolean => {
+      const text = nest.text(name);
+      const item = now().board.items.find((i) => i.id === id);
+      if (gone || text === undefined || !item) return false;
+      const inner = boardFrame(readBoard(text).board);
+      const to = placeInside(viewSpace(item), now().frame, zoom.view(), inner);
+      seed(nest.keyOf(name), { ...zoom.view(), ...to }, [inner.x, inner.y], NO_CURSOR);
+      gone = true;
+      nest.enter(name);
+      return true;
+    };
+    const zoomedInto = (p: Point): boolean => {
+      const into = entering(now().board, now().frame, zoom.view(), space.size(), p);
+      return !!into && goIn(into.id, into.name);
+    };
+    const zoomedOut = (): boolean => {
+      if (gone || !nest.depth || zoom.zoomedIn()) return false;
+      gone = true;
+      nest.leave();
+      return true;
+    };
+    const taken = (e: Event) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    // two fingers drawn together on a board already whole in view go back out, as one more turn of the wheel does
+    const fingers = new Map<number, Point>();
+    let pinch: { apart: number; whole: boolean } | null = null;
+    const apart = (): number => {
+      const [a, b] = [...fingers.values()];
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+    };
+    vp.addEventListener('pointerdown', (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      fingers.set(e.pointerId, space.point(e));
+      pinch = fingers.size === 2 ? { apart: apart(), whole: !zoom.zoomedIn() } : null;
+    });
+    const lifted = (e: PointerEvent) => {
+      fingers.delete(e.pointerId);
+      pinch = null;
+    };
+    vp.addEventListener('pointerup', lifted);
+    vp.addEventListener('pointercancel', lifted);
+    vp.addEventListener('pointermove', (e: PointerEvent) => {
+      at = space.point(e);
+      if (e.pointerType !== 'touch') return;
+      own = Date.now();
+      if (fingers.has(e.pointerId)) fingers.set(e.pointerId, at);
+      if (pinch?.whole && apart() < pinch.apart * PINCH_OUT && zoomedOut()) taken(e);
+    });
+    vp.addEventListener('wheel', (e: WheelEvent) => {
+      if (e.altKey || (fromTrackpad(e) && !e.ctrlKey && !e.metaKey)) return; // two fingers on a trackpad pan
+      at = space.point(e);
+      own = Date.now();
+      // a zoom the view has no room left for still goes in, or out
+      if (e.deltaY < 0 ? zoomedInto(at) : zoomedOut()) taken(e);
+    });
+    vp.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.target !== vp || e.ctrlKey || e.metaKey || e.altKey) return;
+      own = Date.now();
+      const item = now().board.items.find((i) => i.id === now().focus);
+      const name = e.key === 'Enter' && item ? nestedBoardOf(item) : null;
+      if ((name && item && goIn(item.id, name)) || (e.key === '-' && zoomedOut())) taken(e);
+    });
+    const was = zoom.onChange;
+    zoom.onChange = (v) => {
+      was?.(v);
+      const grew = v.scale > scale;
+      scale = v.scale;
+      if (grew && Date.now() - own < OWN_MS) zoomedInto(at ?? middle());
+    };
+  }
+  bindWheel(vp, zoom, (e) => space.point(e));
+}

@@ -45,6 +45,13 @@ export const FULL = `document.querySelector('.thoughtknot-bar [aria-label="Full 
 /** Shows the drawing the `n`th way of the side rail: 2D, 2.5D, 3D or the globe (type_rail). */
 export const SPACE_AT = (n) => `${VIEW}.querySelectorAll('.thoughtknot-rail [data-space]')[${n}].click()`;
 
+/**
+ * Whether the view has drawn its side rail with space `n` on it. A picture on the page is no proof of it.
+ * Other pictures come first, and on a slow machine the rail comes later.
+ */
+export const RAIL_HAS = (n) =>
+  `Boolean(document.querySelector('.thoughtknot-view')) && ${VIEW}.querySelectorAll('.thoughtknot-rail [data-space]').length > ${n}`;
+
 /** Opens the View panel, and every dock and chip that is folded. */
 export const OPEN_ALL = `(() => {
   const view = ${VIEW};
@@ -128,6 +135,8 @@ export async function checkPanels(link, { chrome, sizes = SIZES, spaces = SPACES
       try {
         for (const [n, space] of spaces.entries()) {
           await openPage(browser, link);
+          // the view itself must be there before it is pressed: wait for its rail, at most half a minute
+          for (let i = 0; i < 300 && !(await browser.run(RAIL_HAS(n))); i++) await pause(100);
           if (full) await step(FULL);
           if (n) await step(SPACE_AT(n));
           await step(OPEN_ALL);

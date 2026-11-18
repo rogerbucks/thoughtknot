@@ -113,13 +113,22 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - `stillToRewrite` is asked again just before the write. It refuses the same way when that pane changed while the note
     was read.
 
+### `src/document-worker/` — Word files and PDFs read off the page's thread (ES§67 format_untrusted_files)
+
+- `document-reads.ts` — `DocumentReads`: a Word file or a PDF read in one Web Worker. It starts from a Blob URL of main.js's
+  own copy of the bundle. A read that takes over 10 seconds stops the worker and refuses the file in words. Where no
+  worker can start, the core reads on the page. `documentReadsOf` gives each plug-in its own, closed on unload.
+- `worker-entry.ts` — what runs inside the worker: the core's `serveDocuments`. `esbuild.config.mjs` bundles it into the
+  function `documentWorker` of the module `thoughtknot:document-worker` (typed in `bundled-worker.d.ts`).
+- The draw path (`sources/source-read.ts`) and the Import dialog read through it, and give `connect` the text.
+
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 
 - `layout-worker.ts` — `Layouts`: every graph, and every export, laid out in one Web Worker. The worker is started from
   a Blob URL of main.js's own copy of the worker's bundle. Only where the first worker cannot start is a graph laid out
   on the page's thread, with lower limits. Each is said once in the console, as is drawing paused after three layouts in
   a row fail. The module says why it is built so.
-- `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into
+- `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, the layout engine and all, into
   the function `layoutWorker` of the module `thoughtknot:layout-worker` (typed in `bundled-worker.d.ts`).
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long, or
   drawing is paused. It shows an icon, and the limit and numbers in words.
@@ -350,12 +359,11 @@ A .base file picks notes with its filters. The Graph view draws them as a graph,
   - Nothing is read until Import is pressed. Then the file's bytes are read from the vault, on the device.
   - The rows are written at the end of the note as a graph block (`importedBlock`), through `vault.process`. It is text
     that keeps no live link. A failure is said in a notice, the note left as it was.
-- `sqlite.ts` — `sqliteQuery`: runs the queries on a SQLite file's bytes, in memory, with sql.js. The engine's
-  WebAssembly is inside main.js, so nothing is fetched.
-  - The database is opened query-only, so a query that writes fails. The file itself is never written.
-  - A query of more than 10,000 rows fails, saying how to narrow it.
-  - The plugin's `queryDatabase` calls it, so a test can stand in its own.
-- `sql-js.d.ts` — the types of the parts of sql.js the import uses.
+  - A PowerPoint deck (`import-deck.ts`) is read once when picked, in the document worker. Adding writes one board, a
+    frame to each slide. Its pictures are kept among the note's attachments under free names, by the vault's own writer.
+    The deck is never written. What was left out is said in a notice.
+  - The file's tables are read by the core's `sqlite-read.ts`, in plain JavaScript: no SQL engine, no WebAssembly
+    (Roger, 9 Nov 2026). It is read-only, every page is checked, and a file over the limits is refused whole.
 - `../host-commands.ts` — every command of the plugin is a command of the built-in plug-in `thoughtknot.obsidian`.
   `addCommands` adds them to the registry, and `offerCommands` gives each to Obsidian under the id it always had, so
   hotkeys last. A command with a check (`available`) is offered only while it holds.

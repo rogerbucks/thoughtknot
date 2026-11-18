@@ -154,6 +154,14 @@
   .thoughtknot-stage-card.is-chosen {
     outline-color: Highlight;
   }
+  /* a colour's swatch on a board loses its colour, so it shows the colour's name instead */
+  .thoughtknot-board-swatch {
+    border-radius: 0;
+    padding: 0 var(--gn-space-1);
+  }
+  .thoughtknot-board-swatch::after {
+    content: attr(aria-label);
+  }
   /* the bars over the cards keep their edge */
   .thoughtknot-stage-cards-chosen,
   .thoughtknot-stage-cards-sets {
@@ -2943,12 +2951,141 @@ button.thoughtknot-stage-card-pin {
   display: inline-flex;
   vertical-align: top;
 }
+/* The format bar sits on the same row; its looks wrap under it on a narrow board. */
+.thoughtknot-board-bar + .thoughtknot-board-format,
+.thoughtknot-board-tools + .thoughtknot-board-format {
+  display: inline-flex;
+  flex-wrap: wrap;
+  vertical-align: top;
+  margin-inline-start: var(--gn-space-2);
+}
+.thoughtknot-board-format,
+.thoughtknot-board-format-looks,
+.thoughtknot-board-format-looks > [role='group'] {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-board-format-looks {
+  column-gap: var(--gn-space-3);
+}
+.thoughtknot-board-format-looks[hidden],
+.thoughtknot-board-format-looks > [hidden] {
+  display: none;
+}
+.thoughtknot-board-format [aria-disabled='true'] {
+  opacity: 0.6;
+}
+.thoughtknot-board-swatch {
+  background: var(--thoughtknot-swatch);
+  border: 2px solid var(--thoughtknot-swatch-edge);
+  border-radius: 50%;
+  padding: 0;
+}
+.thoughtknot-board-format button[aria-pressed='true'],
 .thoughtknot-board-tools button[aria-pressed='true'] {
   outline: 2px solid var(--gn-text-normal);
   outline-offset: -2px;
 }
 .thoughtknot-board-tools-fold[aria-expanded='true'] {
   border-inline-end: 1px solid var(--gn-text-muted);
+}
+/* The Layers list: one button in the row above the board; its list opens over the board, so the board never moves. */
+.thoughtknot-board-layers {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  margin-inline-start: var(--gn-space-2);
+}
+.thoughtknot-board-layers-list {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 100%;
+  z-index: 3;
+  min-width: 16em;
+  padding: var(--gn-space-1);
+  background: var(--gn-bg);
+  border: 1px solid var(--gn-text-muted);
+  border-radius: var(--gn-space-1);
+}
+.thoughtknot-board-layers-list ul,
+.thoughtknot-board-layers-list ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.thoughtknot-board-layer {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-board-layer .thoughtknot-board-layer-name,
+.thoughtknot-board-layer .thoughtknot-board-layer-field {
+  flex: 1;
+  min-width: 6em;
+  text-align: start;
+}
+.thoughtknot-board-layer.is-hidden .thoughtknot-board-layer-name {
+  color: var(--gn-text-muted);
+  text-decoration: line-through;
+}
+.thoughtknot-board-layers button[aria-pressed='true'] {
+  outline: 2px solid var(--gn-text-normal);
+  outline-offset: -2px;
+}
+.thoughtknot-board-layers-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  margin-top: var(--gn-space-1);
+  padding-top: var(--gn-space-1);
+  border-top: 1px solid var(--gn-text-muted);
+}
+/* The slide show: the Present button in the row above the board; while it plays, the board alone fills the screen. */
+.thoughtknot-board-present {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  margin-inline-start: var(--gn-space-2);
+}
+.thoughtknot-board.thoughtknot-board-show {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--gn-bg);
+}
+.thoughtknot-board.thoughtknot-board-show
+  > :not(.thoughtknot-viewport, .thoughtknot-board-present-bar, .thoughtknot-board-said) {
+  display: none;
+}
+.thoughtknot-board.thoughtknot-board-show > .thoughtknot-viewport {
+  border-radius: 0;
+}
+.thoughtknot-board.thoughtknot-board-show > .thoughtknot-board-said {
+  position: absolute;
+  inset-inline-start: var(--gn-space-2);
+  bottom: var(--gn-space-2);
+  margin: 0;
+}
+.thoughtknot-board-present-bar {
+  position: absolute;
+  inset-inline-end: var(--gn-space-2);
+  bottom: var(--gn-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  padding: var(--gn-space-1);
+  background: var(--gn-bg);
+  border: 1px solid var(--gn-text-muted);
+  border-radius: var(--gn-space-1);
+}
+.thoughtknot-board-present-bar[hidden] {
+  display: none;
+}
+.thoughtknot-board-present-count {
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
 }
 /* The handle that sizes the item in focus, and the guides a moved item snaps to. */
 .thoughtknot-board .thoughtknot-board-handle {
@@ -2963,7 +3100,27 @@ button.thoughtknot-stage-card-pin {
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
+/* While a pen, highlighter or eraser is in use a drag draws: no scroll or pan by touch, and a cross to aim with. */
+.thoughtknot-board .thoughtknot-viewport.is-inking {
+  touch-action: none;
+  cursor: crosshair;
+}
+.thoughtknot-board .thoughtknot-ink-preview {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.thoughtknot-board [data-item].is-erased {
+  opacity: 0.25; /* a stroke the eraser has crossed, until it lifts */
+}
+.thoughtknot-board .thoughtknot-viewport.is-inking [data-item] {
+  cursor: crosshair;
+}
 .thoughtknot-board-tools button,
+.thoughtknot-board-layers button,
+.thoughtknot-board-present button,
+.thoughtknot-board-present-bar button,
 .thoughtknot-board-bar button,
 .thoughtknot-board-outline > summary {
   min-height: 24px;
@@ -5522,4 +5679,35 @@ img.thoughtknot-picture-hidden,
   .thoughtknot-board-glide {
     animation: none;
   }
+}
+/* The trail above a board entered by zooming in: each board it sits in is a way back out (board_nested). */
+.thoughtknot-board-trail {
+  margin-bottom: var(--gn-space-1);
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-board-trail button {
+  min-height: 24px;
+  min-width: 24px;
+}
+/* A board proposed, shown before it is kept: marked off from the note's own boards (board_proposed). */
+.thoughtknot-board-draft {
+  border: 1px dashed var(--gn-text-muted);
+  border-radius: var(--gn-space-1);
+  padding: var(--gn-space-2);
+}
+.thoughtknot-board-draft button,
+.thoughtknot-board-draft-cited > summary {
+  min-height: 24px;
+  min-width: 24px;
+}
+.thoughtknot-board-draft-cited {
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-board-list-ask {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  margin-top: var(--gn-space-1);
 }

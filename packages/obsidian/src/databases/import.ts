@@ -11,10 +11,10 @@ import {
   boardFormatOf,
   columnsOf,
   documentBlock,
-  documentText,
   importedBlock,
   isDbFile,
   isDocumentPlace,
+  isPresentationPlace,
   pickedLinks,
   pickedThings,
   sqliteEntries,
@@ -24,8 +24,10 @@ import {
   workbookTable,
   word,
 } from '@thoughtknot/core';
-import type { DbRow, SqliteEntry, SqliteTable, WordKey } from '@thoughtknot/core';
+import type { DbRow, PptxRead, SqliteEntry, SqliteTable, WordKey } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { documentReadsOf } from '../document-worker/document-reads';
+import { addDeck } from './import-deck';
 import { noteToRewrite } from '../reading-view';
 import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
@@ -41,7 +43,14 @@ export const IMPORT_COMMAND = {
 export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
   const files = plugin.app.vault
     .getFiles()
-    .filter((f) => isDbFile(f.path) || isWorkbook(f.path) || isDocumentPlace(f.path) || boardFormatOf(f.path))
+    .filter(
+      (f) =>
+        isDbFile(f.path) ||
+        isWorkbook(f.path) ||
+        isDocumentPlace(f.path) ||
+        isPresentationPlace(f.path) ||
+        boardFormatOf(f.path),
+    )
     .sort((a, b) => a.path.localeCompare(b.path));
   if (!files.length) {
     new Notice(word('db.none'));
@@ -73,6 +82,8 @@ class ImportDialog extends Modal {
   private doc = false;
   /** The text of the whiteboard file chosen: the dialog then only names the board, and copies it into the note. */
   private board: string | null = null;
+  /** The slides of the PowerPoint deck chosen, read in the worker: the dialog then only names the board. */
+  private deck: PptxRead | null = null;
   private refused = '';
   private things = '';
   private id = '';
@@ -160,6 +171,7 @@ class ImportDialog extends Modal {
         }),
       );
     if (this.board !== null) return this.drawDocument(word('import.board.copy'), () => void this.addBoard());
+    if (this.deck) return this.drawDocument(word('import.deck.copy'), () => void this.addSlides());
     if (this.doc) return this.drawDocument(word('import.document.copy'), () => void this.addDocument());
     const tables = this.entries.filter((e) => !e.unread).map((e) => e.name);
     this.pick('import.things', 'import.things.sentence', tables, this.things, (v) => {
@@ -233,6 +245,18 @@ class ImportDialog extends Modal {
     }
   }
 
+  /** Writes the board the deck makes into the note, its pictures kept beside it; or says why nothing was written. */
+  private async addSlides(): Promise<void> {
+    const file = this.files[this.chosen];
+    if (!file || !this.deck || this.running) return;
+    this.running = true;
+    try {
+      if (await addDeck(this.plugin, this.file, file, this.deck, this.graph)) this.close();
+    } finally {
+      this.running = false;
+    }
+  }
+
   /** Writes the board the whiteboard file holds into the note, and says what was left out; or why nothing was written. */
   private async addBoard(): Promise<void> {
     const file = this.files[this.chosen];
@@ -258,6 +282,7 @@ class ImportDialog extends Modal {
     this.refused = '';
     this.doc = false;
     this.board = null;
+    this.deck = null;
     const db = this.files[i];
     if (db && boardFormatOf(db.path)) {
       // A whiteboard file is read once here, so one that cannot be read is said now. Nothing is written.
@@ -272,10 +297,19 @@ class ImportDialog extends Modal {
       const read = boardFileBlock(this.graph, db.path, text);
       if ('refused' in read) this.refused = read.refused;
       else [this.bytes, this.board] = [new Uint8Array(), text];
+    } else if (db && isPresentationPlace(db.path)) {
+      // a deck is read once here, in the worker, so a file that cannot be read is said now; nothing is written
+      const bytes = new Uint8Array(await this.app.vault.readBinary(db));
+      const read = await documentReadsOf(this.plugin).readDeck(bytes, db.path, `${db.stat.size}:${db.stat.mtime}`);
+      if ('refused' in read) this.refused = read.refused;
+      else {
+        [this.bytes, this.deck] = [new Uint8Array(), read.deck];
+        this.graph = db.basename.replace(/\W+/g, '_').replace(/^(\d)/, '_$1');
+      }
     } else if (db && isDocumentPlace(db.path)) {
       // a document is read once here, so a file that cannot be read is said now; the block that draws it reads it again
       const bytes = new Uint8Array(await this.app.vault.readBinary(db));
-      const read = documentText(bytes, db.path);
+      const read = await documentReadsOf(this.plugin).read(bytes, db.path, `${db.stat.size}:${db.stat.mtime}`);
       if ('refused' in read) this.refused = read.refused;
       else {
         [this.bytes, this.doc] = [bytes, true];

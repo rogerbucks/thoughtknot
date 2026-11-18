@@ -11,8 +11,11 @@ import type { MarkPoint } from './plugin-diagrams.ts';
 import { readSketch, sketchItemGql, sketchOf } from './sketch.ts';
 import type { Sketch, SketchItem, SketchKind, SketchShape } from './sketch.ts';
 import { insertBlockAfter, replaceSpan } from './store.ts';
+import { thinned } from './board-ink.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
+
+export { thinned }; // the board's pen thins its strokes with it too, so it lives on the board's side
 
 /** A drawing to add: all a drawing holds but its id, which the block gives it. */
 export type NewSketchItem = Omit<SketchItem, 'id' | 'more'>;
@@ -90,38 +93,6 @@ export function sketchEdit(
   } else text = withoutItem(found.span.text, id);
   if (text === null) return { refused: word('sketch.write.gone', { id }) };
   return { note: replaceSpan(note, found.span, text).note };
-}
-
-/** The distance from point `p` to the line from `a` to `b`. */
-function offLine(p: MarkPoint, a: MarkPoint, b: MarkPoint): number {
-  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
-  const long = Math.hypot(dx, dy);
-  if (!long) return Math.hypot(p[0] - a[0], p[1] - a[1]);
-  return Math.abs(dx * (a[1] - p[1]) - dy * (a[0] - p[0])) / long;
-}
-
-/**
- * A freehand stroke thinned: only the points it needs to keep its shape within `within` pixels (Ramer, Douglas and
- * Peucker's way). Its first and last points always stay.
- */
-export function thinned(points: readonly MarkPoint[], within = 1.5): MarkPoint[] {
-  if (points.length < 3) return [...points];
-  const keep = new Array<boolean>(points.length).fill(false);
-  keep[0] = keep[points.length - 1] = true;
-  const spans: [number, number][] = [[0, points.length - 1]];
-  while (spans.length) {
-    const [from, to] = spans.pop() as [number, number];
-    let far = -1,
-      most = within;
-    for (let i = from + 1; i < to; i++) {
-      const d = offLine(points[i] as MarkPoint, points[from] as MarkPoint, points[to] as MarkPoint);
-      if (d > most) [far, most] = [i, d];
-    }
-    if (far < 0) continue;
-    keep[far] = true;
-    spans.push([from, far], [far, to]);
-  }
-  return points.filter((_, i) => keep[i]);
 }
 
 type Place = { x: number; y: number; width: number; height: number };

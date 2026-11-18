@@ -5,6 +5,7 @@
 // - Hand: every press pans, even on an item, so nothing is moved by mistake.
 // - Sticky, Text, Shape, Frame and View: a press on the board makes that item there, then the tool goes back to Choose.
 // - Connect: a press on one item, then on another, joins the two. Escape or a press on an empty spot stops it.
+// - Pen, Highlighter and Eraser: a drag draws a stroke, or rubs strokes out (board-ink.ts). The tool stays until Escape.
 //
 // Host-free: the host passes each press in and does what comes back. A new item is made where it was asked for. If that
 // spot is taken it goes just below, so it never covers another (nodes stay put: nothing else moves).
@@ -13,10 +14,25 @@ import { freeId } from './board-edit.ts';
 import { itemBox } from './board-svg.ts';
 
 /** The tools, in the order the rail shows them. */
-export const BOARD_TOOLS = ['choose', 'hand', 'sticky', 'text', 'shape', 'frame', 'view', 'connect'] as const;
+export const BOARD_TOOLS = [
+  'choose',
+  'hand',
+  'sticky',
+  'text',
+  'shape',
+  'frame',
+  'view',
+  'connect',
+  'pen',
+  'highlighter',
+  'eraser',
+] as const;
 
 /** One tool of a board. */
 export type BoardTool = (typeof BOARD_TOOLS)[number];
+
+/** The tools worked by a drag, not a press: they draw or rub out strokes. */
+export const INK_TOOLS: ReadonlySet<BoardTool> = new Set<BoardTool>(['pen', 'highlighter', 'eraser']);
 
 /** The tools that make an item: each makes the kind of its own name. */
 const MAKING = new Set<BoardTool>(['sticky', 'text', 'shape', 'frame', 'view']);
@@ -45,13 +61,21 @@ export function madeAt(board: Board, kind: BoardKind, at: [number, number]): Boa
     item.layer = layers.length ? Math.min(0, ...layers) - 1 : -1;
     return item; // a frame is drawn behind, so it may go over other items
   }
-  // a frame holds items, so a new item inside one is not on top of anything
-  const boxes = board.items.filter((i) => i.kind !== 'Frame').map(itemBox);
+  return clearOfOthers(board, item);
+}
+
+/**
+ * The item moved down, half its height at a time, until it covers no other item. A frame holds items and a stroke
+ * is drawn over them, so neither counts. Nothing else on the board moves.
+ */
+export function clearOfOthers(board: Board, item: BoardItem): BoardItem {
+  const boxes = board.items.filter((i) => i.kind !== 'Frame' && i.kind !== 'Ink').map(itemBox);
+  const step = Math.max(1, Math.round(itemBox(item).h / 2));
   const taken = () => {
     const b = itemBox(item);
     return boxes.some((o) => b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h);
   };
-  for (let tries = 0; tries < 200 && taken(); tries++) item.y += Math.round(size.h / 2);
+  for (let tries = 0; tries < 200 && taken(); tries++) item.y += step;
   return item;
 }
 
@@ -83,7 +107,7 @@ export function toolPress(
   readOnly = false,
 ): ToolPress {
   if (tool === 'hand') return { kind: 'pan' };
-  if (tool === 'choose' || readOnly) return { kind: 'pass' };
+  if (tool === 'choose' || readOnly || INK_TOOLS.has(tool)) return { kind: 'pass' }; // a drag draws: board-ink
   const kind = toolMakes(tool);
   if (kind) return { kind: 'make', item: madeAt(board, kind, at) };
   // connect

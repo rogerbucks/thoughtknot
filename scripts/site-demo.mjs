@@ -13,7 +13,7 @@ import esbuild from 'esbuild';
 import { copyFileSync, cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { layoutWorker, pluginWorker } from '../packages/obsidian/esbuild.config.mjs';
+import { documentWorker, layoutWorker, pluginWorker } from '../packages/obsidian/esbuild.config.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HARNESS = join(ROOT, 'packages/obsidian/harness');
@@ -91,6 +91,7 @@ export async function buildDemo(out) {
     plugins: [
       layoutWorker,
       pluginWorker,
+      documentWorker,
       {
         name: 'demo-note',
         setup(build) {

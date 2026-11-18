@@ -306,6 +306,10 @@ export const VALUES_LATE = [
   'gqlConnector',
   'joinPlaces',
   'placeKey',
+  // what a file breaks into, kept by its hash (ES§63, connector_derived_kept_apart), 16 Nov 2026
+  'CONNECT_CACHE_MOST',
+  'cacheKey',
+  'connectCache',
   // layouts a plug-in adds (§68, layout_plugins), 28 Oct 2026
   'layoutContract',
   'offerLayouts',
@@ -345,7 +349,14 @@ export const VALUES_LATE = [
   'sketchProposal',
   'writeSketch',
   // a picture for readers without ThoughtKnot (§62, RP1), 30 Oct 2026
+  'PICTURE_BODY_LIMIT',
+  'PICTURE_FOLDER',
+  'PICTURE_MOST_BYTES',
   'PICTURE_ENDING',
+  'isKeptName',
+  'pictureKind',
+  'pictureName',
+  'pictureStem',
   'PICTURE_MOST_THINGS',
   'isPictureFile',
   'madeByThoughtKnot',
@@ -392,6 +403,8 @@ export const VALUES_LATE = [
   'proposeMapping',
   'readCsv',
   'dataSetTables',
+  'nodeTableOf',
+  'readAsBytes',
   'dataSetsOf',
   'keptOf',
   'keptWords',
@@ -453,6 +466,7 @@ export const VALUES_LATE = [
   'BOARD_PICTURE_FORMATS',
   'boardPicturesOf',
   'pictureSize',
+  'slidePicturesOf',
   'picturesPdf',
   // the layout block, the reviewers and metadata from Reading view (layout_block, ai_two_reviewers,
   // reading_view_metadata), 7 Nov 2026
@@ -495,6 +509,10 @@ export const VALUES_LATE = [
   // a Word document or a PDF named after FROM, read as text for a proposal (connector_text_proposed), 15 Nov 2026
   'DOCUMENT_LIMITS',
   'documentText',
+  // documents read in a worker under a time limit (format_untrusted_files), 17 Nov 2026
+  'DocumentReader',
+  'DOCUMENT_READ_MS',
+  'serveDocuments',
   'isDocumentPlace',
   // a sheet of an Excel workbook named after FROM, `book.xlsx#Sheet1` (connector_files_to_gql), 12 Nov 2026
   'workbookPlace',
@@ -531,6 +549,10 @@ export const VALUES_LATE = [
   // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
   'starterBoard',
   'withStarter',
+  // a board asked of an AI in plain words (ES§45, board_proposed), 15 Nov 2026
+  'boardMakeAsk',
+  // the board layers shown over a graph's views (ES§70, board_layers_over), 15 Nov 2026
+  'layersOver',
   // each card's size and hand place kept in the layout block (render_cards), 15 Nov 2026
   'cardInNote',
   'saveCard',
@@ -550,4 +572,11 @@ export const VALUES_LATE = [
   'imageReview',
   'metaCovers',
   'readDescription',
+  // PowerPoint decks read as boards (board_exchange), 17 Nov 2026
+  'deckBlock',
+  'deckBoard',
+  'isPresentationPlace',
+  'pptxBlock',
+  'pptxBoard',
+  'pptxSlides',
 ];

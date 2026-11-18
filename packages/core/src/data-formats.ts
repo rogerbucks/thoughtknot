@@ -3,6 +3,7 @@
 // the same file, or an export (§16). Each is `built`, with the code that does it, or `planned`. The design is
 // wiki/Data-formats-design.md.
 // A format that needs a reader library says so: adding one is Roger's call (format_text_first, RUNTIME_ALLOWED).
+// Excel, Word, PowerPoint, PDF and SQLite are read by small readers of ThoughtKnot's own, so none of them needs one.
 
 /** Where a role of a format stands: built, by the code named, or planned. */
 export type RoleState = { built: string } | 'planned' | null;
@@ -45,14 +46,24 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
     ...roles({ built: 'csv-connector.ts' }, planned, planned, { built: 'export-data-csv.ts' }),
   },
   { name: 'JSON', extensions: ['json'], reader: 'text', ...roles(planned, planned, null, planned) },
-  { name: 'Excel', extensions: ['xlsx'], reader: 'library', ...roles(planned, planned, planned, planned) },
+  {
+    name: 'Excel',
+    extensions: ['xlsx'],
+    reader: 'text',
+    ...roles({ built: 'workbook-connector.ts' }, planned, planned, planned),
+  },
   {
     name: 'Word',
     extensions: ['docx'],
     reader: 'text',
     ...roles({ built: 'document-connector.ts' }, planned, planned, { built: 'compose-out.ts' }),
   },
-  { name: 'PowerPoint', extensions: ['pptx'], reader: 'library', ...roles(planned, planned, null, planned) },
+  {
+    name: 'PowerPoint',
+    extensions: ['pptx'],
+    reader: 'text',
+    ...roles({ built: 'board-pptx.ts' }, planned, null, planned),
+  },
   {
     name: 'PDF',
     extensions: ['pdf'],
@@ -69,7 +80,7 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
     name: 'GraphML',
     extensions: ['graphml'],
     reader: 'text',
-    ...roles(planned, null, null, { built: 'export-data-graphml.ts' }),
+    ...roles({ built: 'graphml-connector.ts' }, null, null, { built: 'export-data-graphml.ts' }),
   },
   { name: 'DOT', extensions: ['dot', 'gv'], reader: 'text', ...roles(planned, null, null, planned) },
   { name: 'GEXF', extensions: ['gexf'], reader: 'text', ...roles(planned, null, null, planned) },
@@ -77,8 +88,8 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
   {
     name: 'SQLite',
     extensions: ['sqlite', 'sqlite3', 'db'],
-    reader: 'library',
-    ...roles(planned, planned, null, null),
+    reader: 'text',
+    ...roles({ built: 'database-connector.ts' }, planned, null, null),
   },
   { name: 'Cypher', extensions: ['cypher', 'cql'], reader: 'text', ...roles(planned, null, null, planned) },
   {

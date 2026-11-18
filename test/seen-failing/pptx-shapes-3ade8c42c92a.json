@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/pptx-shapes.test.js",
+  "test": "pptx_shapes > a paragraph is its runs, breaks and fields in order, and text over the limit is refused",
+  "seen_failing_first": false,
+  "evidence": "The module was split out of the reader and its tests already covered it; this test names it and asserts its own answers"
+}

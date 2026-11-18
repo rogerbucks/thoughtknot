@@ -9,6 +9,7 @@
 //   GET notes/<id>          {text, version, draft}, the version also as the ETag.
 //   PUT notes/<id>          the new text, If-Match its version: {version}. 409 {why, text, version, draft} when stale.
 //   PUT notes/<id>/draft    what was typed, kept as the note's draft. An empty one clears it.
+//   PUT notes/<id>/attachment   {name, base64}: a picture kept beside the note: {src}. GET …/attachment/<name> sends it back.
 //   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}.
 //   GET notes/<id>/versions, /at/<commit>, /reviews…  its earlier versions and its repository's changes (editor-changes.ts)
 import { randomBytes } from 'node:crypto';
@@ -29,6 +30,7 @@ import { GIT_HISTORY, type NoteHistory } from './note-history.ts';
 import { GH_READER, type GitHubReader } from './github-reader.ts';
 import { answer, changesAnswer, type ChangesAsked } from './editor-changes.ts';
 import { pictureStates } from './note-pictures.ts';
+import { keptAnswer, sentAnswer } from './note-attachments.ts';
 import type { NoteReply, StaleWrite, UnwrittenReply, WriteReply } from '../src/api-types.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
@@ -73,7 +75,7 @@ interface OpenNote {
 
 /** One route of the API: a note's id, and what of it is asked for. */
 const ROUTE =
-  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/pictures|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
+  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/pictures|\/attachment(?:\/[0-9A-Za-z_-]{1,80}\.[a-z]{3,4})?|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
 
 const NOT_YOURS: ApiAnswer = { status: 403, text: 'This key proposes changes and does nothing else.' };
 
@@ -181,6 +183,9 @@ export class NoteStore {
     if (what === 'PUT /draft') return this.keepDraft(id, r.body, ifMatch);
     if (what === 'GET /events') return this.follow(id);
     if (what === 'GET /pictures') return this.pictures(id);
+    const beside = (this.notes.get(id) as OpenNote).inVault.split(sep).join('/');
+    if (what === 'PUT /attachment') return this.counted(keptAnswer(this.where.real, beside, r.body));
+    if (what.startsWith('GET /attachment/')) return sentAnswer(this.where.real, beside, what.slice(16));
     if (/^GET \/(versions|at|reviews)/.test(what)) return this.changes(id, what.slice('GET '.length));
     return { status: 405, text: word('server.not-this-method') };
   };
