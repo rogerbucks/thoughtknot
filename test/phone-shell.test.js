@@ -79,8 +79,11 @@ describe('the phone shell, in a real browser', () => {
     await browser.send('Page.navigate', { url: `${base}/${LINK}` });
     for (let i = 0; i < 200 && !(await browser.run(`Boolean(document.querySelector('.thoughtknot-board'))`)); i++)
       await new Promise((t) => setTimeout(t, 100));
-    await new Promise((t) => setTimeout(t, 800));
+    for (let i = 0; i < 100 && !(await browser.run(`${VIEWPORT_READY}`)); i++)
+      await new Promise((t) => setTimeout(t, 100));
   }
+  const VIEWPORT_READY = `(document.querySelector('.thoughtknot-board .thoughtknot-viewport')?.getBoundingClientRect().height || 0) > 0`;
+  const DRAWING_READY = `(document.querySelector('.gn-pane .thoughtknot-pane-drawing .thoughtknot-viewport')?.getBoundingClientRect().height || 0) > 0`;
   const tap = (tab) => browser.run(`document.querySelector('.gn-tab[data-tab=${tab}]').click()`);
   const shown = (selector) =>
     browser.run(
@@ -133,7 +136,8 @@ describe('the phone shell, in a real browser', () => {
   test('the Graph view opens on the drawing, with the space switch in reach', options, async () => {
     await open(true);
     await tap('graph');
-    await new Promise((t) => setTimeout(t, 1500));
+    for (let i = 0; i < 100 && !(await browser.run(`${DRAWING_READY}`)); i++)
+      await new Promise((t) => setTimeout(t, 100));
     assert.ok(await shown('.gn-pane .thoughtknot-pane-drawing'), 'the drawing shows, not the text');
     assert.ok(!(await shown('.gn-pane .thoughtknot-pane-text')));
     const height = await browser.run(
