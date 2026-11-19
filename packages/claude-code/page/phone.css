@@ -1,0 +1,166 @@
+/* The phone layer of the page (ES§40, phone_touch_ready). The phone app's window runs the page as a browser does.
+   These rules only make it fit a hand and a screen. A computer's look does not change. Each rule is under a touch
+   test, or is the safe areas, which are nothing on a screen with no notch. It is the page's file alone, never the
+   plug-in's styles.css, so Obsidian is untouched. Sizes are in CSS pixels, the 44 of Apple's guide. */
+
+/* The notch, the corners and the home bar. The window draws under them (viewport-fit=cover in each page's head), so the
+   page steps in by their size. Zero where there are none. */
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* The start page: the notes as one list of rows, each a whole target, as a phone's own lists are. */
+#gn-app ul {
+  list-style: none;
+  margin: 0 0 var(--gn-space-4);
+  padding: 0;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  overflow: hidden;
+}
+#gn-app li + li {
+  border-top: 1px solid var(--gn-border);
+}
+#gn-app li a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+#gn-app > button {
+  margin-inline-end: var(--gn-space-2);
+}
+
+/* Where the screen is touched, not pointed at. */
+@media (pointer: coarse) {
+  /* Every control is a 44 by 44 target. The drawing's own marks are not controls of the page, so they keep their size. */
+  .gn-page
+    :is(button, summary, select, input:not([type='checkbox'], [type='radio']), [role='button']):not(
+      .thoughtknot-viewport *
+    ) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* a summary keeps its arrow only while it is not a flex box, so it grows by its padding */
+  .gn-page summary {
+    padding-block: var(--gn-space-2);
+  }
+  .gn-page label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  header nav a,
+  .gn-skip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  /* 16 pixels and up: below that, iOS zooms the page when a field takes focus, and does not zoom back. */
+  :is(input, select, textarea) {
+    font-size: max(16px, 1em) !important;
+  }
+  /* A touch screen has no Tab or Ctrl. The line that names those keys stays for a screen reader, out of sight. */
+  .thoughtknot-board-help {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A phone runs no gh. The app keeps no earlier versions yet. So the two choosers that need them are not shown
+   there (app-editor.ts sets the class). */
+.gn-no-gh :is(.gn-review, .gn-changes) {
+  display: none;
+}
+
+/* The phone's shell (phone-shell.ts, phone_shell): a bar at the foot names four views, and one shows at a time. The
+   board and the graph fill the screen. Nothing here applies off a phone, where the page has no gn-phone class. */
+.gn-phone body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-bottom: 0;
+}
+.gn-phone header {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-3);
+  padding-inline: var(--gn-space-3);
+}
+.gn-phone .gn-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--gn-font-size-l);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gn-phone main.gn-page {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  padding: var(--gn-space-2);
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--gn-space-2));
+}
+.gn-tabbar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--gn-border);
+  background: var(--gn-bg);
+}
+.gn-tab {
+  flex: 1;
+  min-height: 56px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.gn-tab[aria-current='true'] {
+  box-shadow: inset 0 3px 0 var(--gn-accent);
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.gn-phone[data-tab]:not([data-tab='board'], [data-tab='more']) .gn-boards,
+.gn-phone[data-tab='more'] .gn-boards > :not(.gn-board-exchange),
+.gn-phone[data-tab='board'] .gn-board-exchange,
+.gn-phone[data-tab]:not([data-tab='graph']) .gn-pane,
+.gn-phone[data-tab]:not([data-tab='note']) :is(.gn-cards, article.gn-prose, .gn-text-version),
+.gn-phone[data-tab]:not([data-tab='more']) :is(.gn-presets, .gn-changes, .gn-review, .gn-export-bar),
+.gn-phone :is(.gn-board-first, .gn-board-turn) {
+  display: none;
+}
+/* the note's own words come before the text version of its graph */
+.gn-phone .gn-cards {
+  order: -2;
+}
+.gn-phone article.gn-prose {
+  order: -1;
+}
+
+/* The Graph view's drawing takes the screen between the header, the pane's own rows and the bar. */
+.gn-phone .gn-pane .thoughtknot-pane-drawing .thoughtknot-viewport {
+  height: calc(100dvh - 330px);
+  min-height: 280px;
+}
+
+/* The graph's own block is in the Graph view. In the Note view the note reads as words. */
+.gn-phone article.gn-prose pre:has(> code.language-gql) {
+  display: none;
+}

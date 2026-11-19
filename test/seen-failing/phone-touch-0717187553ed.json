@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-touch.test.js",
+  "test": "the phone layer, in the files > the page’s style sheet carries the phone layer, with the safe areas and the 44 pixel rule",
+  "seen_failing_first": false,
+  "evidence": "its first check also matched the old sheet (the plug-in styles already use safe areas and 44 px); the browser cases in the same file prove the layer, and the check now names the layer's own rules"
+}

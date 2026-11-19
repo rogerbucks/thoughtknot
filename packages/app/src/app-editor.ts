@@ -67,5 +67,7 @@ if (tauri) {
   const { invoke } = tauri.core;
   void onComputer(invoke).then((yes) => {
     if (yes) nav.append(' ', githubButton({ doc: document, invoke, store: storeOf(document), note }));
+    // a phone runs no gh and keeps no earlier versions yet: the page hides the two choosers that need them
+    else document.documentElement.classList.add('gn-no-gh');
   });
 }

@@ -1321,3 +1321,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/no-inference.test.js` — no guess of a medical or neurological condition (editor spec ES§74, no_condition_guess).
   Nothing in `source-words.ts`, `settings.ts` or a shipped source names one. The pull request template asks whether a
   change measures use.
+
+## The phone app
+
+- `test/phone-touch.test.js` — the phone app's window, opened as a phone in Chrome. Its controls are 44 by 44 and its
+  fields 16 pixels or more. The notch is left clear (ES§40, phone_touch_ready).
+- `test/phone-shell.test.js` — the phone app's window, opened as a phone in Chrome. A bar names four views and one shows at
+  a time. The board fills the screen (ES§40, phone_shell).
