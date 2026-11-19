@@ -30,6 +30,8 @@ describe('the phone layer, in the files', () => {
 
   test('the page’s style sheet carries the phone layer, with the safe areas and the 44 pixel rule', () => {
     const css = pageCss([]);
+    assert.match(css, /phone_touch_ready/, 'the layer’s own file is in the sheet');
+    assert.match(css, /\.gn-no-gh/);
     assert.match(css, /env\(safe-area-inset-bottom\)/);
     assert.match(css, /@media \(pointer: coarse\)[\s\S]*min-height: 44px/);
     assert.doesNotMatch(
