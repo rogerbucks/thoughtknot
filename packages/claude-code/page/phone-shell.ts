@@ -47,7 +47,7 @@ export function phoneShell(win: Window & typeof globalThis): boolean {
       if (b.dataset.tab === tab) b.setAttribute('aria-current', 'true');
       else b.removeAttribute('aria-current');
     }
-    if (doc.scrollingElement) doc.scrollingElement.scrollTop = 0;
+    if (doc.scrollingElement) doc.scrollingElement.scroll(0, 0);
   };
   bar.append(...buttons);
   doc.body.append(bar);
