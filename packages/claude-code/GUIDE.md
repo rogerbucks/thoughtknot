@@ -112,9 +112,16 @@ A command cannot be parsed, so `data-guard.ts` refuses it when:
   quotes and backslashes taken out and the home forms put in;
 - it has a word that resolves into it (the first 40 with a `/`, or starting `.` or `~`).
 
-A command with `mv`, `rm`, `cp`, `rsync` or `ln` in it is also refused in one case. That is when one of those words
-resolves to a folder above the data folder and below home (the Claude config folder, its plugins folder). `ls` and
-other reads of those stay allowed. A relative link is settled from the real path of its own folder.
+A command with `mv`, `rm`, `cp`, `rsync` or `ln` in it, by name or by a path such as `/bin/rm`, is also refused in
+one case. That is when a word the move may act on resolves to a folder above the data folder and below home (the
+Claude config folder, its plugins folder). Its refusal says a folder above was named. `ls` and other reads of those
+stay allowed. A relative link is settled from the real path of its own folder.
+
+The command is read step by step (`shell-steps.ts`). The words judged are those of each step whose program is a
+mover, and the value of every variable set. So `find ~/.claude; cp a b` is allowed. The whole command is judged
+instead, every word, when the steps cannot say: the command is unread, a step runs `cd`, a loop, a branch, `eval` or
+`source`, or a mover is not the program of its own step (handed to `xargs`, `sudo` or `find -exec`, inside `sh -c`,
+a heredoc or a substitution).
 
 It does not stop:
 
