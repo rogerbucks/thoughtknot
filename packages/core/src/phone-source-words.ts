@@ -1,4 +1,4 @@
-// What the phone's bottom bar says, in UK English (editor spec ES§40, phone_shell; §42, words_catalogue).
+// What the phone's bottom bar says, in UK English (ES§40, phone_shell; ES§42, words_catalogue).
 // source-words.ts keeps these with every other word, through app-source-words.ts.
 
 /** The bar's name and its four views, by key, in UK English. */
