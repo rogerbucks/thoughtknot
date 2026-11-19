@@ -1,13 +1,13 @@
 // Which words of a Bash command a move may act on, for data-guard.ts (risk TRUST-2). A move is `mv`, `rm`, `cp`,
-// `rsync` or `ln`. The guard refuses a move that takes a folder above the mod's data folder. Judged on the whole
-// command, a step that only reads such a folder made a copy elsewhere in the command look like a move of it. So the
-// command is read step by step (shell-steps.ts), and only the words a move may be handed are given back. When the
+// `rsync` or `ln`. The guard refuses a move that takes a folder above the mod's data folder. Once, every word of the
+// command was judged. Then a step that only read such a folder made a copy in another step look like a move of it. So
+// the command is read step by step (shell-steps.ts), and only the words a move may be handed are given back. When the
 // steps cannot say which those are, the answer is null and the guard judges every word, as it did before.
 import { UNKNOWN, shellSteps } from './shell-steps.ts';
 
 /**
- * A command that moves, removes, copies, syncs or links whole folders: `mv`, `rm`, `cp`, `rsync` or `ln` as a command,
- * by its name alone or by a path to it, such as `/bin/rm`.
+ * A command that moves, removes, copies, syncs or links whole folders. That is `mv`, `rm`, `cp`, `rsync` or `ln` as a
+ * command, by its name alone or by a path to it, such as `/bin/rm`.
  */
 export const MOVERS = /(^|[\s;|&(`/])(mv|rm|cp|rsync|ln)(?=[\s;|&)`]|$)/;
 
@@ -15,8 +15,8 @@ export const MOVERS = /(^|[\s;|&(`/])(mv|rm|cp|rsync|ln)(?=[\s;|&)`]|$)/;
 const MOVER_NAMES: ReadonlySet<string> = new Set(['mv', 'rm', 'cp', 'rsync', 'ln']);
 
 /**
- * The programs that make the steps after them run somewhere the steps cannot place: in another folder, in a loop or
- * branch, or as text run again. With any of them, the whole command is judged as one.
+ * The programs after which the steps cannot say where a step runs. It may run in another folder, in a loop or branch,
+ * or as text run again. With any of them, the whole command is judged as one.
  */
 const PLACE_UNKNOWN: ReadonlySet<string> = new Set([
   '.',
@@ -39,10 +39,11 @@ const PLACE_UNKNOWN: ReadonlySet<string> = new Set([
 const ASSIGNMENT = /^[A-Za-z_]\w*=/;
 
 /**
- * The words whose folders a move may take, read step by step: the words of each step that runs a mover, the files it
- * writes, and the value of every variable set, which a mover may be handed. Null when the steps cannot say, so the
- * whole command is judged: the command is unread, a step's place is not known, or a mover is named where it is not
- * the program of its own step (handed to `xargs`, `sudo` or `find -exec`, in `sh -c`, a heredoc or a substitution).
+ * The words whose folders a move may take, read step by step. They are the words of each step that runs a mover, and
+ * the files it writes. The value of every variable set is one too, as a mover may be handed it. The answer is null
+ * when the steps cannot say, so the whole command is judged. That is when the command is unread, or a step's place is
+ * not known. It is also when a mover is not the program of its own step. Such a mover is handed to `xargs`, `sudo`
+ * or `find -exec`, or sits in `sh -c`, a heredoc or a substitution.
  */
 export function moverWords(command: string): string[] | null {
   const steps = shellSteps(command);

@@ -112,16 +112,25 @@ A command cannot be parsed, so `data-guard.ts` refuses it when:
   quotes and backslashes taken out and the home forms put in;
 - it has a word that resolves into it (the first 40 with a `/`, or starting `.` or `~`).
 
-A command with `mv`, `rm`, `cp`, `rsync` or `ln` in it, by name or by a path such as `/bin/rm`, is also refused in
-one case. That is when a word the move may act on resolves to a folder above the data folder and below home (the
-Claude config folder, its plugins folder). Its refusal says a folder above was named. `ls` and other reads of those
-stay allowed. A relative link is settled from the real path of its own folder.
+##### A move above the data folder
+
+A move is `mv`, `rm`, `cp`, `rsync` or `ln`, by name or by a path such as `/bin/rm`. A command with a move is also
+refused when a word the move may act on resolves to a folder above the data folder. The folder must be below home,
+such as the Claude config folder or its plugins folder. Its refusal says a folder above was named.
+
+`ls` and other reads of those stay allowed. A relative link is settled from the real path of its own folder.
 
 The command is read step by step (`shell-steps.ts`). The words judged are those of each step whose program is a
-mover, and the value of every variable set. So `find ~/.claude; cp a b` is allowed. The whole command is judged
-instead, every word, when the steps cannot say: the command is unread, a step runs `cd`, a loop, a branch, `eval` or
-`source`, or a mover is not the program of its own step (handed to `xargs`, `sudo` or `find -exec`, inside `sh -c`,
-a heredoc or a substitution).
+move, and the value of every variable set. So a step that lists the config folder, then `cp a b`, is allowed.
+
+Every word is judged when the steps cannot say which a move acts on:
+
+- the command is unread;
+- a step runs `cd`, a loop, a branch, `eval` or `source`;
+- a move is not the program of its own step. It is handed to `xargs`, `sudo` or `find -exec`, or sits in `sh -c`, a
+  heredoc or a substitution.
+
+##### What it does not stop
 
 It does not stop:
 
