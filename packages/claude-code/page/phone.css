@@ -1,0 +1,84 @@
+/* The phone layer of the page (spec §40, phone_touch_ready). The phone app's window runs the page as a browser does.
+   These rules only make it fit a hand and a screen. A computer's look does not change. Each rule is under a touch
+   test, or is the safe areas, which are nothing on a screen with no notch. It is the page's file alone, never the
+   plug-in's styles.css, so Obsidian is untouched. Sizes are in CSS pixels, the 44 of Apple's guide. */
+
+/* The notch, the corners and the home bar. The window draws under them (viewport-fit=cover in each page's head), so the
+   page steps in by their size. Zero where there are none. */
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* The start page: the notes as one list of rows, each a whole target, as a phone's own lists are. */
+#gn-app ul {
+  list-style: none;
+  margin: 0 0 var(--gn-space-4);
+  padding: 0;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  overflow: hidden;
+}
+#gn-app li + li {
+  border-top: 1px solid var(--gn-border);
+}
+#gn-app li a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+#gn-app > button {
+  margin-inline-end: var(--gn-space-2);
+}
+
+/* Where the screen is touched, not pointed at. */
+@media (pointer: coarse) {
+  /* Every control is a 44 by 44 target. The drawing's own marks are not controls of the page, so they keep their size. */
+  .gn-page
+    :is(button, summary, select, input:not([type='checkbox'], [type='radio']), [role='button']):not(
+      .thoughtknot-viewport *
+    ) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* a summary keeps its arrow only while it is not a flex box, so it grows by its padding */
+  .gn-page summary {
+    padding-block: var(--gn-space-2);
+  }
+  .gn-page label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  header nav a,
+  .gn-skip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  /* 16 pixels and up: below that, iOS zooms the page when a field takes focus, and does not zoom back. */
+  :is(input, select, textarea) {
+    font-size: max(16px, 1em) !important;
+  }
+  /* A touch screen has no Tab or Ctrl. The line that names those keys stays for a screen reader, out of sight. */
+  .thoughtknot-board-help {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A phone runs no gh. The app keeps no earlier versions yet. So the two choosers that need them are not shown
+   there (app-editor.ts sets the class). */
+.gn-no-gh :is(.gn-review, .gn-changes) {
+  display: none;
+}

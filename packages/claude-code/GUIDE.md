@@ -637,6 +637,10 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   - The words stand under the editor's drawing, which has its own for screen readers too.
 - `index.html`, `page.css`, `icons/` — the shell, its styles, and the icon files. The icons are hand-drawn after
   Lucide's and credited in `licences/bundled.json`. They are image files, never a code library (cc_one_renderer).
+- `phone.css` — the phone layer (phone_touch_ready). It holds the safe areas, 44 pixel targets and 16 pixel fields on a
+  touch screen. It also holds the start page's rows and what a phone hides. It is the page's file only. The plug-in's
+  `styles.css` is untouched.
+  `test/phone-touch.test.js` opens the app window as a phone in Chrome and measures it.
 
 ### Export from the page
 
