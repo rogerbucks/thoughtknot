@@ -23,4 +23,20 @@ describe('the space of a board', () => {
     assert.deepEqual(space.point({ clientX: 110, clientY: 120 }), { x: 100, y: 100 });
     assert.deepEqual(space.onBoard({ x: 100, y: 100 }), [40, 120]);
   });
+
+  // proves: phone_shell
+  test('a phone’s page can say how tall the board is, and no other page changes it', () => {
+    const named = (room) =>
+      new BoardSpace(
+        {
+          ...viewport(455),
+          ownerDocument: { defaultView: { getComputedStyle: () => ({ getPropertyValue: () => room }) } },
+        },
+        zoom,
+        frame,
+      ).size().height;
+    assert.equal(named('586px'), 586);
+    assert.equal(named(''), HEIGHT, 'a page that names none keeps the usual height');
+    assert.equal(named('nonsense'), HEIGHT);
+  });
 });

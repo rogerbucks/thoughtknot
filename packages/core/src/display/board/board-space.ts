@@ -37,8 +37,17 @@ export class BoardSpace {
   size() {
     const width = this.vp.getBoundingClientRect().width;
     if (width) lastWidth = width;
-    const height = this.full?.getBoundingClientRect().height || HEIGHT;
+    const height = this.full?.getBoundingClientRect().height || this.room() || HEIGHT;
     return { width: width || lastWidth, height };
+  }
+
+  /** The height a phone's page leaves the board, from its `--thoughtknot-board-room`; 0 where the page names none. */
+  private room(): number {
+    const room = parseFloat(
+      this.vp.ownerDocument?.defaultView?.getComputedStyle?.(this.vp)?.getPropertyValue('--thoughtknot-board-room') ??
+        '',
+    );
+    return room > 0 ? room : 0;
   }
 
   /** A box of the board as a part of the whole board, as the zoom wants it. */

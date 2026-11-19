@@ -641,6 +641,9 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   touch screen. It also holds the start page's rows and what a phone hides. It is the page's file only. The plug-in's
   `styles.css` is untouched.
   `test/phone-touch.test.js` opens the app window as a phone in Chrome and measures it.
+- `phone-shell.ts` — the phone's shell (phone_shell). On a touch screen under 700 pixels wide it adds a bar at the foot
+  with four views: Board, Graph, Note and More. One shows at a time, by `phone.css`. It also tells the board how tall to be
+  (`--thoughtknot-board-room`, read by the core's `board-space.ts`), so the board fills the screen.
 
 ### Export from the page
 

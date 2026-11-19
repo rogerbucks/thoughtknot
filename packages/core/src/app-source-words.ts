@@ -14,6 +14,12 @@ export const APP_SOURCE_WORDS = {
   'app.back': 'All notes',
   'app.phone-no-notes': 'No notes yet. Make one here, or put Markdown files, ending in .md, in the app’s folder.',
   'app.new-note': 'New note',
+  // the phone's bottom bar (editor spec §40, phone_shell)
+  'phone.tabs': 'Views of this note',
+  'phone.board': 'Board',
+  'phone.graph': 'Graph',
+  'phone.note': 'Note',
+  'phone.more': 'More',
   'app.privacy': 'ThoughtKnot keeps no data about you. Its privacy page: {address}',
   // sharing a vault with other people (ES§45, board_access)
   'app.share.open': 'Share',
