@@ -82,3 +82,80 @@ body {
 .gn-no-gh :is(.gn-review, .gn-changes) {
   display: none;
 }
+
+/* The phone's shell (phone-shell.ts, phone_shell): a bar at the foot names four views, and one shows at a time. The
+   board and the graph fill the screen. Nothing here applies off a phone, where the page has no gn-phone class. */
+.gn-phone body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-bottom: 0;
+}
+.gn-phone header {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-3);
+  padding-inline: var(--gn-space-3);
+}
+.gn-phone .gn-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--gn-font-size-l);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gn-phone main.gn-page {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  padding: var(--gn-space-2);
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--gn-space-2));
+}
+.gn-tabbar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--gn-border);
+  background: var(--gn-bg);
+}
+.gn-tab {
+  flex: 1;
+  min-height: 56px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.gn-tab[aria-current='true'] {
+  box-shadow: inset 0 3px 0 var(--gn-accent);
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.gn-phone[data-tab]:not([data-tab='board'], [data-tab='more']) .gn-boards,
+.gn-phone[data-tab='more'] .gn-boards > :not(.gn-board-exchange),
+.gn-phone[data-tab='board'] .gn-board-exchange,
+.gn-phone[data-tab]:not([data-tab='graph']) .gn-pane,
+.gn-phone[data-tab]:not([data-tab='note']) :is(.gn-cards, article.gn-prose, .gn-text-version),
+.gn-phone[data-tab]:not([data-tab='more']) :is(.gn-presets, .gn-changes, .gn-review, .gn-export-bar),
+.gn-phone :is(.gn-board-first, .gn-board-turn) {
+  display: none;
+}
+/* the note's own words come before the text version of its graph */
+.gn-phone .gn-cards {
+  order: -2;
+}
+.gn-phone article.gn-prose {
+  order: -1;
+}
+
+/* The Graph view's drawing takes the screen between the header, the pane's own rows and the bar. */
+.gn-phone .gn-pane .thoughtknot-pane-drawing .thoughtknot-viewport {
+  height: calc(100dvh - 330px);
+  min-height: 280px;
+}

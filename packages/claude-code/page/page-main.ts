@@ -30,6 +30,7 @@ import { reviewSection } from './review-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
+import { phoneShell } from './phone-shell.ts';
 import { presetSection } from './preset-section.ts';
 import { vaultPresetCalls } from './vault-preset-calls.ts';
 import { textVersionKept } from './text-version.ts';
@@ -78,6 +79,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   const doc = win.document;
   installDomHelpers(win);
   installHost(browserHost(win));
+  phoneShell(win);
   // the whole page reads in the browser's language's direction, so its own parts mirror with the shared ones
   // (rtl_mirrors)
   readInHostDirection(doc.documentElement);
