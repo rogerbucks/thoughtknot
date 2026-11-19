@@ -1,6 +1,7 @@
 // The words of the desktop app's own pages, in UK English (editor spec §41, standalone_app; §42, words_catalogue).
 // The editor inside the app is the browser editor's page, which says its own words. The VS Code extension's own
 // messages join them here (vscode-source-words.ts). source-words.ts keeps them with every other word.
+import { PHONE_SOURCE_WORDS } from './phone-source-words.ts';
 import { VSCODE_SOURCE_WORDS } from './vscode-source-words.ts';
 
 /** The words of the desktop app and the VS Code extension, by key, in UK English. */
@@ -14,12 +15,6 @@ export const APP_SOURCE_WORDS = {
   'app.back': 'All notes',
   'app.phone-no-notes': 'No notes yet. Make one here, or put Markdown files, ending in .md, in the app’s folder.',
   'app.new-note': 'New note',
-  // the phone's bottom bar (editor ES§40, phone_shell)
-  'phone.tabs': 'Views of this note',
-  'phone.board': 'Board',
-  'phone.graph': 'Graph',
-  'phone.note': 'Note',
-  'phone.more': 'More',
   'app.privacy': 'ThoughtKnot keeps no data about you. Its privacy page: {address}',
   // sharing a vault with other people (ES§45, board_access)
   'app.share.open': 'Share',
@@ -101,4 +96,5 @@ export const APP_SOURCE_WORDS = {
   'app.pictures-not-yet':
     'This window cannot keep a picture: it has no way to write one beside the note and read it back.',
   ...VSCODE_SOURCE_WORDS,
+  ...PHONE_SOURCE_WORDS,
 } as const;
