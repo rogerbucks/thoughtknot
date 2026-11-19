@@ -159,3 +159,8 @@ body {
   height: calc(100dvh - 330px);
   min-height: 280px;
 }
+
+/* The graph's own block is in the Graph view. In the Note view the note reads as words. */
+.gn-phone article.gn-prose pre:has(> code.language-gql) {
+  display: none;
+}
