@@ -1,4 +1,4 @@
-// The phone fits a hand and a screen (spec §40, phone_touch_ready). The app's window is opened in a real Chrome as a
+// The phone fits a hand and a screen (ES§40, phone_touch_ready). The app's window is opened in a real Chrome as a
 // phone: 393 by 852 points, touch, with the Tauri calls answered by a few notes held in the page. Then:
 // - each control of the start page and of a note is at least 44 by 44, the size of Apple's guide.
 // - nothing scrolls sideways, and no field is under 16 pixels, which makes iOS zoom the page.

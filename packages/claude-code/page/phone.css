@@ -1,4 +1,4 @@
-/* The phone layer of the page (spec §40, phone_touch_ready). The phone app's window runs the page as a browser does.
+/* The phone layer of the page (ES§40, phone_touch_ready). The phone app's window runs the page as a browser does.
    These rules only make it fit a hand and a screen. A computer's look does not change. Each rule is under a touch
    test, or is the safe areas, which are nothing on a screen with no notch. It is the page's file alone, never the
    plug-in's styles.css, so Obsidian is untouched. Sizes are in CSS pixels, the 44 of Apple's guide. */
