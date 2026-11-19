@@ -84,8 +84,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   // (rtl_mirrors)
   readInHostDirection(doc.documentElement);
   doc.title = word('page.title');
-  const title = doc.querySelector('.gn-title');
-  if (title) title.textContent = word('page.title');
+  doc.querySelector('.gn-title')?.replaceChildren(word('page.title'));
   const root = doc.getElementById('gn-page');
   if (!root) return;
   const skip = doc.querySelector<HTMLElement>('.gn-skip');

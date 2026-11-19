@@ -99,7 +99,8 @@ describe('in a real browser, as a phone', () => {
     await browser.send('Page.navigate', { url: 'about:blank' });
     await browser.send('Page.navigate', { url: `${base}/${path}` });
     for (let i = 0; i < 200 && !(await browser.run(ready)); i++) await new Promise((t) => setTimeout(t, 100));
-    await new Promise((t) => setTimeout(t, 500));
+    for (let i = 0; i < 50 && !(await browser.run(`document.readyState === 'complete'`)); i++)
+      await new Promise((t) => setTimeout(t, 100));
   }
 
   /** What the page measures: controls under 44, sideways scroll, fields under 16 pixels. */
