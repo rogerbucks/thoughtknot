@@ -23,11 +23,12 @@ function iconRules(names) {
   return names.map((n) => `.gn-icon-${n}{--gn-icon-image:url('/icons/${n}.svg')}`).join('\n');
 }
 
-/** The page's style sheet: theme, shared styles, the page's, the icons'. */
+/** The page's style sheet: theme, shared styles, the page's, the phone layer's, the icons'. */
 export function pageCss(iconNames) {
   const shared = readFileSync(join(here, '../../styles.css'), 'utf8');
   const own = readFileSync(join(here, 'page/page.css'), 'utf8');
-  return [themeCss(), shared, own, iconRules(iconNames)].join('\n');
+  const phone = readFileSync(join(here, 'page/phone.css'), 'utf8');
+  return [themeCss(), shared, own, phone, iconRules(iconNames)].join('\n');
 }
 
 /** Builds the page's files into `out`; returns the esbuild metafiles, for what went into each bundle. */
