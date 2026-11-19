@@ -149,6 +149,7 @@ describe('the phone shell, in a real browser', () => {
       const prose = document.querySelector('article.gn-prose').getBoundingClientRect().top;
       const version = document.querySelector('.gn-text-version'); return [prose, version ? version.getBoundingClientRect().top : 1e9]; })()`);
     assert.ok(top[0] < top[1], 'the note comes before the text version of its graph');
+    assert.ok(!(await shown('article.gn-prose pre')), 'its graph block is in the Graph view, not read as code here');
   });
 
   test('a computer’s page has no bar and no phone class', options, async () => {
