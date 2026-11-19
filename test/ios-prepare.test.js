@@ -46,13 +46,16 @@ test('buildNumber is a whole number of commits', () => {
   assert.match(buildNumber(), /^[1-9]\d*$/);
 });
 
-test('buildPath puts Apple\'s /usr/bin, then rustup\'s Rust, ahead of Homebrew', () => {
+test("buildPath puts Apple's /usr/bin, then rustup's Rust, ahead of Homebrew", () => {
   assert.equal(buildPath('/opt/homebrew/bin:/bin', '/r/bin'), '/usr/bin:/r/bin:/opt/homebrew/bin:/bin');
   assert.equal(buildPath(undefined, '/r/bin'), '/usr/bin:/r/bin');
 });
 
 test('the privacy manifest gives a reason for each API the built app links', () => {
-  const manifest = readFileSync(new URL('../packages/app/src-tauri/ios/PrivacyInfo.xcprivacy', import.meta.url), 'utf8');
+  const manifest = readFileSync(
+    new URL('../packages/app/src-tauri/ios/PrivacyInfo.xcprivacy', import.meta.url),
+    'utf8',
+  );
   for (const needed of ['FileTimestamp', 'DiskSpace', 'SystemBootTime', 'UserDefaults']) {
     assert.match(manifest, new RegExp(`NSPrivacyAccessedAPICategory${needed}`), needed);
   }
