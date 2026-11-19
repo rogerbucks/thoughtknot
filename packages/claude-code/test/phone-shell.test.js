@@ -1,6 +1,6 @@
-// The phone's shell (editor spec ES§40, phone_shell), without a browser: the bar's buttons, the view each shows, the
-// room it leaves the board, and that a computer's page is left alone. The real layout is checked in a browser by
-// test/phone-shell.test.js.
+// The phone's shell (editor spec ES§40, phone_shell), without a browser. It checks the bar's buttons and the view each
+// shows. It checks the room the shell leaves the board, and that a computer's page is left alone. The real layout is
+// checked in a browser by test/phone-shell.test.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
