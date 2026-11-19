@@ -1325,6 +1325,6 @@ after a module nor listed here, and on a listed file that is missing.
 ## The phone app
 
 - `test/phone-touch.test.js` — the phone app's window, opened as a phone in Chrome. Its controls are 44 by 44 and its
-  fields 16 pixels or more. The notch is left clear (spec §40, phone_touch_ready).
+  fields 16 pixels or more. The notch is left clear (ES§40, phone_touch_ready).
 - `test/phone-shell.test.js` — the phone app's window, opened as a phone in Chrome. A bar names four views and one shows at
-  a time. The board fills the screen (spec §40, phone_shell).
+  a time. The board fills the screen (ES§40, phone_shell).

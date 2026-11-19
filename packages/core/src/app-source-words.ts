@@ -14,7 +14,7 @@ export const APP_SOURCE_WORDS = {
   'app.back': 'All notes',
   'app.phone-no-notes': 'No notes yet. Make one here, or put Markdown files, ending in .md, in the app’s folder.',
   'app.new-note': 'New note',
-  // the phone's bottom bar (editor spec §40, phone_shell)
+  // the phone's bottom bar (editor ES§40, phone_shell)
   'phone.tabs': 'Views of this note',
   'phone.board': 'Board',
   'phone.graph': 'Graph',

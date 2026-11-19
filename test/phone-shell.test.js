@@ -1,4 +1,4 @@
-// The phone's shell (spec §40, phone_shell). The app's window is opened in a real Chrome as a phone: 393 by 852 points,
+// The phone's shell (ES§40, phone_shell). The app's window is opened in a real Chrome as a phone: 393 by 852 points,
 // touch, with the Tauri calls answered by a note held in the page. Then:
 // - a bar of four views sits at the foot, each a 56 point target: Board, Graph, Note and More.
 // - one view shows at a time, so nothing stacks, and the page never grows past the screen on the Board view.

@@ -1,4 +1,4 @@
-// The phone's shell (editor spec §40, phone_shell). On a touch screen as narrow as a phone, the note is not one long
+// The phone's shell (editor ES§40, phone_shell). On a touch screen as narrow as a phone, the note is not one long
 // page. The board, the graph, the note's text and the less used parts are four views, and a bar at the thumb's reach
 // names them. One shows at a time, so nothing stacks and nothing overlaps. The board and the graph fill the screen.
 // The page's own parts are the same, so every view of the engine is still there. Only what shows changes (phone.css).

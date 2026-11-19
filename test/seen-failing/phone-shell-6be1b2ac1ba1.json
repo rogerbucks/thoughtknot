@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-shell.test.js",
+  "test": "the phone shell, in a real browser > a computer’s page has no bar and no phone class",
+  "seen_failing_first": false,
+  "evidence": "it pins that a computer's page stays as it was, so it passes before the shell exists; the other cases in the file fail first"
+}

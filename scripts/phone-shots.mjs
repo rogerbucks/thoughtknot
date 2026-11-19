@@ -1,4 +1,4 @@
-// Pictures of the phone app's screens, for a person to look at (spec §40, phone_shell). It builds the app's window.
+// Pictures of the phone app's screens, for a person to look at (ES§40, phone_shell). It builds the app's window.
 // It opens it in a real Chrome as an iPhone of each size. It saves a picture of the start page and of each view.
 // Usage: node scripts/phone-shots.mjs OUT_FOLDER [NOTE.md]. The notes are one made up here, or the file given.
 import { createServer } from 'node:http';
