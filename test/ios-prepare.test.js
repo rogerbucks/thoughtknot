@@ -3,7 +3,8 @@
 // number that only grows.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildNumber, flattenPng, readPng, writeRgbPng } from '../scripts/ios-prepare.mjs';
+import { buildNumber, buildPath, flattenPng, readPng, writeRgbPng } from '../scripts/ios-prepare.mjs';
+import { readFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 
 function rgbaPng(width, height, rgba) {
@@ -43,4 +44,17 @@ test('flattenPng blends a half-transparent pixel onto the background', () => {
 
 test('buildNumber is a whole number of commits', () => {
   assert.match(buildNumber(), /^[1-9]\d*$/);
+});
+
+test('buildPath puts Apple\'s /usr/bin, then rustup\'s Rust, ahead of Homebrew', () => {
+  assert.equal(buildPath('/opt/homebrew/bin:/bin', '/r/bin'), '/usr/bin:/r/bin:/opt/homebrew/bin:/bin');
+  assert.equal(buildPath(undefined, '/r/bin'), '/usr/bin:/r/bin');
+});
+
+test('the privacy manifest gives a reason for each API the built app links', () => {
+  const manifest = readFileSync(new URL('../packages/app/src-tauri/ios/PrivacyInfo.xcprivacy', import.meta.url), 'utf8');
+  for (const needed of ['FileTimestamp', 'DiskSpace', 'SystemBootTime', 'UserDefaults']) {
+    assert.match(manifest, new RegExp(`NSPrivacyAccessedAPICategory${needed}`), needed);
+  }
+  for (const reason of ['C617.1', '3B52.1', 'E174.1', '35F9.1', 'CA92.1']) assert.ok(manifest.includes(reason), reason);
 });

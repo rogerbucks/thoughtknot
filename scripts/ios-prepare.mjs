@@ -16,6 +16,8 @@
 //   node scripts/ios-prepare.mjs --build     also run `cargo tauri ios build` for app-store-connect with that number.
 //   add --root DIR                           to work on another checkout, such as the main one from a worktree.
 //                                            Only the checkout that ran `ios init` has gen/.
+// --build puts /usr/bin first on PATH, for Apple's rsync, then rustup's Rust. Homebrew's Rust has no iOS targets,
+// so it must not come first. Needs `rustup component add llvm-tools`.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -144,6 +146,20 @@ function paths(root) {
   };
 }
 
+/** PATH for the iPhone build: /usr/bin (Apple's rsync), then rustup's toolchain folder, then the rest. */
+export function buildPath(rest, rustupBin) {
+  return ['/usr/bin', rustupBin, rest].filter(Boolean).join(':');
+}
+
+/** The folder holding rustup's rustc, which has the iOS targets. */
+function rustupBin() {
+  try {
+    return dirname(execFileSync('rustup', ['which', 'rustc'], { encoding: 'utf8' }).trim());
+  } catch {
+    throw new Error('rustup is not installed, and the iOS build needs its Rust targets');
+  }
+}
+
 function prepareIcons(apple, iconSource) {
   const appIcons = join(apple, 'Assets.xcassets', 'AppIcon.appiconset');
   const out = mkdtempSync(join(tmpdir(), 'ios-icons-'));
@@ -170,6 +186,7 @@ function main(args) {
     const config = JSON.stringify({ bundle: { iOS: { bundleVersion: build } } });
     execFileSync('cargo', ['tauri', 'ios', 'build', '--export-method', 'app-store-connect', '--config', config], {
       cwd: join(root, 'packages', 'app'),
+      env: { ...process.env, PATH: buildPath(process.env.PATH, rustupBin()) },
       stdio: 'inherit',
     });
   }
