@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/phone-shell.test.js",
+  "test": "the phone shell > the board is told how tall to be, and again when the screen turns",
+  "seen_failing_first": false,
+  "evidence": "Added after the shell code, to cover the code that only runs in the built page; test/phone-shell.test.js proved the shell first."
+}

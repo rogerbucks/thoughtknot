@@ -5,9 +5,7 @@
     {
       "file": "test/phone-shell.test.js",
       "failedFirst": [],
-      "passedFirst": [],
-      "notReplayed": "its run against the code before it did not finish",
-      "tests": []
+      "passedFirst": []
     }
   ]
 }
