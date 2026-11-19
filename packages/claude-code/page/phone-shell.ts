@@ -5,7 +5,7 @@
 import { word } from '@thoughtknot/core';
 
 /** A touch screen as narrow as a phone: the page's shell is the phone's. */
-export const PHONE_SHELL = '(pointer: coarse) and (max-width: 700px)';
+export const PHONE_SHELL = ['(pointer:coarse)', '(max-width:700px)'] as const;
 
 /** The four views, in the bar's order. */
 export const PHONE_TABS = ['board', 'graph', 'note', 'more'] as const;
@@ -15,7 +15,7 @@ const BOARD_CHROME = 200;
 
 /** Makes the shell on a phone, and does nothing elsewhere. Returns whether it did. */
 export function phoneShell(win: Window & typeof globalThis): boolean {
-  if (!win.matchMedia(PHONE_SHELL).matches) return false;
+  if (!PHONE_SHELL.every((query) => win.matchMedia(query).matches)) return false;
   const doc = win.document;
   const root = doc.documentElement;
   root.classList.add('gn-phone');
