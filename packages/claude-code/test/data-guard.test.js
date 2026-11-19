@@ -335,6 +335,56 @@ describe('what the second review found', () => {
     allowed(await guardDataFolder('Bash', { command: 'mv ~/notes/a.md ~/notes/b.md' }, ports));
     allowed(await guardDataFolder('Bash', { command: 'rm -rf ~ --help' }, ports));
   });
+
+  test('a step that only reads an ancestor does not make a copy in another step a move of it', async () => {
+    const w = world();
+    const config = join(w.top, 'home');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'thoughtknot');
+    mkdirSync(fallback, { recursive: true });
+    const ports = { ...w.ports, data: fallback, home: config };
+    for (const command of [
+      'find ~/.claude -maxdepth 3 -type l; cp -p ~/.claude/settings.json /x/b/',
+      'B=/x/b; ls -la ~/.claude > "$B/links.txt"; cp -pL ~/.claude/CLAUDE.md "$B/CLAUDE.md"',
+    ]) {
+      allowed(await guardDataFolder('Bash', { command }, ports));
+    }
+  });
+
+  test('a move the steps cannot place is still judged on the whole command', async () => {
+    const w = world();
+    const config = join(w.top, 'home');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'thoughtknot');
+    mkdirSync(fallback, { recursive: true });
+    const ports = { ...w.ports, data: fallback, home: config };
+    for (const command of [
+      'ls ~/.claude; rm -rf ~/.claude/plugins',
+      '/bin/rm -rf ~/.claude',
+      'ls ~/.claude | xargs rm -rf',
+      'find ~/.claude -exec rm -rf {} +',
+      'sudo rm -rf ~/.claude',
+      'sh -c "rm -rf ~/.claude"',
+      'X=~/.claude; rm -rf "$X"',
+      'cd ~/.claude && rm -rf plugins',
+      'for d in ~/.claude; do rm -rf "$d"; done',
+      'rm -rf $(echo ~/.claude)',
+      'sh <<EOF\nrm -rf ~/.claude\nEOF',
+      'echo ~/.claude `rm -rf x`',
+    ]) {
+      refused(await guardDataFolder('Bash', { command }, ports));
+    }
+  });
+
+  test('the refusal for a folder above says so, and the one for the folder itself is unchanged', async () => {
+    const w = world();
+    const config = join(w.top, 'home');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'thoughtknot');
+    mkdirSync(fallback, { recursive: true });
+    const ports = { ...w.ports, data: fallback, home: config };
+    const above = await guardDataFolder('Bash', { command: 'rm -rf ~/.claude' }, ports);
+    const itself = await guardDataFolder('Bash', { command: `rm -rf ${fallback}` }, ports);
+    assert.match(above, /folder above/);
+    assert.doesNotMatch(itself, /folder above/);
+  });
 });
 
 describe('the shipped real-path process', () => {
