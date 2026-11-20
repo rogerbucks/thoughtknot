@@ -7,9 +7,15 @@
 //
 // A classification is judged by what the call leaves. The note is read, the call's change is made to a copy, and the
 // classification before and after is compared. A note not yet made has none to change, so a new note may be written.
-// When the note cannot be read, a call is refused if any text it carries holds a classification line. Bash is judged
-// by gate-shell.ts.
-import { classificationOf, word } from '@thoughtknot/core';
+// A Write over a note that exists is a change, never a new note, so a class cannot be reset by writing the note again.
+// A change may raise the class, never lower it. Both sides must be one class among those set (lowest first, read
+// through the settings' table of class names). The class after must rank above the one before. It must also be one
+// the user lists in settings.json under `classificationRaises`: the classes Claude may raise a note to. The list is
+// the user's alone, as the data folder is, and none set means no raise. So a class the user keeps for themselves (a
+// credential, say) is left off it. Anything else is refused: a move down, a class not set, none, or one that
+// cannot be read. When the note cannot be read, a call is refused if any text it carries holds a classification line.
+// Bash is judged by gate-shell.ts, which still refuses any change.
+import { classificationOf, matchClass, word } from '@thoughtknot/core';
 import { forms, namesWord, onWindows, pathOf, slashed, slashedPorts } from './data-guard.ts';
 import type { GuardPorts, ToolInput } from './data-guard.ts';
 import { shellMayRun } from './gate-shell.ts';
@@ -22,6 +28,19 @@ export const matrixNoteRefusal = (): string => word('cc.refusal.matrix-note');
 /** The refusal on a classification line: it names no level, path or text of the call. */
 export const classificationRefusal = (): string => word('cc.refusal.classification');
 
+/** The refusal on a raise to a class the user has not listed: it names no level, path or text of the call. */
+export const classificationRaiseRefusal = (): string =>
+  word('cc.refusal.classification-raise', { settings: 'settings.json', key: RAISES_KEY });
+
+/** The key in settings.json that lists the classes Claude may raise a note to. */
+export const RAISES_KEY = 'classificationRaises';
+
+/** The classes Claude may raise a note to, from the saved settings: only a list of names counts, else none. */
+export function raisesFrom(saved: unknown): string[] {
+  const given = saved && typeof saved === 'object' ? (saved as Record<string, unknown>)[RAISES_KEY] : undefined;
+  return Array.isArray(given) ? given.filter((c): c is string => typeof c === 'string') : [];
+}
+
 /** The refusal when the guard could not tell where a path leads. */
 export const gateCheckFailedRefusal = (): string => word('cc.refusal.gate-check-failed');
 
@@ -30,6 +49,12 @@ export type GatePorts = Omit<GuardPorts, 'data'> & {
   matrixNote: string | null;
   /** A file's text; rejects when it cannot be read. With none, any classification line in a call refuses it. */
   read?: (path: string) => Promise<string>;
+  /** The classifications set, lowest first. With none, every change of a classification is refused. */
+  classifications?: readonly string[];
+  /** The settings' table from a note's class names to the classifications set (aiClassMap). */
+  classMap?: Record<string, string>;
+  /** The classes Claude may raise a note to (settings.json `classificationRaises`). With none, no raise is allowed. */
+  raises?: readonly string[];
 };
 
 /** A line that sets a classification, top-level or not: what the gate's own reader looks for. */
@@ -73,6 +98,26 @@ const vaultPath = (note: string) => note.replace(/\\/g, '/').replace(/^(\.\/|\/)
 const sameClassification = (before: string, after: string) =>
   JSON.stringify(classificationOf(before)) === JSON.stringify(classificationOf(after));
 
+/** The rank of a note's one class among those set, lowest first; null when it has none, several, or one not set. */
+function rankOf(text: string, ports: GatePorts): number | null {
+  const c = classificationOf(text);
+  const levels = [...(ports.classifications ?? [])];
+  if (c.kind !== 'given') return null;
+  const level = matchClass(c.level, levels, ports.classMap ?? {});
+  return level === null ? null : levels.indexOf(level);
+}
+
+/** The refusal for a change from `before` to `after`, or null when it leaves the class or raises it to one listed. */
+function judgeChange(before: string, after: string, ports: GatePorts): string | null {
+  if (sameClassification(before, after)) return null;
+  const from = rankOf(before, ports);
+  const to = rankOf(after, ports);
+  if (from === null || to === null || to <= from) return classificationRefusal();
+  const levels = [...(ports.classifications ?? [])];
+  const listed = (ports.raises ?? []).some((r) => matchClass(r, levels, ports.classMap ?? {}) === levels[to]);
+  return listed ? null : classificationRaiseRefusal();
+}
+
 async function guardClassification(tool: string, path: string, input: Record<string, unknown>, ports: GatePorts) {
   let before: string | null = null;
   try {
@@ -82,7 +127,7 @@ async function guardClassification(tool: string, path: string, input: Record<str
     if (tool === 'Write') return null;
   }
   const after = before === null ? null : textAfter(tool, input, before);
-  if (before !== null && after !== null) return sameClassification(before, after) ? null : classificationRefusal();
+  if (before !== null && after !== null) return judgeChange(before, after, ports);
   const carried = textsOf({ ...input, file_path: '', notebook_path: '', path: '' });
   return carried.some((t) => CLASSIFICATION_LINE.test(t)) ? classificationRefusal() : null;
 }

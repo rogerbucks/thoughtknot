@@ -123,6 +123,10 @@ export const CC_SOURCE_WORDS = {
   'cc.refusal.classification':
     'thoughtknot: this call would change a note’s classification, which sets what Claude may open, so Claude may not ' +
     'make it. Ask the user to change the classification in the note themselves. Nothing was changed.',
+  'cc.refusal.classification-raise':
+    'thoughtknot: this call would raise a note’s classification to one the user has not let Claude give, so only ' +
+    'the user may make it. The classes Claude may raise a note to are listed under {key} in {settings}, which the ' +
+    'user edits. Ask the user to change the classification in the note themselves. Nothing was changed.',
   'cc.refusal.gate-check-failed':
     'thoughtknot: this call was refused because the guard for what sets Claude’s gate could not check where it leads ' +
     '(node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.',

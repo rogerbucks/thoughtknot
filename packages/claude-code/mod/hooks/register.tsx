@@ -26,6 +26,7 @@ import {
   EditorLauncher,
   guardDataFolder,
   guardGateFiles,
+  raisesFrom,
   guardOpenNote,
   pathOf,
   confirmArgs,
@@ -182,11 +183,39 @@ async function dataFolderOf($: EngineInterface): Promise<{ data: string; home?: 
 
 /** The user's settings, saved as settings.json in the data folder; none, or one that cannot be read, is the defaults. */
 async function settingsAt($: EngineInterface, data: string) {
+  return settingsFrom(await savedAt($, data));
+}
+
+/** What settings.json holds as saved, or null when there is none or it cannot be read. */
+async function savedAt($: EngineInterface, data: string): Promise<unknown> {
   try {
-    return settingsFrom(JSON.parse(await $.fs.read(`${data}/settings.json`)));
+    return JSON.parse(await $.fs.read(`${data}/settings.json`));
   } catch {
-    return settingsFrom(null);
+    return null;
   }
+}
+
+/**
+ * The gate files' guard, with the matrix note, the classifications and the classes Claude may raise a note to, all
+ * from the user's settings, and a read.
+ */
+async function gateFilesRefusal(
+  $: EngineInterface,
+  tool: string,
+  input: Record<string, unknown>,
+  data: string,
+  ports: Omit<Parameters<typeof guardGateFiles>[2], 'matrixNote'>,
+) {
+  const saved = await savedAt($, data);
+  const settings = settingsFrom(saved);
+  return guardGateFiles(tool, input, {
+    matrixNote: settings.aiMatrixNote ?? null,
+    classifications: settings.classifications,
+    classMap: settings.aiClassMap,
+    raises: raisesFrom(saved),
+    read: (path) => $.fs.read(path),
+    ...ports,
+  });
 }
 
 /** The launcher over this host's calls; the server it runs is the mod's own bin/editor-server.mjs. */
@@ -341,11 +370,7 @@ export const register: Register = (on) => {
     const refusal =
       (await guardDataFolder(tool, input, { data, ...ports })) ??
       (await guardOpenNote(tool, input, { note: launcher?.note ?? null, ...ports })) ??
-      (await guardGateFiles(tool, input, {
-        matrixNote: (await settingsAt($, data)).aiMatrixNote ?? null,
-        read: (path) => $.fs.read(path),
-        ...ports,
-      }));
+      (await gateFilesRefusal($, tool, input, data, ports));
     return refusal === null ? next(e) : { deny: refusal };
   }).catch(($, e, next) => (next.called ? next(e) : { deny: dataFolderRefusal() }));
 

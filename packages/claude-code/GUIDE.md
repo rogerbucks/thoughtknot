@@ -155,8 +155,13 @@ So a change to the open note is never applied by Claude's own tools while `guard
   - **The matrix note:** a file tool whose real path ends with the note's path in the vault is refused
     (`MATRIX_NOTE_REFUSAL`). A link to it is found. Bash is refused when it names the note's file name.
   - **A classification:** the note is read, the call's change is made to a copy, and the classification before and
-    after is compared. A change or removal is refused (`CLASSIFICATION_REFUSAL`). So is an edit that breaks the front
-    matter around it. A note not yet made may be written.
+    after is compared. A move down, a removal, or a class not among those set is refused (`CLASSIFICATION_REFUSAL`).
+    So is an edit that breaks the front matter around it. A note not yet made may be written, with any class. A Write
+    over a note that exists is a change, not a new note.
+  - **A raise** is allowed when the note has one class before and one after, ranked higher in `classifications`. The
+    class after must be listed in settings.json under `classificationRaises`, the classes Claude may raise a note to. The user edits that list; none
+    set means no raise. A raise to a class not listed is refused with its own word (`cc.refusal.classification-raise`).
+    So a class the user keeps for themselves, such as a credential, is left off the list.
   - When the note cannot be read, a call is refused if any text it carries holds a classification line.
   - The refusals name no level, path or text of the call.
 
