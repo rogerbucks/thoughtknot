@@ -36,15 +36,17 @@ export const PLAN =
 
 /**
  * A `$.process.spawn` stand-in over Node's: every request is kept in `requests`, every child in `children`, and all are
- * killed when the file's tests end. Leaving the loop (`return()`) kills the child, as the host does.
+ * killed when the file's tests end. Leaving the loop (`return()`) kills the child, as the host does. A request with no
+ * `cwd` starts in the session's folder, `cwd` here, as the host's does; none given is the test's own folder.
  */
-export function hostSpawn() {
+export function hostSpawn({ cwd } = {}) {
   const requests = [];
   const children = [];
   const spawnProcess = (request) => {
     requests.push(request);
     const child = spawn(request.argv[0], request.argv.slice(1), {
       stdio: 'pipe',
+      cwd: request.cwd ?? cwd,
       env: { ...process.env, ...request.env },
     });
     children.push(child);

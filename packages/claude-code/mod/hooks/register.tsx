@@ -230,6 +230,7 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
       (request) => $.process.spawn(request),
       ['node', `${$.plugin.root}/bin/real-path.mjs`],
       (ms, fn) => $.clock.after(ms, fn),
+      $.plugin.root,
     ),
     exists: (path) => $.fs.exists(path),
     read: (path) => $.fs.read(path),
@@ -340,6 +341,15 @@ function answerWith(from: { press: unknown } | { origin: unknown }, picked: numb
   return r.ok ? null : r.why;
 }
 
+/** Whether the session's working folder is gone; a check that cannot say is taken as not gone. */
+async function folderGone($: EngineInterface, cwd: string): Promise<boolean> {
+  try {
+    return !(await $.fs.exists(cwd));
+  } catch {
+    return false;
+  }
+}
+
 export const register: Register = (on) => {
   // the pane's words are said in the system's language (spec §42)
   followSystemLanguage();
@@ -353,18 +363,24 @@ export const register: Register = (on) => {
     const input = e as Record<string, unknown>;
     if (tool !== 'Bash' && pathOf(tool, input) === null) return next(e);
     const { data, home } = await dataFolderOf($);
+    const cwd = await $.session.cwd();
+    // the checks run from the mod's own folder: one in the session's would not start once that folder is deleted, and
+    // every path they are asked about is already a full path. A gone folder changes only what a failed check says.
     const ports = {
       ...(home ? { home } : {}),
-      cwd: await $.session.cwd(),
+      cwd,
+      cwdGone: await folderGone($, cwd),
       realPath: realPathVia(
         (request) => $.process.spawn(request),
         ['node', `${$.plugin.root}/bin/real-path.mjs`],
         (ms, fn) => $.clock.after(ms, fn),
+        $.plugin.root,
       ),
       readLink: readLinkVia(
         (request) => $.process.spawn(request),
         ['node', `${$.plugin.root}/bin/real-path.mjs`],
         (ms, fn) => $.clock.after(ms, fn),
+        $.plugin.root,
       ),
     };
     const refusal =

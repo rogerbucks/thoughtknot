@@ -4,6 +4,8 @@
 // - The start has no shell.
 // - The path is one argument, after `--`, so a path starting with a dash is never an option.
 // - Only stdout is read. A process that does not answer in time is killed.
+// - It runs from the folder it is given, the mod's own, never the session's. A session's folder may be deleted, and
+//   then it could not start there. Every path it is asked about is already a full path.
 // - Any error is a rejection. The caller takes it as not knowing, and refuses what it cannot place.
 // A path that is not there is a rejection with `code` `ENOENT` (the process's exit code 2). So a caller can tell it
 // from a failure.
@@ -17,8 +19,9 @@ async function ask(
   spawn: EditorPorts['spawn'],
   argv: readonly string[],
   after: EditorPorts['after'],
+  cwd: string | undefined,
 ): Promise<{ out: string; code: number | null }> {
-  const pieces = spawn({ argv })[Symbol.asyncIterator]();
+  const pieces = spawn(cwd === undefined ? { argv } : { argv, cwd })[Symbol.asyncIterator]();
   let fail: (why: Error) => void = () => {};
   const timedOut = new Promise<never>((_, reject) => (fail = reject));
   timedOut.catch(() => {});
@@ -42,14 +45,18 @@ async function ask(
   }
 }
 
-/** `realPath` over the host's process call, the command that runs the shipped process and the clock. */
+/**
+ * `realPath` over the host's process call, the command that runs the shipped process and the clock. It runs from
+ * `cwd`; with none, from the host's default, the session's folder.
+ */
 export function realPathVia(
   spawn: EditorPorts['spawn'],
   program: readonly string[],
   after: EditorPorts['after'],
+  cwd?: string,
 ): (path: string) => Promise<string> {
   return async (path) => {
-    const { out, code } = await ask(spawn, [...program, '--', path], after);
+    const { out, code } = await ask(spawn, [...program, '--', path], after, cwd);
     if (code === 2) throw Object.assign(new Error('The path is not there.'), { code: 'ENOENT' });
     if (code !== 0 || !out) throw new Error('The real path could not be found.');
     return out;
@@ -58,15 +65,17 @@ export function realPathVia(
 
 /**
  * Where the link at a path leads, as a full path. The process settles a relative one from the link's own folder. It is
- * null when the path is no link or is not there. A process that cannot run or fails is a rejection.
+ * null when the path is no link or is not there. A process that cannot run or fails is a rejection. It runs from `cwd`,
+ * as `realPathVia` does.
  */
 export function readLinkVia(
   spawn: EditorPorts['spawn'],
   program: readonly string[],
   after: EditorPorts['after'],
+  cwd?: string,
 ): (path: string) => Promise<string | null> {
   return async (path) => {
-    const { out, code } = await ask(spawn, [...program, '--link', '--', path], after);
+    const { out, code } = await ask(spawn, [...program, '--link', '--', path], after, cwd);
     if (code === 3) return null;
     if (code !== 0 || !out) throw new Error('The link could not be read.');
     return out;

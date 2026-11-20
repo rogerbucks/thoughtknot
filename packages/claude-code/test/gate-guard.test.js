@@ -9,10 +9,12 @@ import { join } from 'node:path';
 import {
   classificationRefusal,
   classificationRaiseRefusal,
+  gateCheckFailedRefusal,
   matrixNoteRefusal,
   guardGateFiles,
   raisesFrom,
 } from '../src/gate-guard.ts';
+import { sessionFolderGoneRefusal } from '../src/data-guard.ts';
 
 const made = [];
 afterEach(() => {
@@ -570,5 +572,15 @@ describe('the mod runs it', () => {
     assert.match(helper, /classifications: settings\.classifications/);
     assert.match(helper, /classMap: settings\.aiClassMap/);
     assert.match(helper, /read: \(path\) => \$\.fs\.read\(path\)/);
+  });
+});
+
+describe('a check that cannot run still refuses (20 Nov 2026)', () => {
+  test('it says the gate check failed, or that the session’s folder is gone when it is', async () => {
+    const v = vault();
+    const broken = { ...v.ports, realPath: async () => Promise.reject(new Error('spawn node ENOENT')) };
+    const call = { file_path: join(v.top, 'other.md'), content: 'x' };
+    refusedWith(await guardGateFiles('Write', call, broken), gateCheckFailedRefusal());
+    refusedWith(await guardGateFiles('Write', call, { ...broken, cwdGone: true }), sessionFolderGoneRefusal());
   });
 });
