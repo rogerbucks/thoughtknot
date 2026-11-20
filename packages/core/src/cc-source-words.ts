@@ -106,6 +106,11 @@ export const CC_SOURCE_WORDS = {
     'may open, so Claude may not write to it. The user changes these settings, by editing {settings} in the ' +
     'thoughtknot plugin data folder ({variable}, or else the plugins data folder under their Claude config ' +
     'folder). Nothing was changed.',
+  'cc.refusal.data-folder-above':
+    'thoughtknot: this command moves, copies, syncs, links or removes, and names a folder above the mod’s data ' +
+    'folder ({variable}), such as the Claude config folder or its plugins folder. The guard could not tell that the ' +
+    'move leaves that folder alone, so it refused. A step that only reads that folder may run as a command of its ' +
+    'own. Nothing was changed.',
   'cc.refusal.data-check-failed':
     'thoughtknot: this call was refused because the guard for the mod’s data folder could not check where it ' +
     'leads (node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.',

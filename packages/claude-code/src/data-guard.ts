@@ -15,6 +15,7 @@
 // propose tool, so the user sees each change on the card first. Its own writing calls, of every tool above, that
 // reach the note are refused, and the refusal points to that tool. For Bash, the note's file name alone counts too.
 import { word } from '@thoughtknot/core';
+import { MOVERS, moverWords } from './mover-words.ts';
 
 /** The tools whose target is a file path, and the field that holds it. */
 const FILE_TOOLS: Readonly<Record<string, 'file_path' | 'notebook_path'>> = {
@@ -52,6 +53,10 @@ const MAX_WORDS = 40;
 /** The refusal, in words: it names no path, command or text of the call. */
 export const dataFolderRefusal = (): string =>
   word('cc.refusal.data-folder', { settings: 'settings.json', variable: 'CLAUDE_PLUGIN_DATA' });
+
+/** The refusal for a command that moves, copies or removes, and names a folder above the data folder. */
+export const dataFolderAboveRefusal = (): string =>
+  word('cc.refusal.data-folder-above', { variable: 'CLAUDE_PLUGIN_DATA' });
 
 /** The refusal when the guard could not tell where a path leads, so it cannot say the call leaves the folder alone. */
 export const checkFailedRefusal = (): string => word('cc.refusal.data-check-failed');
@@ -196,9 +201,6 @@ function names(text: string, needle: string): boolean {
 /** `plugins/data` as whole path parts, the folder every plugin's data lives in, however it was renamed or moved. */
 const PLUGINS_DATA = /(^|[^A-Za-z0-9._-])plugins\/data(?![A-Za-z0-9._-])/i;
 
-/** A command that moves, removes, copies, syncs or links whole folders: `mv`, `rm`, `cp`, `rsync` or `ln` as a command. */
-const MOVERS = /(^|[\s;|&(`])(mv|rm|cp|rsync|ln)(?=\s)/;
-
 /**
  * A copy of the command as the shell would read it. Quotes and backslashes are taken out. The home folder is put in for
  * `$HOME`, `${HOME}`, `~` and `~name`. Any named user is taken as the home folder, which only widens the match.
@@ -232,6 +234,8 @@ function spellings(folderForms: readonly string[], kept: Kept, ports: GuardPorts
 interface Kept {
   target: string;
   refusal: string;
+  /** The answer when a move takes a folder above the path; the refusal itself when unset. */
+  above?: string;
   /** The answer when where a path leads cannot be checked. */
   failed: string;
   /** Words a command names the path by, wherever they stand in it. */
@@ -246,6 +250,7 @@ interface Kept {
 const dataKept = (ports: GuardPorts): Kept => ({
   target: ports.data,
   refusal: dataFolderRefusal(),
+  above: dataFolderAboveRefusal(),
   failed: checkFailedRefusal(),
   spelt: ['CLAUDE_PLUGIN_DATA'],
   pluginsData: true,
@@ -282,15 +287,27 @@ async function guardCommand(command: string, kept: Kept, ports: GuardPorts): Pro
     .split(/[\s'"`;|&<>()=,]+/)
     .filter((word) => word.includes('/') || word.startsWith('.') || word.startsWith('~'))
     .slice(0, MAX_WORDS);
-  const moves = MOVERS.test(copy);
-  const home = ports.home ? normalise(ports.home) : null;
   for (const word of words) {
     for (const form of await forms(word, ports)) {
       if (where.some((folder) => inside(form, folder))) return refusal;
-      // moving, removing, copying, syncing or linking a folder above what is kept, below home, takes it too
-      if (moves && home && form.toLowerCase() !== home.toLowerCase() && inside(form, home)) {
-        if (where.some((folder) => inside(folder, form))) return refusal;
-      }
+    }
+  }
+  // moving, removing, copying, syncing or linking a folder above what is kept, below home, takes it too. Only the words
+  // a move may act on are judged, when the steps can say which; otherwise every word, as the command cannot be parsed
+  const home = ports.home ? normalise(ports.home) : null;
+  if (!home || !MOVERS.test(copy)) return null;
+  const placed = moverWords(command);
+  const judged =
+    placed === null
+      ? words
+      : placed
+          .map((word) => plain(word, ports))
+          .filter((word) => word.includes('/') || word.startsWith('.') || word.startsWith('~'))
+          .slice(0, MAX_WORDS);
+  for (const word of judged) {
+    for (const form of await forms(word, ports)) {
+      if (form.toLowerCase() === home.toLowerCase() || !inside(form, home)) continue;
+      if (where.some((folder) => inside(folder, form))) return kept.above ?? refusal;
     }
   }
   return null;

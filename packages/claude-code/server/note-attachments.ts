@@ -97,7 +97,7 @@ export async function keepPicture(root: string, inVault: string, given: string, 
     const file = join(folder, name);
     const handle = await fs
       .open(file, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o644)
-      .catch((e: NodeJS.ErrnoException) => e);
+      .catch((e: Error & { code?: string }) => e);
     if (handle instanceof Error) {
       if (handle.code === 'EEXIST' || handle.code === 'ELOOP') continue;
       return {
@@ -117,7 +117,7 @@ export async function keepPicture(root: string, inVault: string, given: string, 
         ok: false,
         status: 500,
         why: word('server.picture.not-kept', {
-          why: (e as NodeJS.ErrnoException).code ?? word('server.export.failed'),
+          why: (e as Error & { code?: string }).code ?? word('server.export.failed'),
         }),
       };
     }
