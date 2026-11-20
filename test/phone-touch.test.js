@@ -1,6 +1,7 @@
 // The phone fits a hand and a screen (ES§40, phone_touch_ready). The app's window is opened in a real Chrome as a
 // phone: 393 by 852 points, touch, with the Tauri calls answered by a few notes held in the page. Then:
-// - each control of the start page and of a note is at least 44 by 44, the size of Apple's guide.
+// - each control of the start page and of the shell's four views (board, graph, note, more) is at least 44 by 44, the
+//   size of Apple's guide. Every miss is listed with its selector, view and size.
 // - nothing scrolls sideways, and no field is under 16 pixels, which makes iOS zoom the page.
 // - the window draws under the notch and the home bar, and the page steps in by their size.
 // - the line naming Tab and Ctrl is out of sight on a touch screen but still read by a screen reader.
@@ -114,6 +115,77 @@ describe('in a real browser, as a phone', () => {
       .map((e) => e.tagName + ' ' + getComputedStyle(e).fontSize);
     return { small, fields, over: document.documentElement.scrollWidth - innerWidth };
   })()`;
+
+  /** Every visible control on the screen, measured against the 44 rule: what misses it is listed with selector, view, size. */
+  const WALK = (view) => `(() => {
+    const sel = 'button, a[href], summary, select, input:not([type=checkbox],[type=radio]), [role=button], [role=tab], [tabindex]';
+    const name = (e) => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') +
+      [...e.classList].slice(0, 3).map((c) => '.' + c).join('') +
+      (e.getAttribute('role') ? '[role=' + e.getAttribute('role') + ']' : '') +
+      (e.dataset.tab ? '[data-tab=' + e.dataset.tab + ']' : '') +
+      ((e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 24) ? ' "' + (e.getAttribute('aria-label') || e.textContent).trim().slice(0, 24) + '"' : '');
+    const seen = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
+      return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && !e.closest('.thoughtknot-viewport') && !e.closest('[hidden]'); };
+    const miss = [];
+    let walked = 0;
+    const check = (e, box, what) => { const r = box.getBoundingClientRect();
+      if (r.width < 44 - 0.5 || r.height < 44 - 0.5) miss.push(${JSON.stringify(view)} + ': ' + what + name(e) + ' ' + r.width.toFixed(1) + 'x' + r.height.toFixed(1)); };
+    for (const e of document.querySelectorAll(sel)) if (seen(e)) { walked++; check(e, e, ''); }
+    if (walked < 2) miss.push(${JSON.stringify(view)} + ': only ' + walked + ' controls were found, so nothing was checked');
+    for (const e of document.querySelectorAll('input[type=checkbox], input[type=radio]')) {
+      if (!seen(e) && !(e.labels?.[0] && seen(e.labels[0]))) continue;
+      const label = e.labels?.[0] ?? e.closest('label');
+      if (label) { const r = label.getBoundingClientRect(); if (r.height < 44 - 0.5) miss.push(${JSON.stringify(view)} + ': label of ' + name(e) + ' ' + r.width.toFixed(1) + 'x' + r.height.toFixed(1)); }
+      else check(e, e, 'unlabelled ');
+    }
+    return miss;
+  })()`;
+
+  /** Opens the editor on a note, taps one of the shell's four views, and returns what misses the rule there. */
+  async function walkView(view) {
+    await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
+    await browser.run(`document.querySelector('.gn-tab[data-tab=${view}]').click()`);
+    await new Promise((t) => setTimeout(t, 400));
+    // the board's tools are folded: the walk opens them, so they are measured too
+    if (view === 'board') {
+      await browser.run(`document.querySelector('.thoughtknot-board-tools-fold[aria-expanded=false]')?.click()`);
+      await new Promise((t) => setTimeout(t, 300));
+    }
+    return browser.run(WALK(view));
+  }
+
+  test('the start page: every interactive element is at least 44 by 44', options, async () => {
+    await open('index.html', `document.querySelectorAll('#gn-app li a').length > 0`);
+    assert.deepEqual(await browser.run(WALK('start')), []);
+  });
+
+  test('the board’s tools row: its buttons do not touch each other', options, async () => {
+    await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
+    await browser.run(`document.querySelector('.gn-tab[data-tab=board]').click()`);
+    await new Promise((t) => setTimeout(t, 400));
+    await browser.run(`document.querySelector('.thoughtknot-board-tools-fold[aria-expanded=false]')?.click()`);
+    await new Promise((t) => setTimeout(t, 300));
+    const gaps = await browser.run(`(() => {
+      const out = [];
+      for (const row of document.querySelectorAll('.thoughtknot-board-tools, .thoughtknot-board-bar')) {
+        const rs = [...row.querySelectorAll('button')].map((b) => b.getBoundingClientRect()).filter((r) => r.width > 0);
+        for (let i = 1; i < rs.length; i++) {
+          const a = rs[i - 1], b = rs[i];
+          const sameRow = Math.abs(a.top - b.top) < 4;
+          const gap = sameRow ? b.left - a.right : b.top - a.bottom;
+          if (gap < 8) out.push(row.className + ' button ' + i + ' is ' + gap.toFixed(1) + ' from the one before');
+        }
+      }
+      return { out, rows: document.querySelectorAll('.thoughtknot-board-tools button').length };
+    })()`);
+    assert.ok(gaps.rows > 1, 'the board has a tools row to check');
+    assert.deepEqual(gaps.out, []);
+  });
+
+  for (const view of ['board', 'graph', 'note', 'more'])
+    test(`the ${view} view: every interactive element is at least 44 by 44`, options, async () => {
+      assert.deepEqual(await walkView(view), []);
+    });
 
   test('the start page: every control is 44 by 44 and nothing scrolls sideways', options, async () => {
     await open('index.html', `document.querySelectorAll('#gn-app li a').length > 0`);
