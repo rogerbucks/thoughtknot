@@ -104,6 +104,22 @@ describe('in a real browser, as a phone', () => {
       await new Promise((t) => setTimeout(t, 100));
   }
 
+  /** Polls until `ready` is true in the page, or fails. */
+  async function until(ready) {
+    for (let i = 0; i < 100 && !(await browser.run(ready)); i++) await new Promise((t) => setTimeout(t, 50));
+    assert.ok(await browser.run(ready), `never true in the page: ${ready}`);
+  }
+
+  /** Shows one of the shell's views, and opens the board's folded tools when it is the board. */
+  async function showView(view) {
+    await browser.run(`document.querySelector('.gn-tab[data-tab=${view}]').click()`);
+    await until(`document.documentElement.dataset.tab === '${view}'`);
+    if (view === 'board') {
+      await browser.run(`document.querySelector('.thoughtknot-board-tools-fold[aria-expanded=false]')?.click()`);
+      await until(`document.querySelector('.thoughtknot-board-tools-fold')?.getAttribute('aria-expanded') !== 'false'`);
+    }
+  }
+
   /** What the page measures: controls under 44, sideways scroll, fields under 16 pixels. */
   const MEASURE = `(() => {
     const controls = [...document.querySelectorAll('.gn-page :is(button, summary, select, input:not([type=checkbox],[type=radio]), a[href])')]
@@ -144,13 +160,8 @@ describe('in a real browser, as a phone', () => {
   /** Opens the editor on a note, taps one of the shell's four views, and returns what misses the rule there. */
   async function walkView(view) {
     await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
-    await browser.run(`document.querySelector('.gn-tab[data-tab=${view}]').click()`);
-    await new Promise((t) => setTimeout(t, 400));
-    // the board's tools are folded: the walk opens them, so they are measured too
-    if (view === 'board') {
-      await browser.run(`document.querySelector('.thoughtknot-board-tools-fold[aria-expanded=false]')?.click()`);
-      await new Promise((t) => setTimeout(t, 300));
-    }
+    // the board's tools are folded: showView opens them, so they are measured too
+    await showView(view);
     return browser.run(WALK(view));
   }
 
@@ -161,10 +172,7 @@ describe('in a real browser, as a phone', () => {
 
   test('the board’s tools row: its buttons do not touch each other', options, async () => {
     await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
-    await browser.run(`document.querySelector('.gn-tab[data-tab=board]').click()`);
-    await new Promise((t) => setTimeout(t, 400));
-    await browser.run(`document.querySelector('.thoughtknot-board-tools-fold[aria-expanded=false]')?.click()`);
-    await new Promise((t) => setTimeout(t, 300));
+    await showView('board');
     const gaps = await browser.run(`(() => {
       const out = [];
       for (const row of document.querySelectorAll('.thoughtknot-board-tools, .thoughtknot-board-bar')) {
