@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crdt-open"
+description = "Enables the crdt_open command without any pre-configured scope."
+commands.allow = ["crdt_open"]
+
+[[permission]]
+identifier = "deny-crdt-open"
+description = "Denies the crdt_open command without any pre-configured scope."
+commands.deny = ["crdt_open"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mesh-dial"
+description = "Enables the mesh_dial command without any pre-configured scope."
+commands.allow = ["mesh_dial"]
+
+[[permission]]
+identifier = "deny-mesh-dial"
+description = "Denies the mesh_dial command without any pre-configured scope."
+commands.deny = ["mesh_dial"]

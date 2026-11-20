@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crdt-has-been"
+description = "Enables the crdt_has_been command without any pre-configured scope."
+commands.allow = ["crdt_has_been"]
+
+[[permission]]
+identifier = "deny-crdt-has-been"
+description = "Denies the crdt_has_been command without any pre-configured scope."
+commands.deny = ["crdt_has_been"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-machine-found"
+description = "Enables the machine_found command without any pre-configured scope."
+commands.allow = ["machine_found"]
+
+[[permission]]
+identifier = "deny-machine-found"
+description = "Denies the machine_found command without any pre-configured scope."
+commands.deny = ["machine_found"]

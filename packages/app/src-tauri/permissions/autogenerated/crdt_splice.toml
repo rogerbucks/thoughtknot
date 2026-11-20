@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crdt-splice"
+description = "Enables the crdt_splice command without any pre-configured scope."
+commands.allow = ["crdt_splice"]
+
+[[permission]]
+identifier = "deny-crdt-splice"
+description = "Denies the crdt_splice command without any pre-configured scope."
+commands.deny = ["crdt_splice"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mesh-accept"
+description = "Enables the mesh_accept command without any pre-configured scope."
+commands.allow = ["mesh_accept"]
+
+[[permission]]
+identifier = "deny-mesh-accept"
+description = "Denies the mesh_accept command without any pre-configured scope."
+commands.deny = ["mesh_accept"]
