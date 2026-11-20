@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-gestures.test.js",
+  "test": "the phone’s gestures, in a real browser > a tap on each tab of the bar changes the view",
+  "seen_failing_first": false,
+  "evidence": "A pinning test for gestures that already worked: this change adds no code, so the test could not fail first. It guards the touch behaviour against later change."
+}
