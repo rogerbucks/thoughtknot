@@ -3,7 +3,7 @@
 // a11y_targets_reflow_auto) share it. Chrome is the one given, the first of the usual names on the PATH, or where a Mac
 // or a Windows PC installs it.
 import { spawn, execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -158,6 +158,43 @@ const alive = (pid) => {
   }
 };
 
+/** How long a reaper's lock may stand before it is taken to be left by a process that died while reaping. */
+const REAP_LOCK_MS = 10_000;
+
+/**
+ * Removes the slot left by `owner`, a process that is gone, and says whether it did. Two processes can both find the
+ * same slot left behind. If both removed it, the second could remove the slot the first had just taken. Or it could
+ * fail with ENOTEMPTY as the first wrote its pid. So only the process holding the slot's reap lock removes it, and only once
+ * it has read the dead owner's pid again under the lock.
+ */
+function reap(slot, owner) {
+  const lock = `${slot}.reap`;
+  try {
+    mkdirSync(lock);
+  } catch (e) {
+    if (e?.code !== 'EEXIST') throw e;
+    try {
+      if (Date.now() - statSync(lock).mtimeMs > REAP_LOCK_MS) rmSync(lock, { recursive: true, force: true });
+    } catch {
+      // the lock went while it was looked at
+    }
+    return false;
+  }
+  try {
+    let now = 0;
+    try {
+      now = Number(readFileSync(join(slot, 'pid'), 'utf8'));
+    } catch {
+      return false; // already removed, or taken again by a process that has not written its pid yet
+    }
+    if (now !== owner || alive(now)) return false;
+    rmSync(slot, { recursive: true, force: true });
+    return true;
+  } finally {
+    rmSync(lock, { recursive: true, force: true });
+  }
+}
+
 /**
  * Waits for one of `limit` slots and returns the function that frees it. A slot is a folder made in `dir`. It holds the
  * pid of the process using it. Test files run as separate processes, so the folders are how they count each other.
@@ -184,8 +221,7 @@ export async function takeChromeSlot({
           continue; // just made by another process, which has not written its pid yet
         }
         if (alive(owner)) continue;
-        rmSync(slot, { recursive: true, force: true });
-        i--; // try this slot again, now it is free
+        if (reap(slot, owner)) i--; // try this slot again, now it is free
         continue;
       }
       writeFileSync(join(slot, 'pid'), String(process.pid));
