@@ -169,4 +169,47 @@ describe('the Chromes open at once across the test processes', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  test('a slot left behind is removed by one process only, so two never remove it at once', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'slots-'));
+    try {
+      const { existsSync, mkdirSync, writeFileSync } = await import('node:fs');
+      mkdirSync(join(dir, 'slot-0'));
+      writeFileSync(join(dir, 'slot-0', 'pid'), '999999999');
+      mkdirSync(join(dir, 'slot-0.reap')); // another process is removing it right now
+      let tries = 0;
+      const release = await takeChromeSlot({
+        dir,
+        limit: 1,
+        sleep: async () => {
+          tries++;
+          assert.equal(existsSync(join(dir, 'slot-0', 'pid')), true, 'the slot is left to the process reaping it');
+          if (tries === 3) rmSync(join(dir, 'slot-0.reap'), { recursive: true }); // that process is done
+        },
+      });
+      assert.equal(tries, 3, 'it waited while the other reaped, then took the slot over');
+      assert.equal(readFileSync(join(dir, 'slot-0', 'pid'), 'utf8'), String(process.pid));
+      release();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a reap lock left by a process that died while reaping is cleared after ten seconds', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'slots-'));
+    try {
+      const { mkdirSync, utimesSync, writeFileSync } = await import('node:fs');
+      mkdirSync(join(dir, 'slot-0'));
+      writeFileSync(join(dir, 'slot-0', 'pid'), '999999999');
+      mkdirSync(join(dir, 'slot-0.reap'));
+      const old = new Date(Date.now() - 11_000);
+      utimesSync(join(dir, 'slot-0.reap'), old, old);
+      let tries = 0;
+      const release = await takeChromeSlot({ dir, limit: 1, sleep: async () => assert.ok(++tries < 5, 'never freed') });
+      assert.equal(tries, 1, 'the stale lock is cleared on the first pass and the slot taken on the next');
+      release();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
