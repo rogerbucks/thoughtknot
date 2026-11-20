@@ -30,7 +30,7 @@ import { reviewSection } from './review-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
-import { phoneShell } from './phone-shell.ts';
+import { phoneShell, phoneTitle } from './phone-shell.ts';
 import { presetSection } from './preset-section.ts';
 import { vaultPresetCalls } from './vault-preset-calls.ts';
 import { textVersionKept } from './text-version.ts';
@@ -92,6 +92,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   const say = (text: string) => root.replaceChildren(Object.assign(doc.createElement('p'), { textContent: text }));
   const { token, note } = takeFragment(win);
   if (!token || !note) return say(word('page.open-from-link'));
+  phoneTitle(doc, note);
   try {
     const calls = serverCalls(token, win.fetch.bind(win));
     const exports = exportCalls(token, win.fetch.bind(win));
@@ -103,8 +104,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       calls.plugins().catch(() => []),
     ]);
     markPage(doc, settings);
-    const graph = doc.createElement('section');
-    graph.setAttribute('class', 'gn-graph');
+    const graph = Object.assign(doc.createElement('section'), { className: 'gn-graph' });
     const cards = doc.createElement('div');
     cards.setAttribute('class', 'gn-cards');
     const prose = doc.createElement('article');

@@ -2,8 +2,11 @@
 // touch, with the Tauri calls answered by a note held in the page. Then:
 // - a bar of four views sits at the foot, each a 56 point target: Board, Graph, Note and More.
 // - one view shows at a time, so nothing stacks, and the page never grows past the screen on the Board view.
-// - the board fills the screen between the header and the bar.
-// - the Graph view opens on the drawing, with its 2D, 2.5D and 3D switch in reach.
+// - the header names the note, with the way back to all notes before it.
+// - the board fills the screen from its top to the bar (phone_board_canvas).
+// - the Graph view opens on the drawing, with its undo row and its Drawing and Text tabs on one row. The drawing
+//   fills the screen to the bar (phone_graph_view).
+// - the More view is grouped rows: each control a whole row, 44 or more, with no bullets (phone_more).
 // - the Note view opens on the note's own words, not the text version of its graph.
 // - a computer's page has no bar and keeps its layout.
 // Chrome is the one THOUGHTKNOT_CHROME names, or the first of the usual names on the PATH. Where none is found the
@@ -105,15 +108,34 @@ describe('the phone shell, in a real browser', () => {
     assert.equal(await browser.run(`document.querySelector('.gn-tab[aria-current]').textContent`), 'Board');
   });
 
-  test('the Board view fills the screen: the board is tall, and the page does not scroll', options, async () => {
+  /** A frame or two, for the shell to fit what was just drawn or shown. */
+  const settle = () =>
+    browser.run(`new Promise((done) => setTimeout(() => requestAnimationFrame(() => requestAnimationFrame(done)), 0))`);
+
+  test('the header names the note, with the way back before it', options, async () => {
     await open(true);
+    const h = await browser.run(`(() => {
+      const back = document.querySelector('header nav a').getBoundingClientRect();
+      const title = document.querySelector('.gn-title');
+      return { name: title.textContent, back: back.left, height: back.height, title: title.getBoundingClientRect().left }; })()`);
+    assert.equal(h.name, 'Map', 'the note, not the app');
+    assert.ok(h.back <= 24, `the way back is at the left, at ${h.back}`);
+    assert.ok(h.back < h.title, 'and comes before the name');
+    assert.ok(h.height >= 44, `the way back is ${h.height} tall`);
+  });
+
+  test('the Board view fills the screen to the bar, and the page does not scroll', options, async () => {
+    await open(true);
+    await settle();
     const m =
       await browser.run(`(() => { const v = document.querySelector('.thoughtknot-board .thoughtknot-viewport').getBoundingClientRect();
-      return { height: v.height, bottom: v.bottom, scroll: document.documentElement.scrollHeight - innerHeight, over: document.documentElement.scrollWidth - innerWidth }; })()`);
-    assert.ok(m.height >= 400, `the board is ${m.height} tall`);
+      const bar = document.querySelector('.gn-tabbar').getBoundingClientRect().top;
+      return { height: v.height, top: v.top, gap: bar - v.bottom, scroll: document.documentElement.scrollHeight - innerHeight, over: document.documentElement.scrollWidth - innerWidth }; })()`);
+    assert.ok(m.height >= 500, `the board is ${m.height} tall`);
+    assert.ok(m.top <= 200, `the board starts at ${m.top}, under the header and its rows`);
+    assert.ok(m.gap >= 0 && m.gap <= 16, `the board ends ${m.gap} above the bar`);
     assert.ok(m.scroll <= 0, `the page is ${m.scroll} taller than the screen`);
     assert.ok(m.over <= 0, 'nothing scrolls sideways');
-    assert.ok(m.bottom <= 852 - 56, 'the board ends above the bar');
   });
 
   test('one view shows at a time', options, async () => {
@@ -144,6 +166,40 @@ describe('the phone shell, in a real browser', () => {
       `document.querySelector('.gn-pane .thoughtknot-pane-drawing .thoughtknot-viewport').getBoundingClientRect().height`,
     );
     assert.ok(height >= 450, `the drawing is ${height} tall: it fills the screen`);
+    await settle();
+    const m = await browser.run(`(() => {
+      const top = (q) => document.querySelector(q).getBoundingClientRect().top;
+      const v = document.querySelector('.gn-pane .thoughtknot-pane-drawing .thoughtknot-viewport').getBoundingClientRect();
+      return { head: top('.gn-pane .thoughtknot-pane-head'), tabs: top('.gn-pane .thoughtknot-tabs'),
+        gap: top('.gn-tabbar') - v.bottom, scroll: document.documentElement.scrollHeight - innerHeight }; })()`);
+    assert.ok(Math.abs(m.head - m.tabs) <= 4, `the undo row and the tabs share a row, at ${m.head} and ${m.tabs}`);
+    assert.ok(m.gap >= 0 && m.gap <= 16, `the drawing ends ${m.gap} above the bar`);
+    assert.ok(m.scroll <= 0, `the page is ${m.scroll} taller than the screen`);
+    assert.ok(!(await shown('.gn-pane .thoughtknot-sheet')), 'no row only to say there are no problems');
+  });
+
+  test('the More view is grouped rows, each control a whole row', options, async () => {
+    await open(true);
+    await tap('more');
+    const m = await browser.run(`(() => {
+      const shown = [...document.querySelectorAll('main :is(button, select, input, summary)')]
+        .map((e) => [e.textContent.trim().slice(0, 30) || e.tagName, e.getBoundingClientRect()])
+        .filter(([, r]) => r.height > 0);
+      const bullets = [...document.querySelectorAll('main ul')].filter((u) => u.getBoundingClientRect().height > 0)
+        .map((u) => getComputedStyle(u).listStyleType);
+      return { controls: shown.map(([n, r]) => [n, Math.round(r.width), Math.round(r.height)]), bullets,
+        over: document.documentElement.scrollWidth - innerWidth }; })()`);
+    assert.ok(m.controls.length >= 4, `the More view has ${m.controls.length} controls`);
+    for (const [name, width, height] of m.controls) {
+      assert.ok(height >= 44, `${name} is ${height} tall`);
+      assert.ok(width >= 300, `${name} is ${width} wide: a whole row`);
+    }
+    assert.deepEqual(
+      m.bullets.filter((b) => b !== 'none'),
+      [],
+      'no bullets',
+    );
+    assert.ok(m.over <= 0, 'nothing scrolls sideways');
   });
 
   test('the Note view opens on the note’s own words', options, async () => {
