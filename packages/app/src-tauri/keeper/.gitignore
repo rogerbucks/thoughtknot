@@ -4,3 +4,5 @@
 /ios/.tauri
 /ios/.build
 /permissions/schemas
+/.tauri
+/ios/Package.resolved

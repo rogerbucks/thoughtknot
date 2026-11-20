@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crdt-history"
+description = "Enables the crdt_history command without any pre-configured scope."
+commands.allow = ["crdt_history"]
+
+[[permission]]
+identifier = "deny-crdt-history"
+description = "Denies the crdt_history command without any pre-configured scope."
+commands.deny = ["crdt_history"]

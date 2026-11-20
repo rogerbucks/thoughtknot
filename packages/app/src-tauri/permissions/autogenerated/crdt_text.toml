@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crdt-text"
+description = "Enables the crdt_text command without any pre-configured scope."
+commands.allow = ["crdt_text"]
+
+[[permission]]
+identifier = "deny-crdt-text"
+description = "Denies the crdt_text command without any pre-configured scope."
+commands.deny = ["crdt_text"]

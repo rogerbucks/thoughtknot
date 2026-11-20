@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-parts-read"
+description = "Enables the parts_read command without any pre-configured scope."
+commands.allow = ["parts_read"]
+
+[[permission]]
+identifier = "deny-parts-read"
+description = "Denies the parts_read command without any pre-configured scope."
+commands.deny = ["parts_read"]

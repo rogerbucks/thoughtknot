@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-run-gh"
+description = "Enables the run_gh command without any pre-configured scope."
+commands.allow = ["run_gh"]
+
+[[permission]]
+identifier = "deny-run-gh"
+description = "Denies the run_gh command without any pre-configured scope."
+commands.deny = ["run_gh"]
