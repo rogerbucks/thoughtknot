@@ -127,7 +127,7 @@ jobs:
           if-no-files-found: error
           path: packages/app/src-tauri/gen/apple/build/arm64-sim/*.app
 
-  # The phone's screens pictured in WebKit, the engine an iPhone uses (spec §40, phone_webkit_shots), at each iPhone size.
+  # The phone's screens pictured in WebKit, the engine an iPhone uses (ES§40, phone_webkit_shots), at each iPhone size.
   # On macOS, where Playwright's WebKit needs no packages from apt; kept off pull requests like the iPhone build above.
   webkit-shots:
     if: ${{ !contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) }}
