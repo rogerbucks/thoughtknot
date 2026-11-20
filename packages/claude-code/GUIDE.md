@@ -45,7 +45,8 @@ Whether the desktop app does, and keeps the drawing's style sheet, is checked by
 - `editor-matrix.ts` — `withMatrix`: the matrix note read for Claude's row, only from inside the vault's real path.
 - `editor-realpath.ts` — `realPathVia`: a file's real path, links settled. It is asked of the shipped process
   `bin/real-path-process.ts` (built to `mod/bin/real-path.mjs`, run by node) through the host's process call. That is
-  because the mod's file calls settle no links. The path is the one argument.
+  because the mod's file calls settle no links. The path is the one argument. The guards run it from the mod's own
+  folder, so a session whose folder was deleted is still checked.
   - The matrix note is read only when its real path is inside the vault's real path. A link out, a host with no such
     call, or a path that cannot be settled refuses it. Each gives a plain reason (`matrixProblem`), which both gates
     give.

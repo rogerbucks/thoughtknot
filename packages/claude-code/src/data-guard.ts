@@ -61,6 +61,12 @@ export const dataFolderAboveRefusal = (): string =>
 /** The refusal when the guard could not tell where a path leads, so it cannot say the call leaves the folder alone. */
 export const checkFailedRefusal = (): string => word('cc.refusal.data-check-failed');
 
+/**
+ * The refusal when a check could not run and the session's working folder is gone: the user moves the session or opens
+ * a new one. It names no path.
+ */
+export const sessionFolderGoneRefusal = (): string => word('cc.refusal.session-folder-gone');
+
 /** The refusal on the note open in the editor: it names the propose tool, and no path or text of the call. */
 export const openNoteRefusal = (): string => word('cc.refusal.open-note', { tool: 'mcp__thoughtknot__propose' });
 
@@ -80,6 +86,11 @@ export interface GuardPorts {
   realPath: (path: string) => Promise<string>;
   /** Where the link at a path leads as a full path, or null when it is no link or not there; rejects on failure. */
   readLink?: (path: string) => Promise<string | null>;
+  /**
+   * Whether the session's working folder is gone (deleted while the session was in it). It changes only what a failed
+   * check says, never whether it refuses.
+   */
+  cwdGone?: boolean;
 }
 
 /** A Windows drive at the start of a path, `C:/`, once its backslashes are slashes. */
@@ -363,6 +374,6 @@ async function guardCall(tool: string, input: ToolInput, kept: Kept, given: Guar
     return path === null ? null : await guardFile(as(path), { ...kept, target: as(kept.target) }, ports);
   } catch {
     // the real path could not be had (the process did not run, node is missing, it timed out): not knowing is a no
-    return kept.failed;
+    return ports.cwdGone ? sessionFolderGoneRefusal() : kept.failed;
   }
 }

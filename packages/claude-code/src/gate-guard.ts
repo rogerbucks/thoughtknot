@@ -16,7 +16,7 @@
 // cannot be read. When the note cannot be read, a call is refused if any text it carries holds a classification line.
 // Bash is judged by gate-shell.ts, which still refuses any change.
 import { classificationOf, matchClass, word } from '@thoughtknot/core';
-import { forms, namesWord, onWindows, pathOf, slashed, slashedPorts } from './data-guard.ts';
+import { forms, namesWord, onWindows, pathOf, sessionFolderGoneRefusal, slashed, slashedPorts } from './data-guard.ts';
 import type { GuardPorts, ToolInput } from './data-guard.ts';
 import { shellMayRun } from './gate-shell.ts';
 
@@ -155,7 +155,7 @@ export async function guardGateFiles(tool: string, input: ToolInput, ports: Gate
       if (found.some((f) => f.toLowerCase().endsWith(tail))) return matrixNoteRefusal();
     }
   } catch {
-    return gateCheckFailedRefusal();
+    return ports.cwdGone ? sessionFolderGoneRefusal() : gateCheckFailedRefusal();
   }
   return guardClassification(tool, path, input, ports);
 }

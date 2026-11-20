@@ -17,7 +17,16 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { guardDataFolder, guardOpenNote, pathOf } from '../src/data-guard.ts';
+import {
+  checkFailedRefusal,
+  guardDataFolder,
+  guardOpenNote,
+  noteCheckFailedRefusal,
+  pathOf,
+  sessionFolderGoneRefusal,
+} from '../src/data-guard.ts';
+import { readLinkVia, realPathVia } from '../src/editor-realpath.ts';
+import { hostSpawn } from './editor-mod-support.js';
 
 const made = [];
 afterEach(() => {
@@ -484,5 +493,78 @@ describe('on Windows, a path in backslashes and a drive is the same path', () =>
     assert.equal(typeof (await guardOpenNote('Edit', { file_path: 'C:\\vault\\plan.md' }, open)), 'string');
     assert.equal(typeof (await guardOpenNote('Bash', { command: 'del plan.md' }, open)), 'string');
     assert.equal(await guardOpenNote('Edit', { file_path: 'C:\\vault\\other.md' }, open), null);
+  });
+});
+
+describe('a session whose working folder was deleted (20 Nov 2026)', () => {
+  // the shipped process, run from its source; a clock that never fires, for a process that answers
+  const PROGRAM = [process.execPath, script];
+  const NEVER_LATE = () => ({ cancel() {} });
+
+  /** A world whose session folder is gone, its real-path and link calls over a host that starts children there. */
+  function gone(from) {
+    const w = world();
+    rmSync(w.work, { recursive: true, force: true });
+    const host = hostSpawn({ cwd: w.work });
+    const ports = {
+      ...w.ports,
+      cwdGone: true,
+      realPath: realPathVia(host.spawn, PROGRAM, NEVER_LATE, from?.(w)),
+      readLink: readLinkVia(host.spawn, PROGRAM, NEVER_LATE, from?.(w)),
+    };
+    return { ...w, host, ports };
+  }
+
+  test('the guard still checks, as its process runs from a folder that exists, and still keeps the folder', async () => {
+    const w = gone((w) => w.top);
+    allowed(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'a.md') }, w.ports));
+    allowed(await guardDataFolder('Write', { file_path: 'notes.md' }, w.ports));
+    allowed(await guardDataFolder('Bash', { command: `echo hi > ${join(w.elsewhere, 'out.txt')}` }, w.ports));
+    refused(await guardDataFolder('Write', { file_path: join(w.data, 'settings.json') }, w.ports));
+    const note = join(w.elsewhere, 'plan.md');
+    writeFileSync(note, 'x');
+    allowed(await guardOpenNote('Edit', { file_path: join(w.elsewhere, 'other.md') }, { ...w.ports, note }));
+    refused(await guardOpenNote('Edit', { file_path: note }, { ...w.ports, note }));
+    assert.ok(
+      w.host.requests.every((r) => r.cwd === w.top),
+      'every check ran from the folder given',
+    );
+  });
+
+  test('a check that cannot run from the gone folder still refuses, and says the folder is gone', async () => {
+    const w = gone();
+    const answer = await guardDataFolder('Write', { file_path: join(w.elsewhere, 'a.md') }, w.ports);
+    assert.equal(answer, sessionFolderGoneRefusal());
+    assert.match(answer, /working folder/);
+    assert.match(answer, /new session/);
+    assert.ok(!answer.includes(w.top), 'the refusal names no path');
+    const note = join(w.elsewhere, 'plan.md');
+    assert.equal(
+      await guardOpenNote('Bash', { command: 'rm plan.md' }, { ...w.ports, note }),
+      sessionFolderGoneRefusal(),
+    );
+  });
+
+  test('a helper that genuinely fails still refuses, as before', async () => {
+    const w = world();
+    const host = hostSpawn();
+    const missing = ['tk-no-such-node-here'];
+    const ports = {
+      ...w.ports,
+      cwdGone: false,
+      realPath: realPathVia(host.spawn, missing, NEVER_LATE, w.top),
+      readLink: readLinkVia(host.spawn, missing, NEVER_LATE, w.top),
+    };
+    assert.equal(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'a.md') }, ports), checkFailedRefusal());
+    const note = join(w.elsewhere, 'plan.md');
+    assert.equal(await guardOpenNote('Edit', { file_path: note }, { ...ports, note }), noteCheckFailedRefusal());
+  });
+
+  test('the mod runs every real-path and link check from its own folder, never the session’s', () => {
+    const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
+    const calls = register.match(/(realPathVia|readLinkVia)\([^;]*?\$\.clock\.after\(ms, fn\),\s*([^)]*)\)/g) ?? [];
+    assert.equal(calls.length, (register.match(/(realPathVia|readLinkVia)\(/g) ?? []).length);
+    for (const call of calls) assert.match(call, /\$\.plugin\.root,?\s*\)$/);
+    assert.match(register, /cwdGone/);
   });
 });

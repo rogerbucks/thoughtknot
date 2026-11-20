@@ -114,6 +114,10 @@ export const CC_SOURCE_WORDS = {
   'cc.refusal.data-check-failed':
     'thoughtknot: this call was refused because the guard for the mod’s data folder could not check where it ' +
     'leads (node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.',
+  'cc.refusal.session-folder-gone':
+    'thoughtknot: this call was refused because the guard could not check where it leads, and the session’s ' +
+    'working folder is no longer there (it may have been deleted, as a removed worktree is). Nothing was changed. ' +
+    'Ask the user to move this session to a folder that exists, or to start a new session.',
   'cc.refusal.open-note':
     'thoughtknot: this note is open in the ThoughtKnot editor, so Claude may not change it with its own tools. ' +
     'Propose the change with the propose tool ({tool}) instead: the user accepts or rejects it on ' +

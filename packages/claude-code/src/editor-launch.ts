@@ -27,8 +27,11 @@ export { settingsForServer } from './editor-settings-env.ts';
 
 /** What the launcher is handed by the code that runs it. */
 export interface EditorPorts {
-  /** `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. */
-  spawn: (request: { argv: readonly string[]; env?: Record<string, string>; input?: string }) => Spawned;
+  /**
+   * `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. It
+   * runs from `cwd`, or the session's folder when none.
+   */
+  spawn: (request: { argv: readonly string[]; cwd?: string; env?: Record<string, string>; input?: string }) => Spawned;
   /**
    * A file's real path, links settled (`realPathVia` over the host's process call). With none, a matrix note cannot be
    * placed inside the vault, and is refused.
