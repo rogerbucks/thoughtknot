@@ -6,7 +6,13 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { classificationRefusal, matrixNoteRefusal, guardGateFiles } from '../src/gate-guard.ts';
+import {
+  classificationRefusal,
+  classificationRaiseRefusal,
+  matrixNoteRefusal,
+  guardGateFiles,
+  raisesFrom,
+} from '../src/gate-guard.ts';
 
 const made = [];
 afterEach(() => {
@@ -32,6 +38,23 @@ function vault({ read = true } = {}) {
     ...(read ? { read: async (path) => readFileSync(path, 'utf8') } : {}),
   };
   return { top, matrix, plan, ports };
+}
+
+/** The classifications set, lowest first: the ranking of the arbux vault's seven classes, Unmoderated the highest. */
+const RANKED = ['Public', 'Own', 'Third-party', 'Personal', 'Credential', 'Eyes-only', 'Unmoderated'];
+
+/** A note with this classification line, or none when `level` is null. */
+const rankedNote = (level) =>
+  `---\ntitle: Plan\n${level === null ? '' : `classification: ${level}\n`}---\n\nThe plan.\n`;
+
+/** The classes Claude may raise a note to, as Roger's rule of 19 Nov 2026 has it: all but Credential and Eyes-only. */
+const RAISES = ['Own', 'Third-party', 'Personal', 'Unmoderated'];
+
+/** A vault whose plan note carries `level`, with the classifications set, the table of class names and the raises. */
+function ranked(level, classMap = {}, raises = RAISES) {
+  const v = vault();
+  writeFileSync(v.plan, rankedNote(level));
+  return { ...v, ports: { ...v.ports, classifications: RANKED, classMap, raises } };
 }
 
 const refusedWith = (answer, refusal) => assert.equal(answer, refusal);
@@ -119,6 +142,114 @@ describe('a note’s classification line', () => {
       await guardGateFiles('Write', { file_path: v.plan, content: NOTE.replace('The plan', 'Our plan') }, v.ports),
     );
     allowed(await guardGateFiles('Write', { file_path: join(v.top, 'new.md'), content: NOTE }, v.ports));
+  });
+
+  test('with the classifications set, a raise to a more restricted one is allowed, by Edit, MultiEdit or Write', async () => {
+    const v = ranked('Own');
+    const raise = { old_string: 'classification: Own', new_string: 'classification: Personal' };
+    allowed(await guardGateFiles('Edit', { file_path: v.plan, ...raise }, v.ports));
+    allowed(await guardGateFiles('MultiEdit', { file_path: v.plan, edits: [raise] }, v.ports));
+    const content = rankedNote('Third-party');
+    allowed(await guardGateFiles('Write', { file_path: v.plan, content }, v.ports));
+  });
+
+  test('a raise reads the class names through the settings’ table, as the matrix does', async () => {
+    const v = ranked('own work', { 'own work': 'Own', medical: 'Personal' });
+    const raise = { old_string: 'classification: own work', new_string: 'classification: medical' };
+    allowed(await guardGateFiles('Edit', { file_path: v.plan, ...raise }, v.ports));
+  });
+
+  test('a move down, or to the same rank by another name, is refused', async () => {
+    const v = ranked('Personal', { medical: 'Personal' });
+    const lower = { old_string: 'classification: Personal', new_string: 'classification: Own' };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...lower }, v.ports), classificationRefusal());
+    const same = { old_string: 'classification: Personal', new_string: 'classification: medical' };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...same }, v.ports), classificationRefusal());
+  });
+
+  test('a raise to a class the user has not listed is refused: Credential and Eyes-only, here', async () => {
+    const v = ranked('Own');
+    for (const kept of ['Credential', 'Eyes-only']) {
+      const raise = { old_string: 'classification: Own', new_string: `classification: ${kept}` };
+      refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...raise }, v.ports), classificationRaiseRefusal());
+    }
+  });
+
+  test('a raise to Unmoderated, the highest, is allowed when listed: it only quarantines the note', async () => {
+    const v = ranked('Personal');
+    const raise = { old_string: 'classification: Personal', new_string: 'classification: Unmoderated' };
+    allowed(await guardGateFiles('Edit', { file_path: v.plan, ...raise }, v.ports));
+  });
+
+  test('with no raises listed, or a list naming no class set, every raise is refused', async () => {
+    const raise = { old_string: 'classification: Own', new_string: 'classification: Personal' };
+    for (const raises of [[], ['Secretish']]) {
+      const v = ranked('Own', {}, raises);
+      refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...raise }, v.ports), classificationRaiseRefusal());
+    }
+    const unset = ranked('Own');
+    const { raises: _, ...ports } = unset.ports;
+    refusedWith(await guardGateFiles('Edit', { file_path: unset.plan, ...raise }, ports), classificationRaiseRefusal());
+  });
+
+  test('the raises are read from settings.json as a list of names, and as none otherwise', () => {
+    assert.deepEqual(raisesFrom({ classificationRaises: ['Own', 3, 'Personal'] }), ['Own', 'Personal']);
+    assert.deepEqual(raisesFrom({ classificationRaises: 'Own' }), []);
+    assert.deepEqual(raisesFrom({}), []);
+    assert.deepEqual(raisesFrom(null), []);
+  });
+
+  test('a class not among those set, a missing one, or one that cannot be read is refused on either side', async () => {
+    const v = ranked('Own');
+    const unknown = { old_string: 'classification: Own', new_string: 'classification: Secretish' };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...unknown }, v.ports), classificationRefusal());
+    const removed = { old_string: 'classification: Own\n', new_string: '' };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...removed }, v.ports), classificationRefusal());
+    const list = { old_string: 'classification: Own', new_string: 'classification: [Own, Personal]' };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...list }, v.ports), classificationRefusal());
+    const twice = {
+      old_string: 'classification: Own',
+      new_string: 'classification: Personal\nclassification: Personal',
+    };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...twice }, v.ports), classificationRefusal());
+    const fromUnknown = ranked('Secretish');
+    const raise = { old_string: 'classification: Secretish', new_string: 'classification: Personal' };
+    refusedWith(
+      await guardGateFiles('Edit', { file_path: fromUnknown.plan, ...raise }, fromUnknown.ports),
+      classificationRefusal(),
+    );
+    const unlabelled = ranked(null);
+    const label = { old_string: 'title: Plan', new_string: 'title: Plan\nclassification: Personal' };
+    refusedWith(
+      await guardGateFiles('Edit', { file_path: unlabelled.plan, ...label }, unlabelled.ports),
+      classificationRefusal(),
+    );
+  });
+
+  test('with no classifications set, every change is refused, a raise too', async () => {
+    const v = ranked('Own');
+    const ports = { ...v.ports, classifications: [] };
+    const raise = { old_string: 'classification: Own', new_string: 'classification: Personal' };
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...raise }, ports), classificationRefusal());
+  });
+
+  test('a Write onto a new path may set any classification, the top ones too', async () => {
+    const v = ranked('Own');
+    for (const level of ['Public', 'Personal', 'Unmoderated']) {
+      const content = rankedNote(level);
+      allowed(await guardGateFiles('Write', { file_path: join(v.top, `new-${level}.md`), content }, v.ports));
+    }
+  });
+
+  test('a Write over a note that exists is judged as a change, not a new note: down is refused', async () => {
+    const v = ranked('Personal');
+    const content = rankedNote('Public');
+    refusedWith(await guardGateFiles('Write', { file_path: v.plan, content }, v.ports), classificationRefusal());
+    const kept = rankedNote('Eyes-only');
+    refusedWith(
+      await guardGateFiles('Write', { file_path: v.plan, content: kept }, v.ports),
+      classificationRaiseRefusal(),
+    );
   });
 
   test('a note that cannot be read is refused when the call carries a classification line at all', async () => {
@@ -421,17 +552,23 @@ describe('a note’s classification line', () => {
   });
 
   test('the refusals name no level, path or text of the call', () => {
-    for (const refusal of [classificationRefusal(), matrixNoteRefusal()])
-      assert.doesNotMatch(refusal, /secret|public|plan\.md|matrix\.md/);
+    for (const refusal of [classificationRefusal(), classificationRaiseRefusal(), matrixNoteRefusal()])
+      assert.doesNotMatch(refusal, /secret|public|credential|eyes-only|unmoderated|plan\.md|matrix\.md/i);
   });
 });
 
 describe('the mod runs it', () => {
-  test('in the same tool.call hook as the other guards, with the matrix note from the settings and a read', () => {
+  test('in the same tool.call hook as the other guards, with the matrix note and classifications from the settings and a read', () => {
     const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
     const hook = /on\('tool\.call', async[\s\S]*?\.catch\(/.exec(register)?.[0] ?? '';
-    assert.match(hook, /guardGateFiles\(tool, input/);
-    assert.match(hook, /matrixNote: \(await settingsAt\(\$, data\)\)\.aiMatrixNote/);
-    assert.match(hook, /read: \(path\) => \$\.fs\.read\(path\)/);
+    assert.match(hook, /gateFilesRefusal\(\$, tool, input, data, ports\)/);
+    const helper = /async function gateFilesRefusal\([\s\S]*?\n\}\n/.exec(register)?.[0] ?? '';
+    assert.match(helper, /const saved = await savedAt\(\$, data\)/);
+    assert.match(helper, /raises: raisesFrom\(saved\)/);
+    assert.match(helper, /guardGateFiles\(tool, input/);
+    assert.match(helper, /matrixNote: settings\.aiMatrixNote \?\? null/);
+    assert.match(helper, /classifications: settings\.classifications/);
+    assert.match(helper, /classMap: settings\.aiClassMap/);
+    assert.match(helper, /read: \(path\) => \$\.fs\.read\(path\)/);
   });
 });

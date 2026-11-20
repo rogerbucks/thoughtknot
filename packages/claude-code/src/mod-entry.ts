@@ -6,7 +6,7 @@ export type { GraphView } from './graph-view.ts';
 export { cleanSvg, settingsFrom, word } from '@thoughtknot/core';
 export { EditorLauncher, confirmArgs, editArgs, sayEdit, sayProposed, sayStopped } from './editor-launch.ts';
 export { dataFolderRefusal, guardDataFolder, guardOpenNote, pathOf } from './data-guard.ts';
-export { guardGateFiles } from './gate-guard.ts';
+export { guardGateFiles, raisesFrom } from './gate-guard.ts';
 export { readLinkVia, realPathVia } from './editor-realpath.ts';
 export type { EditOutcome, EditorPorts, Spawned } from './editor-launch.ts';
 export { layOut, nodeMissing, RENDER_SCRIPT } from './graphviz-process.ts';
