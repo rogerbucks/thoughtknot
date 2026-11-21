@@ -1,7 +1,7 @@
 // The phone fits a hand and a screen (ES§40, phone_touch_ready). The app's window is opened in a real Chrome as a
 // phone: 393 by 852 points, touch, with the Tauri calls answered by a few notes held in the page. Then:
-// - each control of the start page and of the shell's four views (board, graph, note, more) is at least 44 by 44, the
-//   size of Apple's guide. Every miss is listed with its selector, view and size.
+// - each interactive element of the start page and of the shell's four views is at least 44 by 44, the size of Apple's
+//   guide. The views are board, graph, note and more. Every miss is listed with its selector, view and size.
 // - nothing scrolls sideways, and no field is under 16 pixels, which makes iOS zoom the page.
 // - the window draws under the notch and the home bar, and the page steps in by their size.
 // - the line naming Tab and Ctrl is out of sight on a touch screen but still read by a screen reader.

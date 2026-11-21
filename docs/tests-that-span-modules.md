@@ -1324,9 +1324,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The phone app
 
-- `test/phone-touch.test.js` — the phone app's window, opened as a phone in Chrome. Every interactive element of the start
-  page and of each of the shell's four views (board, graph, note, more) is at least 44 by 44, and every miss is listed with
-  its selector, view and size. The board's tool buttons do not touch. Its fields are 16 pixels or more. The notch is left
-  clear (ES§40, phone_touch_ready).
+- `test/phone-touch.test.js` — the phone app's window, opened as a phone in Chrome. Every interactive element is at least 44 by 44. That holds on the start
+  page and in each of the shell's four views: board, graph, note and more. Every miss is listed with its selector, view
+  and size. The board's tool buttons do not touch. Its fields are 16 pixels or more. The notch is left clear
+  (ES§40, phone_touch_ready).
 - `test/phone-shell.test.js` — the phone app's window, opened as a phone in Chrome. A bar names four views and one shows at
   a time. The board fills the screen (ES§40, phone_shell).
