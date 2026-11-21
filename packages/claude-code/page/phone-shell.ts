@@ -100,13 +100,13 @@ export function phoneShell(win: Window & typeof globalThis): boolean {
   fit();
   win.addEventListener('resize', fit);
   // the board and the drawing are drawn after the shell, and the rows above them open and close: the page is
-  // fitted again. Not on a pan or a zoom, which change only the drawing's style.
-  if (typeof win.MutationObserver === 'function')
-    new win.MutationObserver(later).observe(doc.body, {
-      childList: true,
-      subtree: true,
-      attributeFilter: ['hidden', 'open', 'class'],
-    });
+  // fitted again. Not on a pan or a zoom, which change only the drawing's style. Only the screen's own header and
+  // page are watched. A toast or a dialog added to the body outside them moves nothing in the fit.
+  if (typeof win.MutationObserver === 'function') {
+    const watch = new win.MutationObserver(later);
+    for (const part of [doc.querySelector('header'), doc.querySelector('main')])
+      if (part) watch.observe(part, { childList: true, subtree: true, attributeFilter: ['hidden', 'open', 'class'] });
+  }
   return true;
 }
 
