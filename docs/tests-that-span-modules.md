@@ -1328,6 +1328,9 @@ after a module nor listed here, and on a listed file that is missing.
   page and in each of the shell's four views: board, graph, note and more. Every miss is listed with its selector, view
   and size. The board's tool buttons do not touch. Its fields are 16 pixels or more. The notch is left clear
   (ES§40, phone_touch_ready).
+- `test/phone-gestures.test.js` — the phone app's window, opened as a phone in Chrome and driven by real touches. A tap on a
+  tab changes the view. One finger drags and two fingers pinch the board and the graph's drawing, and the page neither
+  scrolls nor zooms. A tap on a board item or a graph node selects it (ES§40, phone_gestures).
 - `test/phone-shell.test.js` — the phone app's window, opened as a phone in Chrome. A bar names four views and one shows at
   a time, and the header names the note. The board and the graph's drawing fill the screen to the bar. The More view is
   whole rows (ES§40, phone_shell, phone_board_canvas, phone_graph_view, phone_more).
