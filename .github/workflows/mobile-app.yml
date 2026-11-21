@@ -20,6 +20,7 @@ on:
       - 'scripts/phone-shots.mjs'
       - 'package.json'
       - 'package-lock.json'
+      - 'scripts/android-app-check.mjs'
       - '.github/workflows/mobile-app.yml'
   pull_request:
     paths:
@@ -30,6 +31,7 @@ on:
       - 'scripts/phone-shots.mjs'
       - 'package.json'
       - 'package-lock.json'
+      - 'scripts/android-app-check.mjs'
       - '.github/workflows/mobile-app.yml'
   workflow_dispatch:
   # the nightly. It builds the commit the nightly woke at: a ref handed in here would be a checkout CodeQL cannot
@@ -67,6 +69,10 @@ jobs:
           cargo tauri android init --ci
           cargo tauri icon icons/icon.png
           cargo tauri android build --ci --debug --apk --target aarch64
+      # The keeper's rules with a fake store in place of the Keystore, built with the runner's kotlinc, and the built app
+      # looked through for any key (android_app, test_android_app). The real Keystore is tried on the emulator below.
+      - run: node scripts/android-app-check.mjs keeper
+      - run: node scripts/android-app-check.mjs scan packages/app/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
       # The keeper's tests (keeper/android/src/androidTest) on an Android emulator: the vault key is made at first launch,
       # kept sealed by a key in the Android Keystore, and never written out. KVM lets the emulator run at speed.
       - name: The vault key on an Android emulator
