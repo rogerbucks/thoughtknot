@@ -127,6 +127,14 @@ jobs:
       # key (ios_app, test_ios_app). The run on a simulator itself is a local check on Roger's Mac, never here.
       - run: node scripts/ios-app-check.mjs keeper
       - run: node scripts/ios-app-check.mjs scan packages/app/src-tauri/gen/apple/build/arm64-sim/ThoughtKnot.app
+      # one app for the iPhone and the iPad (mobile_checked): it must name both device families, 1 the iPhone, 2 the iPad
+      - name: The app is for the iPhone and the iPad
+        working-directory: packages/app/src-tauri/gen/apple/build/arm64-sim
+        run: |
+          families=$(/usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily' ./*.app/Info.plist)
+          echo "$families"
+          grep -qx ' *1' <<< "$families"
+          grep -qx ' *2' <<< "$families"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: thoughtknot-app-ios-simulator
