@@ -69,6 +69,11 @@ describe('the phone’s gestures, in a real browser', () => {
   async function until(expression) {
     for (let i = 0; i < 100 && !(await browser.run(expression)); i++) await wait(100);
   }
+  /**
+   * Two turns of the page's own timers: what the page does in answer to what just happened has been done. Not frames:
+   * Chrome draws none for a page that is out of sight, and a wait on one never ends. Not a number of milliseconds.
+   */
+  const settle = () => browser.run(`new Promise((done) => setTimeout(() => setTimeout(() => done(true), 0), 0))`);
   const ready = (selector) => `(document.querySelector('${selector}')?.getBoundingClientRect().height || 0) > 0`;
 
   /** Opens the note as a phone with touch, and waits for the board to draw. */
@@ -105,11 +110,11 @@ describe('the phone’s gestures, in a real browser', () => {
     await browser.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(0) });
     for (let i = 1; i < steps; i++) {
       await browser.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: points(i) });
-      await wait(16);
+      await settle();
     }
     await browser.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await browser.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }).catch(() => {});
-    await wait(150);
+    await settle();
   }
   const line = (from, to, n = 12) =>
     Array.from({ length: n + 1 }, (_, i) => [
@@ -155,7 +160,7 @@ describe('the phone’s gestures, in a real browser', () => {
           await touch([[[r.left + r.width / 2, r.top + r.height / 2]]]);
         }
         await until(ready(selector));
-        await wait(300);
+        await settle();
       }
       /** Two fingers apart: the drawing is zoomed in, as a person does before panning. */
       async function zoomIn() {
@@ -210,13 +215,13 @@ describe('the phone’s gestures, in a real browser', () => {
     const r = await tab('graph');
     await touch([[[r.left + r.width / 2, r.top + r.height / 2]]]);
     await until(`document.querySelector('${DRAWING} g.node')`);
-    await wait(300);
+    await settle();
     const state = () =>
       browser.run(`({ hot: [...document.querySelectorAll('${DRAWING} g.node.thoughtknot-hot')].map((g) => g.dataset.key),
         sheet: Boolean(document.querySelector('.thoughtknot-details:not([hidden])')) })`);
     const before = await state();
     await touch([[await centre(`${DRAWING} g.node`)]]);
-    await wait(300);
+    await until(`document.querySelector('${DRAWING} g.node.thoughtknot-hot')`);
     assert.deepEqual(before, { hot: [], sheet: false }, 'nothing is selected to begin with');
     assert.deepEqual(await state(), { hot: ['a'], sheet: true }, 'a tap on a node selects it and opens its details');
   });
