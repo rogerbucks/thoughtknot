@@ -29,6 +29,7 @@ jobs:
       shards: ${{ steps.plan.outputs.shards }}
       python: ${{ steps.plan.outputs.python }}
       tests: ${{ steps.plan.outputs.tests }}
+      coverage: ${{ steps.coverage.outputs.run }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,6 +46,13 @@ jobs:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
           BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
         run: node scripts/ci-plan.mjs --base "$BASE"
+      # Whether the coverage shards below will run the whole suite: they do when a package (or the coverage ratchet)
+      # changed. They are told the same way, so this must read the same files as theirs.
+      - id: coverage
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if [ -z "$BASE" ] || git diff --name-only "$BASE" HEAD | grep -qE '^(packages/|scripts/quality-|quality/baseline)'; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
 
   # The suite, its test files split over six machines that run at once, so a run takes about a minute, not five. Each
   # prints only its failures; the full report of a failed one is kept as the run's artifact. The test job below stands
@@ -54,8 +62,10 @@ jobs:
     timeout-minutes: 30
     needs: plan
     # runs when the plan failed too: then every shard runs the whole suite. Not on a push to main: the coverage shards
-    # below run the whole suite there (a push has no base, so coverage is never skipped) and the coverage job gates it
-    if: ${{ !cancelled() && github.event_name != 'push' }}
+    # below run the whole suite there (a push has no base, so coverage is never skipped) and the coverage job gates it.
+    # Not on a pull request that changes a package either: the coverage shards run the whole suite there too, so this
+    # partial run would be a second, smaller one (21 Nov 2026)
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.plan.outputs.coverage != 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -100,7 +110,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [plan, suite]
+    needs: [plan, suite, coverage-shard]
     if: always()
     steps:
       - env:
@@ -108,10 +118,14 @@ jobs:
           TIER: ${{ needs.plan.outputs.tier }}
           RESULT: ${{ needs.suite.result }}
           EVENT: ${{ github.event_name }}
+          COVERAGE: ${{ needs.plan.outputs.coverage }}
+          SHARES: ${{ needs.coverage-shard.result }}
         run: |
           if [ "$PLAN" != success ]; then echo "::warning::The CI plan failed, so the whole suite ran. Fix scripts/ci-plan.mjs."; fi
           if [ "$TIER" = subset ]; then echo "::notice::A partial run: only what the change reaches. The label ci:full runs everything; main always does."; fi
           if [ "$EVENT" = push ]; then echo "::notice::A push to main runs the suite once, in the coverage shards: the coverage check is its result."; test "$RESULT" = skipped; exit; fi
+          # a pull request that changes a package: the coverage shards ran the whole suite, so the partial run was skipped
+          if [ "$COVERAGE" = true ]; then echo "::notice::The coverage shards ran the whole suite on this change, so it ran once."; test "$RESULT" = skipped && test "$SHARES" = success; exit; fi
           test "$RESULT" = success
 
   # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.

@@ -152,6 +152,18 @@ describe('ci-plan', () => {
       assert.match(body, /needs: plan/, job);
       assert.match(body, /!cancelled\(\)/, `${job} still runs when the plan failed`);
     }
+    // the whole suite runs once: where the coverage shards run it (a package changed), the partial run is skipped, and
+    // the one `test` check then stands on the shards. The plan says which, from the same files the shards read.
+    const suite = ci.split('\n  suite:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
+    assert.match(suite, /needs\.plan\.outputs\.coverage != 'true'/, 'no partial run beside the coverage shards');
+    const gate = ci.split('\n  test:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
+    assert.match(gate, /needs: \[plan, suite, coverage-shard\]/);
+    assert.match(gate, /test "\$RESULT" = skipped && test "\$SHARES" = success/);
+    const reads = (job) => /grep -qE '(\^\(packages\/[^']*)'/.exec(job)?.[1];
+    const plan = ci.split('\n  plan:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
+    const shard = ci.split('\n  coverage-shard:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
+    assert.ok(reads(plan), 'the plan reads the files that make coverage run');
+    assert.equal(reads(plan), reads(shard), 'the plan and the coverage shards read the same files');
     // a file list is data: it reaches the shell through the environment, never spliced into the command
     assert.doesNotMatch(ci, /run:.*\$\{\{\s*needs\.plan\.outputs\.tests/);
     // the jobs that keep the repository safe never wait on the plan

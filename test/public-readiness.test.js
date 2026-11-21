@@ -379,7 +379,7 @@ describe('the settings on GitHub', () => {
       // a job split by a matrix reports a check for each part, so it is required through the job that needs it
       else assert.ok(!REQUIRED_CHECKS.includes(job), job);
     }
-    assert.match(ci.test.join('\n'), /needs: \[plan, suite\]\n\s+if: always\(\)/);
+    assert.match(ci.test.join('\n'), /needs: \[plan, suite, coverage-shard\]\n\s+if: always\(\)/);
     assert.ok(runCommands(ci.test.join('\n')).some((r) => /^test "\$RESULT" = success$/m.test(r)));
     assert.match(ci.test.join('\n'), /RESULT: \$\{\{ needs\.suite\.result \}\}/);
     // the suite in seven parts, each printing only its failures and keeping the full report as a file
