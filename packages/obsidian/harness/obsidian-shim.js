@@ -510,9 +510,21 @@ export function parseYaml(text) {
   }
   return out;
 }
-/** Obsidian's Platform: a phone when the screen is narrow and touched, so the page lays out as the phone app does. */
+/**
+ * Obsidian's Platform: a phone when the screen is narrow and touched, so the page lays out as the phone app does. With
+ * ?mobile in the page's address it is Obsidian mobile, as on an iPhone or an Android phone (mobile_checked). It is
+ * then a tablet when the screen is not a phone's.
+ */
 const phone = typeof matchMedia === 'function' && matchMedia('(max-width: 599px) and (pointer: coarse)').matches;
-export const Platform = { isMobile: false, isDesktop: true, isPhone: phone };
+const mobile = new URLSearchParams(globalThis.location?.search ?? '').has('mobile');
+export const Platform = {
+  isMobile: mobile,
+  isMobileApp: mobile,
+  isDesktop: !mobile,
+  isDesktopApp: !mobile,
+  isPhone: phone,
+  isTablet: mobile && !phone,
+};
 /** Obsidian's interface language: the browser's, as the harness runs in one. */
 export const getLanguage = () => globalThis.navigator?.language || 'en';
 /** Obsidian's Markdown renderer (§18): the browser view has none, so a detail's Markdown is shown as its text. */
