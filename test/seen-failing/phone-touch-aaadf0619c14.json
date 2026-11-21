@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-touch.test.js",
+  "test": "in a real browser, as a phone > the board view's .thoughtknot-board-tools row: its buttons do not touch each other",
+  "seen_failing_first": false,
+  "evidence": "The same check, renamed from the board tools row test of the earlier commit, where it failed first against the 4 px gap; the rule it checks was already in the parent."
+}

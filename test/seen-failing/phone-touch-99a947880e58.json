@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-touch.test.js",
+  "test": "in a real browser, as a phone > the graph view's .thoughtknot-pane-tools row: its buttons do not touch each other",
+  "seen_failing_first": false,
+  "evidence": "The gap rule for .thoughtknot-pane-tools was already in the parent. Checked by hand: with that selector taken out of phone.css this test fails, so it does guard the rule."
+}

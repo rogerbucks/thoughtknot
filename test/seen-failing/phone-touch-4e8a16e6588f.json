@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-touch.test.js",
+  "test": "in a real browser, as a phone > the more view: every interactive element is at least 44 by 44",
+  "seen_failing_first": false,
+  "evidence": "The phone already met the 44 point size rule after P1b, so this test locks in a rule that held; it could not fail against the old code. The gap test in the same commit failed first."
+}
