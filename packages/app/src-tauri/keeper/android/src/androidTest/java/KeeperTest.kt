@@ -63,5 +63,8 @@ class KeeperTest {
     val refused = runCatching { Keeper(context).vaultKey() }
     assertTrue(refused.isFailure)
     assertArrayEquals(before, Keeper(context).sealedCopy())
+    assertFalse(
+      "no new sealing key is made for a sealed copy it could not open",
+      KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.containsAlias(Keeper.ALIAS))
   }
 }

@@ -199,10 +199,10 @@ test('CI builds the Android app and the iPhone simulator app, with no key of Rog
 test('the vault key is made on the device and kept in its secure store, and the window may not ask for it yet', () => {
   const keeper = (path) => read(`src-tauri/keeper/${path}`);
   const kotlin = keeper('android/src/main/java/Keeper.kt');
-  assert.match(kotlin, /KeyStore\.getInstance\(STORE\)/);
+  assert.match(kotlin, /KeyStore\.getInstance\(Keeper\.STORE\)/);
   assert.match(kotlin, /STORE = "AndroidKeyStore"/, 'the sealing key lives in the Android Keystore');
   assert.match(kotlin, /context\.noBackupFilesDir/, 'the sealed copy is never backed up');
-  assert.match(kotlin, /SecureRandom\(\)\.nextBytes/, 'made on the device');
+  assert.match(keeper('android/src/main/java/VaultKeys.kt'), /random\.nextBytes\(fresh\)/, 'made on the device');
   const swift = keeper('ios/Sources/Keeper.swift');
   assert.match(swift, /kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly/, 'in the Keychain, for this device only');
   assert.match(swift, /SecRandomCopyBytes/, 'made on the device');
@@ -210,6 +210,7 @@ test('the vault key is made on the device and kept in its secure store, and the 
   const sources = [
     'src/lib.rs',
     'android/src/main/java/Keeper.kt',
+    'android/src/main/java/VaultKeys.kt',
     'ios/Sources/Keeper.swift',
     'ios/Sources/KeeperPlugin.swift',
   ];

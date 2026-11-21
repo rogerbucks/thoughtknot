@@ -1,0 +1,6 @@
+{
+  "file": "packages/app/test/app-config.test.js",
+  "test": "the vault key is made on the device and kept in its secure store, and the window may not ask for it yet",
+  "seen_failing_first": false,
+  "evidence": "An existing test, brought up to date with the keeper's rules, which moved to VaultKeys.kt in an earlier commit; it checks code already written and tested first in android-app.test.js."
+}
