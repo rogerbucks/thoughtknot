@@ -35,7 +35,7 @@ describe('the phone’s gestures, in a real browser', () => {
 
   let built, server, base, browser;
   const stub = `(() => {
-    const notes = { 'Map.md': ${JSON.stringify(NOTE)} };
+    const notes = { 'Map.md': decodeURIComponent("${encodeURIComponent(NOTE)}") };
     window.__TAURI__ = { core: { invoke: async (c, a = {}) => {
       if (c === 'own_folder') return 'Documents';
       if (c === 'read_dir') return Object.keys(notes).map((n) => [n, false]);
@@ -69,8 +69,7 @@ describe('the phone’s gestures, in a real browser', () => {
   async function until(expression) {
     for (let i = 0; i < 100 && !(await browser.run(expression)); i++) await wait(100);
   }
-  const ready = (selector) =>
-    `(document.querySelector(${JSON.stringify(selector)})?.getBoundingClientRect().height || 0) > 0`;
+  const ready = (selector) => `(document.querySelector('${selector}')?.getBoundingClientRect().height || 0) > 0`;
 
   /** Opens the note as a phone with touch, and waits for the board to draw. */
   async function open() {
@@ -118,11 +117,11 @@ describe('the phone’s gestures, in a real browser', () => {
       from[1] + ((to[1] - from[1]) * i) / n,
     ]);
   const centre = (selector) =>
-    browser.run(`(() => { const r = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
+    browser.run(`(() => { const r = document.querySelector('${selector}').getBoundingClientRect();
       return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
   /** What the view is: where it sits and how big its picture is. */
   const view = (selector) =>
-    browser.run(`(() => { const v = document.querySelector(${JSON.stringify(selector)}); const s = getComputedStyle(v);
+    browser.run(`(() => { const v = document.querySelector('${selector}'); const s = getComputedStyle(v);
       const svg = v.querySelector('svg');
       return { x: s.getPropertyValue('--thoughtknot-x'), y: s.getPropertyValue('--thoughtknot-y'),
         width: svg ? svg.getAttribute('width') : null }; })()`);
