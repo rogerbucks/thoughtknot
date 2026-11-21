@@ -1329,4 +1329,7 @@ after a module nor listed here, and on a listed file that is missing.
   and size. The board's tool buttons do not touch. Its fields are 16 pixels or more. The notch is left clear
   (ES§40, phone_touch_ready).
 - `test/phone-shell.test.js` — the phone app's window, opened as a phone in Chrome. A bar names four views and one shows at
-  a time. The board fills the screen (ES§40, phone_shell).
+  a time, and the header names the note. The board and the graph's drawing fill the screen to the bar. The More view is
+  whole rows (ES§40, phone_shell, phone_board_canvas, phone_graph_view, phone_more).
+- `test/phone-shots.test.js` — the phone app's screens pictured in WebKit, the engine an iPhone uses. CI takes them on
+  macOS, off pull requests. Where WebKit is installed, each picture is the phone shell (ES§40, phone_webkit_shots).

@@ -47,6 +47,7 @@ body {
   }
   /* a summary keeps its arrow only while it is not a flex box, so it grows by its padding */
   .gn-page summary {
+    box-sizing: border-box;
     padding-block: var(--gn-space-2);
   }
   .gn-page label {
@@ -98,10 +99,16 @@ body {
   padding-bottom: 0;
 }
 .gn-phone header {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: var(--gn-space-3);
-  padding-inline: var(--gn-space-3);
+  width: 100%;
+  margin: 0;
+  padding: var(--gn-space-2) var(--gn-space-3) 0;
+}
+.gn-phone header nav {
+  flex: none;
 }
 .gn-phone .gn-title {
   margin: 0;
@@ -160,10 +167,107 @@ body {
   order: -1;
 }
 
-/* The Graph view's drawing takes the screen between the header, the pane's own rows and the bar. */
+/* The board takes the screen from its top to the bar (phone_board_canvas). phone-shell.ts measures the room, the
+   board reads it for its zoom, and this makes the viewport that tall. The outline under it stays for a screen
+   reader: the Note view has the words. */
+.gn-phone .gn-boards .thoughtknot-board > .thoughtknot-viewport {
+  height: var(--thoughtknot-board-room, 420px);
+}
+.gn-phone .thoughtknot-board-outline {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The Graph view (phone_graph_view). The pane's undo row and its Drawing and Text tabs share one row. The drawing takes
+   the screen from its top to the bar, measured as the board's is. "No problems" is not said in a row of its
+   own: a problem, when there is one, still is. */
+.gn-phone .gn-pane .thoughtknot-pane {
+  flex-flow: row wrap;
+  align-items: center;
+  height: auto;
+}
+.gn-phone .gn-pane .thoughtknot-pane > * {
+  flex: 1 0 100%;
+  min-width: 0;
+}
+.gn-phone .gn-pane .thoughtknot-pane > :is(.thoughtknot-pane-head, .thoughtknot-tabs) {
+  flex: 0 1 auto;
+  margin-block: 0;
+}
+.gn-phone .gn-pane .thoughtknot-pane > .thoughtknot-tabs {
+  margin-inline-start: auto;
+}
 .gn-phone .gn-pane .thoughtknot-pane-drawing .thoughtknot-viewport {
-  height: calc(100dvh - 330px);
-  min-height: 280px;
+  height: var(--thoughtknot-graph-room, calc(100dvh - 330px));
+  min-height: 240px;
+}
+.gn-phone .gn-pane .thoughtknot-sheet:not(:has(.thoughtknot-pane-problems > :not(.thoughtknot-quiet))) {
+  display: none;
+}
+
+/* The More view (phone_more): its parts are grouped rows, as a phone's settings are. Each part is a card, each
+   control a whole row of 44 or more, and the long words under a control are small and quiet. */
+.gn-phone[data-tab='more'] :is(.gn-board-exchange, .gn-presets, .gn-export-bar) {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  width: 100%;
+  margin: 0 0 var(--gn-space-3);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+}
+.gn-phone[data-tab='more'] .gn-board-exchange {
+  display: block;
+}
+.gn-phone[data-tab='more'] .gn-board-exchange > div,
+.gn-phone[data-tab='more'] .thoughtknot-presets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+}
+.gn-phone[data-tab='more'] .gn-board-exchange > div[hidden] {
+  display: none;
+}
+.gn-phone[data-tab='more'] .thoughtknot-presets h2 {
+  margin: 0;
+  font-size: var(--gn-font-size-l);
+}
+.gn-phone[data-tab='more'] .thoughtknot-presets ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gn-phone[data-tab='more'] .thoughtknot-presets li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+.gn-phone[data-tab='more'] .thoughtknot-presets li > span {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.gn-phone[data-tab='more'] :is(.gn-board-exchange, .gn-presets) label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gn-space-1);
+}
+.gn-phone[data-tab='more'] :is(.gn-board-exchange, .gn-presets, .gn-export-bar) :is(button, select, input) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  justify-content: flex-start;
+  text-align: start;
 }
 
 /* The graph's own block is in the Graph view. In the Note view the note reads as words. */
