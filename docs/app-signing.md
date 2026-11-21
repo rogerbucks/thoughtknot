@@ -173,6 +173,42 @@ Each needs a small change to `scripts/desktop-build.mjs`, and the secrets for th
 The iPhone app (spec `ios_app`) uses the same Apple membership. It needs an Apple Distribution certificate and a
 provisioning profile, and goes out through TestFlight. Those steps come with the iPhone app itself.
 
+### The vault key, and why a signing expiry costs only a reinstall
+
+- **Made on the phone:** the first launch makes 32 random bytes on the device
+  (`packages/app/src-tauri/keeper/ios/Sources/Keeper.swift`). No key is in the app or in the repository.
+- **Kept in the Keychain:** for this device only (`AfterFirstUnlockThisDeviceOnly`), never synced, never in a backup
+  another device opens. The Keychain outlives the app, so a reinstall finds the same key.
+- **Never replaced:** a Keychain that cannot answer (locked, broken) gives an error, never a new key. A new key would
+  lock the notes.
+
+### Check it on this Mac (local only, never a CI job)
+
+```bash
+cd ~/Dev/thoughtknot && node scripts/ios-app-check.mjs simulator
+```
+
+- **What it does:** builds the simulator app, then on its own simulator, "ThoughtKnot keeper check", wiped first:
+  1. checks the app holds no key;
+  2. installs and launches it, and finds one Keychain item, sealed, for this device only;
+  3. writes a note, reinstalls a copy signed again, and finds the note and the same item;
+  4. deletes the app, installs it again, and finds the same key.
+- **About 15 minutes from cold,** most of it the build. Needs Xcode and the Rust iPhone targets. An `.app` already built can be passed after
+  `simulator`.
+- **Build without `--no-sign`.** An unsigned simulator app has no Keychain access (error -34018), so it can never make a
+  key. The default simulator build signs it with no certificate, which is enough.
+- **In CI:** the macOS phone job runs `ios-app-check.mjs keeper` (the keeper's Swift tests, with a fake Keychain) and
+  `ios-app-check.mjs scan` on the built app. The normal suite runs both on a Mac (`packages/app/test/ios-app.test.js`).
+
+### Left for a real iPhone (Roger)
+
+The simulator cannot show two things, so `test_ios_app` stays `partial`:
+
+- **A real signing expiry:** install a build signed for the team's devices and write a note. Once its signing expires,
+  install a build with a new certificate or profile. The notes should open, with no new key.
+- **iOS Data Protection:** on a locked phone, the notes and the key are sealed at rest. The simulator has no Data
+  Protection.
+
 ## Risks
 
 - The keys are in the build step's environment on main. Any crate's build script that runs in that step could read

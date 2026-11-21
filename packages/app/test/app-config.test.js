@@ -203,11 +203,17 @@ test('the vault key is made on the device and kept in its secure store, and the 
   assert.match(kotlin, /STORE = "AndroidKeyStore"/, 'the sealing key lives in the Android Keystore');
   assert.match(kotlin, /context\.noBackupFilesDir/, 'the sealed copy is never backed up');
   assert.match(kotlin, /SecureRandom\(\)\.nextBytes/, 'made on the device');
-  const swift = keeper('ios/Sources/KeeperPlugin.swift');
+  const swift = keeper('ios/Sources/Keeper.swift');
   assert.match(swift, /kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly/, 'in the Keychain, for this device only');
   assert.match(swift, /SecRandomCopyBytes/, 'made on the device');
   // no key is carried in the app: no run of 16 or more bytes or hex digits is written in the keeper's code
-  for (const path of ['src/lib.rs', 'android/src/main/java/Keeper.kt', 'ios/Sources/KeeperPlugin.swift']) {
+  const sources = [
+    'src/lib.rs',
+    'android/src/main/java/Keeper.kt',
+    'ios/Sources/Keeper.swift',
+    'ios/Sources/KeeperPlugin.swift',
+  ];
+  for (const path of sources) {
     assert.doesNotMatch(keeper(path), /(?:0x[0-9a-f]{2}\s*,\s*){16}/i, `${path} holds no key bytes`);
     assert.doesNotMatch(keeper(path), /[0-9a-f]{32}/i, `${path} holds no key written out`);
   }
