@@ -152,8 +152,8 @@ describe('ci-plan', () => {
       assert.match(body, /needs: plan/, job);
       assert.match(body, /!cancelled\(\)/, `${job} still runs when the plan failed`);
     }
-    // the whole suite runs once: where the coverage shards run it (a package changed), the partial run is skipped, and
-    // the one `test` check then stands on the shards. The plan says which, from the same files the shards read.
+    // The whole suite runs once. Where the coverage shards run it, the partial run is skipped. The `test` check then
+    // stands on the shards. The plan says which, from the same files the shards read.
     const suite = ci.split('\n  suite:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
     assert.match(suite, /needs\.plan\.outputs\.coverage != 'true'/, 'no partial run beside the coverage shards');
     const gate = ci.split('\n  test:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
