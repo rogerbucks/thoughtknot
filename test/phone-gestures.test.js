@@ -1,5 +1,5 @@
-// The phone's gestures (ES§40, phone_gestures). The app's window is opened in a real Chrome as a phone, 393 by 852 points,
-// and driven by real touches (DevTools Input.dispatchTouchEvent), not clicks. Then:
+// The phone's gestures (ES§40, phone_gestures). The app's window is opened in a real Chrome as a phone.
+// It is 393 by 852 points, and driven by real touches (DevTools Input.dispatchTouchEvent), not clicks. Then:
 // - a tap on each tab of the bar changes the view the page shows.
 // - one finger dragging the board or the graph's drawing moves it, and the page itself does not scroll.
 // - two fingers pinching the board or the drawing zoom it, and the page does not zoom.
