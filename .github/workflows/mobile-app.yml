@@ -18,6 +18,7 @@ on:
       - 'packages/claude-code/esbuild.page.mjs'
       - 'packages/core/src/**'
       - 'scripts/phone-shots.mjs'
+      - 'scripts/ios-app-check.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/mobile-app.yml'
@@ -28,6 +29,7 @@ on:
       - 'packages/claude-code/esbuild.page.mjs'
       - 'packages/core/src/**'
       - 'scripts/phone-shots.mjs'
+      - 'scripts/ios-app-check.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/mobile-app.yml'
@@ -121,6 +123,10 @@ jobs:
           cargo tauri ios init --ci
           cargo tauri icon icons/icon.png
           cargo tauri ios build --ci --debug --target aarch64-sim --no-sign
+      # The keeper's iPhone code with a fake store in place of the Keychain, and the built app looked through for any
+      # key (ios_app, test_ios_app). The run on a simulator itself is a local check on Roger's Mac, never here.
+      - run: node scripts/ios-app-check.mjs keeper
+      - run: node scripts/ios-app-check.mjs scan packages/app/src-tauri/gen/apple/build/arm64-sim/ThoughtKnot.app
       # one app for the iPhone and the iPad (mobile_checked): it must name both device families, 1 the iPhone, 2 the iPad
       - name: The app is for the iPhone and the iPad
         working-directory: packages/app/src-tauri/gen/apple/build/arm64-sim
