@@ -832,7 +832,7 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/process-risks-ops.test.js` — Dependabot watches the Docker image, and the release writes an SBOM. The wiki
   survives a missing Chrome. The docs name every job that writes (OPS-9, OPS-11, OPS-12).
 
-## Workflows and the desktop app
+## Workflows
 
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
   runner for hours (editor spec §13, ci_jobs_time_limited).
@@ -840,11 +840,16 @@ after a module nor listed here, and on a listed file that is missing.
   with LF line ends, and Python reads Node's output as UTF-8.
 - `test/workflow-keys.test.js` — no workflow names a key twice in one map. GitHub can't read such a file, and shows a
   failed run on every push with no job run (#847).
+
+## The desktop and phone apps
+
 - `packages/app/test/app-config.test.js` — the desktop app is shut by default. Its window loads only its own pages,
   reaches no other origin, and calls only the app's eight folder commands (spec §41, standalone_app). The phone app
   builds with no key, and its vault key is kept in the phone's secure store (spec §40, android_app, ios_app).
 - `test/mobile-checked.test.js` — the plug-in loads and draws a graph as on Obsidian mobile, asking for nothing from
   Node or Electron. The nightly builds the Android app and the iPhone and iPad app (spec §40, mobile_checked).
+- `packages/app/test/ios-app.test.js` — the iPhone app's vault key is made at first launch and kept in the Keychain,
+  and the built app holds no key. It spans the keeper's Swift code and `scripts/ios-app-check.mjs` (ES§40, ios_app).
 - `test/ios-prepare.test.js` — the iPhone build's App Store icons have no alpha channel. Its build number only grows
   along main (ES§40, ios_app).
 - `test/standalone-app.test.js` — the built desktop app, driven through tauri-driver. It lists, draws and writes
