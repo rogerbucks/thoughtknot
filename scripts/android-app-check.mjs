@@ -3,10 +3,11 @@
 // sealed by a key in the Android Keystore, and the app carries none.
 //
 // Usage:
-//   node scripts/android-app-check.mjs keeper              build the keeper's rules (keeper/android/.../VaultKeys.kt)
-//                                                          with their tests, a fake store in place of the Keystore,
-//                                                          and run them. Needs kotlinc and Java, as the Android job in
-//                                                          CI has. The real Keystore is tried there on an emulator.
+//   node scripts/android-app-check.mjs keeper              build and run the keeper's rules and their tests.
+//                                                          The rules are keeper/android/.../VaultKeys.kt. A fake
+//                                                          store stands in for the Keystore. Needs kotlinc and Java,
+//                                                          as the Android job in CI has. The real Keystore is tried
+//                                                          there on an emulator.
 //   node scripts/android-app-check.mjs scan <apk or dir>   look through a built app (an .apk or .aab, or a folder) for
 //                                                          key material. Exit 1 naming each find.
 //

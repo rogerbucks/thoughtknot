@@ -1,11 +1,11 @@
 // The Android app's keys (ES§40, android_app, test_android_app). Each device makes its own vault key at first launch,
 // sealed by a key in the Android Keystore, and the app carries none.
 // What runs here, in the normal suite:
-// - the keeper's rules (VaultKeys.kt) with their tests, a fake store in place of the Keystore. This needs Java and
-//   kotlinc; elsewhere the Android phone job in .github/workflows/mobile-app.yml runs them, beside the real Keystore
-//   on an emulator (KeeperTest.kt);
-// - the look through a built app for key material, on planted keys, on what an Android build holds that is not a key,
-//   and on what goes into the app.
+// - the keeper's rules (VaultKeys.kt) with their tests, a fake store in place of the Keystore. They need Java and
+//   kotlinc. Without them, the Android phone job in .github/workflows/mobile-app.yml runs them. It also tries the
+//   real Keystore on an emulator (KeeperTest.kt).
+// - the look through a built app for key material. It is tried on planted keys and on what goes into the app. It is
+//   also tried on what an Android build holds that is not a key.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
