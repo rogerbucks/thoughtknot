@@ -120,16 +120,11 @@ describe('in a real browser, as a phone', () => {
     }
   }
 
-  /** What the page measures: controls under 44, sideways scroll, fields under 16 pixels. */
+  /** What the page measures besides the 44 rule (WALK): sideways scroll, and fields under 16 pixels. */
   const MEASURE = `(() => {
-    const controls = [...document.querySelectorAll('.gn-page :is(button, summary, select, input:not([type=checkbox],[type=radio]), a[href])')]
-      .filter((e) => !e.closest('.thoughtknot-viewport') && !e.closest('p, li > a:not(#gn-app a)'));
-    const small = controls.map((e) => [e, e.getBoundingClientRect()])
-      .filter(([e, r]) => r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden' && (r.width < 44 || r.height < 44))
-      .map(([e, r]) => (e.getAttribute('aria-label') || e.textContent || e.tagName).trim().slice(0, 30) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
     const fields = [...document.querySelectorAll('input, select, textarea')].filter((e) => parseFloat(getComputedStyle(e).fontSize) < 16)
       .map((e) => e.tagName + ' ' + getComputedStyle(e).fontSize);
-    return { small, fields, over: document.documentElement.scrollWidth - innerWidth };
+    return { fields, over: document.documentElement.scrollWidth - innerWidth };
   })()`;
 
   /** Every visible control on the screen, measured against the 44 rule: what misses it is listed with selector, view, size. */
@@ -170,47 +165,48 @@ describe('in a real browser, as a phone', () => {
     assert.deepEqual(await browser.run(WALK('start')), []);
   });
 
-  test('the board’s tools row: its buttons do not touch each other', options, async () => {
-    await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
-    await showView('board');
-    const gaps = await browser.run(`(() => {
-      const out = [];
-      for (const row of document.querySelectorAll('.thoughtknot-board-tools, .thoughtknot-board-bar')) {
-        const rs = [...row.querySelectorAll('button')].map((b) => b.getBoundingClientRect()).filter((r) => r.width > 0);
+  // Each row of tool buttons the phone layer spaces, in the view that shows it.
+  const TOOL_ROWS = [
+    ['board', '.thoughtknot-board-tools'],
+    ['graph', '.thoughtknot-pane-tools'],
+  ];
+  for (const [view, row] of TOOL_ROWS)
+    test(`the ${view} view's ${row} row: its buttons do not touch each other`, options, async () => {
+      await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
+      await showView(view);
+      const found = await browser.run(`(() => {
+        const out = [];
+        const rs = [...document.querySelectorAll('${row} button')].map((b) => b.getBoundingClientRect()).filter((r) => r.width > 0);
         for (let i = 1; i < rs.length; i++) {
           const a = rs[i - 1], b = rs[i];
           const sameRow = Math.abs(a.top - b.top) < 4;
           const gap = sameRow ? b.left - a.right : b.top - a.bottom;
-          if (gap < 8) out.push(row.className + ' button ' + i + ' is ' + gap.toFixed(1) + ' from the one before');
+          if (gap < 8) out.push('button ' + i + ' is ' + gap.toFixed(1) + ' from the one before');
         }
-      }
-      return { out, rows: document.querySelectorAll('.thoughtknot-board-tools button').length };
-    })()`);
-    assert.ok(gaps.rows > 1, 'the board has a tools row to check');
-    assert.deepEqual(gaps.out, []);
-  });
+        return { out, shown: rs.length };
+      })()`);
+      assert.ok(found.shown > 1, `${row} shows at least two buttons in the ${view} view, so there is a gap to check`);
+      assert.deepEqual(found.out, []);
+    });
 
   for (const view of ['board', 'graph', 'note', 'more'])
     test(`the ${view} view: every interactive element is at least 44 by 44`, options, async () => {
       assert.deepEqual(await walkView(view), []);
     });
 
-  test('the start page: every control is 44 by 44 and nothing scrolls sideways', options, async () => {
+  test('the start page: nothing scrolls sideways and no field zooms the page', options, async () => {
     await open('index.html', `document.querySelectorAll('#gn-app li a').length > 0`);
     const m = await browser.run(MEASURE);
-    assert.deepEqual(m.small, []);
     assert.deepEqual(m.fields, []);
     assert.ok(m.over <= 0, `the page is ${m.over} wide of the screen`);
-    assert.ok(await browser.run(`document.querySelector('#gn-app li a').getBoundingClientRect().height >= 44`));
   });
 
   test(
-    'a note: every control is 44 by 44, no field zooms the page, and the keys line is only for a screen reader',
+    'a note: no field zooms the page, nothing scrolls sideways, and the keys line is only for a screen reader',
     options,
     async () => {
       await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.thoughtknot-board-help'))`);
       const m = await browser.run(MEASURE);
-      assert.deepEqual(m.small, []);
       assert.deepEqual(m.fields, []);
       assert.ok(m.over <= 0, `the page is ${m.over} wide of the screen`);
       const help = await browser.run(

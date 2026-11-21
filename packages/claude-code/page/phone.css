@@ -63,7 +63,6 @@ body {
   }
   /* The board's tools row: 44 pixel buttons with 8 between, so a thumb that lands between two does not hit either. */
   .thoughtknot-board-tools,
-  .thoughtknot-board-bar,
   .thoughtknot-pane-tools {
     gap: var(--gn-space-2);
   }
