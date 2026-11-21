@@ -3,7 +3,7 @@
 // built after. It goes on the page, as reading view does. Or, with ?live, it is built off it and put there once drawn,
 // as Live Preview does.
 import Plugin from '../src/main.ts';
-import { processors, files } from 'obsidian';
+import { processors, files, Platform } from 'obsidian';
 import note from './sample.md';
 
 files.set('Sample.md', note);
@@ -122,5 +122,7 @@ async function readingView() {
   });
 
   await plugin.openEditor({ path: 'Sample.md', line: 14, graph: 'reader' });
+  // which Obsidian the page is, as the plug-in read it: mobile with ?mobile (mobile_checked)
+  document.body.dataset.platform = Platform.isMobile ? 'mobile' : 'desktop';
   document.body.dataset.ready = 'yes';
 }
