@@ -1436,5 +1436,29 @@
       "ai_both_sides",
       "ai_guess_label"
     ]
+  },
+  "AQ1": {
+    "title": "Ask the graph: filters and highlights from plain words",
+    "size": "M",
+    "requirements": [
+      "ai_query_highlight",
+      "ai_query_words_kept",
+      "ai_query_lock",
+      "ai_query_merge",
+      "ai_query_saved",
+      "ai_query_sends_ruled",
+      "ai_query_fails_open"
+    ]
+  },
+  "BF1": {
+    "title": "The whiteboard first",
+    "size": "M",
+    "requirements": [
+      "board_first_new_note",
+      "board_first_ways_in",
+      "board_first_ai",
+      "board_first_import",
+      "board_first_default"
+    ]
   }
 }

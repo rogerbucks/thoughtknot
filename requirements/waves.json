@@ -225,8 +225,18 @@
       }
     },
     {
-      "title": "Wave 14 · Slice 9 web, corporate and iOS",
+      "title": "Wave 13a · AI queries and the whiteboard first",
       "start": "2026-11-26",
+      "end": "2026-11-28",
+      "estimate": true,
+      "workstreams": [
+        "AQ1",
+        "BF1"
+      ]
+    },
+    {
+      "title": "Wave 14 · Slice 9 web, corporate and iOS",
+      "start": "2026-11-29",
       "end": "2026-11-30",
       "estimate": true,
       "workstreams": [
