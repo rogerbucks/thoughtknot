@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-touch.test.js",
+  "test": "in a real browser, as a phone > a note: no field zooms the page, nothing scrolls sideways, and the keys line is only for a screen reader",
+  "seen_failing_first": false,
+  "evidence": "Renamed and trimmed from the note test of the earlier commit, which already held these checks; no behaviour was added."
+}

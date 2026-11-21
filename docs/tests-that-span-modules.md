@@ -1324,8 +1324,10 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The phone app
 
-- `test/phone-touch.test.js` — the phone app's window, opened as a phone in Chrome. Its controls are 44 by 44 and its
-  fields 16 pixels or more. The notch is left clear (ES§40, phone_touch_ready).
+- `test/phone-touch.test.js` — the phone app's window, opened as a phone in Chrome. Every interactive element is at least 44 by 44. That holds on the start
+  page and in each of the shell's four views: board, graph, note and more. Every miss is listed with its selector, view
+  and size. The board's tool buttons do not touch. Its fields are 16 pixels or more. The notch is left clear
+  (ES§40, phone_touch_ready).
 - `test/phone-gestures.test.js` — the phone app's window, opened as a phone in Chrome and driven by real touches. A tap on a
   tab changes the view. One finger drags and two fingers pinch the board and the graph's drawing, and the page neither
   scrolls nor zooms. A tap on a board item or a graph node selects it (ES§40, phone_gestures).

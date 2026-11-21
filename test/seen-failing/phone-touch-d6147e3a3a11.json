@@ -1,0 +1,6 @@
+{
+  "file": "test/phone-touch.test.js",
+  "test": "in a real browser, as a phone > the start page: nothing scrolls sideways and no field zooms the page",
+  "seen_failing_first": false,
+  "evidence": "Renamed and trimmed from the start page test of the earlier commit, which already held these two checks; no behaviour was added."
+}
