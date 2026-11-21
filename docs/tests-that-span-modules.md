@@ -850,6 +850,9 @@ after a module nor listed here, and on a listed file that is missing.
   Node or Electron. The nightly builds the Android app and the iPhone and iPad app (spec §40, mobile_checked).
 - `packages/app/test/ios-app.test.js` — the iPhone app's vault key is made at first launch and kept in the Keychain,
   and the built app holds no key. It spans the keeper's Swift code and `scripts/ios-app-check.mjs` (ES§40, ios_app).
+- `packages/app/test/android-app.test.js` — the Android app's vault key is made at first launch, sealed by a key in
+  the Android Keystore, and the built app holds no key. It spans the keeper's Kotlin code, `scripts/android-app-check.mjs`
+  and the iPhone check's look for keys (ES§40, android_app).
 - `test/ios-prepare.test.js` — the iPhone build's App Store icons have no alpha channel. Its build number only grows
   along main (ES§40, ios_app).
 - `test/standalone-app.test.js` — the built desktop app, driven through tauri-driver. It lists, draws and writes
