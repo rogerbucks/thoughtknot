@@ -120,6 +120,9 @@ async function livePreviewCard(note) {
   const el = widget.toDOM();
   env.doc.body.appendChild(el);
   await until(() => !!el.querySelector('g.node'));
+  // The card sizes and moves its names once a frame after it is drawn (viewer-aids.ts). So the picture waits for the
+  // frames still to come. Taken before them, it lacks the names' moves, and only some runs show it.
+  await until(() => env.doc.frames.size === 0);
   return { env, el };
 }
 
