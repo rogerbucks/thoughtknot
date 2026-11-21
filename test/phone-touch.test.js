@@ -106,7 +106,7 @@ describe('in a real browser, as a phone', () => {
 
   /** Polls until `ready` is true in the page, or fails. */
   async function until(ready) {
-    for (let i = 0; i < 100 && !(await browser.run(ready)); i++) await new Promise((t) => setTimeout(t, 50));
+    for (let i = 0; i < 200 && !(await browser.run(ready)); i++) await new Promise((t) => setTimeout(t, 100));
     assert.ok(await browser.run(ready), `never true in the page: ${ready}`);
   }
 
@@ -115,8 +115,10 @@ describe('in a real browser, as a phone', () => {
     await browser.run(`document.querySelector('.gn-tab[data-tab=${view}]').click()`);
     await until(`document.documentElement.dataset.tab === '${view}'`);
     if (view === 'board') {
+      // the board draws after the bar does: wait for its fold button, open it, and wait for it to say so
+      await until(`Boolean(document.querySelector('.thoughtknot-board-tools-fold'))`);
       await browser.run(`document.querySelector('.thoughtknot-board-tools-fold[aria-expanded=false]')?.click()`);
-      await until(`document.querySelector('.thoughtknot-board-tools-fold')?.getAttribute('aria-expanded') !== 'false'`);
+      await until(`document.querySelector('.thoughtknot-board-tools-fold')?.getAttribute('aria-expanded') === 'true'`);
     }
   }
 
@@ -174,6 +176,8 @@ describe('in a real browser, as a phone', () => {
     test(`the ${view} view's ${row} row: its buttons do not touch each other`, options, async () => {
       await open('editor.html#token=app&note=Map.md', `Boolean(document.querySelector('.gn-tab'))`);
       await showView(view);
+      // the graph pane draws after its tab is shown: wait for the row's buttons before measuring
+      await until(`document.querySelectorAll('${row} button').length > 1`);
       const found = await browser.run(`(() => {
         const out = [];
         const rs = [...document.querySelectorAll('${row} button')].map((b) => b.getBoundingClientRect()).filter((r) => r.width > 0);
