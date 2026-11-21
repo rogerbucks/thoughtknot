@@ -138,6 +138,22 @@ describe('the phone shell, in a real browser', () => {
     assert.ok(m.over <= 0, 'nothing scrolls sideways');
   });
 
+  test('a change outside the screen does not fit the page again, and one inside does', options, async () => {
+    await open(true);
+    await settle();
+    // a marker where the fit writes: a fit would put the real room back over it
+    const MARK = `document.documentElement.style.setProperty('--thoughtknot-board-room', '999px')`;
+    const room = () => browser.run(`document.documentElement.style.getPropertyValue('--thoughtknot-board-room')`);
+    await browser.run(MARK);
+    await browser.run(`(() => { const o = document.createElement('div'); o.className = 'outside'; document.body.append(o);
+      o.hidden = true; o.classList.add('more'); })()`);
+    await settle();
+    assert.equal(await room(), '999px', 'a part added to the body, outside the header and the page, fits nothing');
+    await browser.run(`document.querySelector('main').classList.toggle('inside')`);
+    await settle();
+    assert.notEqual(await room(), '999px', 'a change in the page fits it again');
+  });
+
   test('one view shows at a time', options, async () => {
     await open(true);
     assert.ok(await shown('.gn-boards .thoughtknot-board'));
