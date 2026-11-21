@@ -69,9 +69,11 @@ describe('the phone’s gestures, in a real browser', () => {
   async function until(expression) {
     for (let i = 0; i < 100 && !(await browser.run(expression)); i++) await wait(100);
   }
-  /** Two frames: what the page does in answer to what just happened has been done, by state and not by a number of ms. */
-  const settle = () =>
-    browser.run(`new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done(true))))`);
+  /**
+   * Two turns of the page's own timers: what the page does in answer to what just happened has been done. Not frames:
+   * Chrome draws none for a page that is out of sight, and a wait on one never ends. Not a number of milliseconds.
+   */
+  const settle = () => browser.run(`new Promise((done) => setTimeout(() => setTimeout(() => done(true), 0), 0))`);
   const ready = (selector) => `(document.querySelector('${selector}')?.getBoundingClientRect().height || 0) > 0`;
 
   /** Opens the note as a phone with touch, and waits for the board to draw. */
