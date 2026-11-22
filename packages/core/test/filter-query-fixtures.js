@@ -1,5 +1,5 @@
-// What the AI query tests share (editor spec ES§75): a small graph of tasks, the choices it fills, two filters and the
-// drawing they are shown on. Every send uses a fake transport, so no test reaches the network.
+// What the AI query tests share (editor spec ES§75). A small graph of tasks, the choices it fills, and two filters.
+// The drawing they are shown on, too. Every send uses a fake transport, so no test reaches the network.
 import { readNote } from '../src/drawing.ts';
 import { gqlBlocks } from '../src/blocks.ts';
 import { ruleChoices } from '../src/rule-builder.ts';

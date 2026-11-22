@@ -3,7 +3,7 @@
 // what it finds with a badge as well as colour. Neither moves a thing or writes to the note.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { queryOf, queryShown, queryView } from '../src/filter-query.ts';
+import { queryOf, queryShown, queryView } from '../src/filter.ts';
 import { BOXES, CHOICES, EDGES, G, LATE, NONE, NOTE } from './filter-query-fixtures.js';
 
 const late = queryOf('q1', 'late tasks', LATE);

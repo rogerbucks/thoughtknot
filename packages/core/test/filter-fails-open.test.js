@@ -4,7 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { confirmSend, prepareSend, sendPrepared } from '../src/ai.ts';
-import { queryAsk, queryOf, queryResult } from '../src/filter-query.ts';
+import { queryOf } from '../src/filter.ts';
+import { queryAsk, queryResult } from '../src/filter-send.ts';
 import { BASE, CHOICES, G, LATE, LATE_ANSWER, answering } from './filter-query-fixtures.js';
 
 const late = queryOf('q1', 'late tasks', LATE);

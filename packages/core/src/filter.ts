@@ -1,22 +1,19 @@
 // Ask the graph: filters and highlights from plain words (editor spec ES§75). Roger, 22 Nov 2026: a question asked in
-// words becomes a filter or a highlight that can be refined, locked and merged. A query holds:
-// - the words asked, beside the filter they became (ai_query_words_kept). New words go with the filter as it stands; a
-//   hand edit marks the words as no longer matching; every change can be stepped back.
-// - how it is shown (ai_query_highlight): a filter fades or hides what it does not keep; a highlight hides nothing and
-//   marks what it finds with a badge and a colour. Neither moves a thing or writes to the note.
+// words becomes a filter or a highlight. It can be refined, locked and merged. A query holds:
+// - the words asked, beside the filter they became (ai_query_words_kept). New words go with the filter as it stands. A
+//   hand edit marks the words as no longer matching. Every change can be stepped back.
+// - how it is shown (ai_query_highlight). A filter fades or hides what it does not keep. A highlight hides nothing,
+//   and marks what it finds with a badge and a colour. Neither moves a thing or writes to the note.
 // - a lock (ai_query_lock): while locked, nothing changes its words or filter. It goes on applying as the graph changes.
 // - parts, when merged (ai_query_merge): all of them or any of them, each part with its own mark, named in a legend.
-// Every send goes the one way anything is sent (ai.ts, through rule-describe.ts), so the AI rules of ES§19 hold
-// (ai_query_sends_ruled). A query that fails leaves what was shown, says why and keeps the words (ai_query_fails_open).
+// What is sent for a query, and what comes back, is filter-send.ts.
 //
 // Host-free and pure: each change gives a new query, or why it is refused.
 import type { Graph } from '@thoughtknot/graph-spec';
-import type { SendAsk, SendRefused, SendResult } from './ai.ts';
 import { blankFilter, filterKeeps, filterOfRule, filterReady, filterSaid, withAsked } from './filter-ask.ts';
 import type { FocusEdge, Kept } from './focus.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { RuleChoices, RuleDraft } from './rule-builder.ts';
-import { ruleDescribeAsk } from './rule-describe.ts';
 import type { Badge } from './rule-words.ts';
 import type { RuleWrite } from './rule-write.ts';
 import { word } from './words.ts';
@@ -121,22 +118,6 @@ export function queryAskWords(q: Query | null, words: string): string | QueryRef
   if (q.locked) return refused('filter.query.locked');
   const ready = q.parts || filterReady(q.draft);
   return ready ? word('filter.ask.change', { now: filterWords(q), words }) : words;
-}
-
-/**
- * The ask for a query from words, ready for `prepareSend`: a first ask, a refinement, or a merged query asked again.
- * It is a rule described (rule-describe.ts), so it is held to every rule of a send. Refused while locked.
- */
-export function queryAsk(
-  base: Omit<SendAsk, 'question' | 'answers' | 'choice'>,
-  graph: string,
-  choices: RuleChoices,
-  q: Query | null,
-  words: string,
-): SendAsk | SendRefused {
-  const sent = queryAskWords(q, words);
-  if (typeof sent !== 'string') return sent;
-  return ruleDescribeAsk(base, graph, choices, sent);
 }
 
 /**
@@ -251,31 +232,4 @@ export function queryView(
         parts.filter((p) => p.keeps.has(b.key)).map((p) => p.mark),
       );
   return { forward: legend.forward, hidden: legend.hidden, marks };
-}
-
-/** What came of asking: the query filled, or why not, with what was shown before and the words kept to try again. */
-export type QueryAsked = { query: Query } | { failed: string; query: Query | null; words: string };
-
-/**
- * What a send for `q` and `words` comes to (ai_query_fails_open). An answer is only taken as a filter on things that
- * keeps something in `graph`. Anything else, a send refused or failed, a question back, an answer that is no filter or
- * keeps nothing, says why in words and leaves `q` as it was, so the graph is shown as before and the words are kept.
- */
-export function queryResult(
-  q: Query | null,
-  words: string,
-  result: SendResult,
-  graph: Graph,
-  choices?: RuleChoices,
-  id?: string,
-): QueryAsked {
-  const fail = (why: string): QueryAsked => ({ failed: word('filter.query.failed', { why }), query: q, words });
-  if ('refused' in result) return fail(result.refused);
-  if ('failed' in result) return fail(result.failed);
-  if ('asks' in result) return fail(word('filter.query.asks', { asks: result.asks }));
-  if (!('rule' in result)) return fail(word('filter.ask.not-filter'));
-  const filled = queryAnswered(q, words, result.rule, id);
-  if ('refused' in filled) return fail(filled.refused);
-  if (!queryKeeps(graph, filled, choices).size) return fail(word('filter.query.keeps-none'));
-  return { query: filled };
 }

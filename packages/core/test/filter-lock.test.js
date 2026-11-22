@@ -5,7 +5,6 @@ import assert from 'node:assert/strict';
 import { prepareSend } from '../src/ai.ts';
 import {
   queryAnswered,
-  queryAsk,
   queryAskWords,
   queryBack,
   queryEdited,
@@ -13,7 +12,8 @@ import {
   queryLocked,
   queryOf,
   querySaid,
-} from '../src/filter-query.ts';
+} from '../src/filter.ts';
+import { queryAsk } from '../src/filter-send.ts';
 import { BASE, CHOICES, DEAR, GRAPH, G, LATE, LATE_RULE, graphOf } from './filter-query-fixtures.js';
 
 const late = queryEdited(queryOf('q1', 'late tasks', DEAR), LATE);

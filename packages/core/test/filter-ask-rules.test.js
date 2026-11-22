@@ -1,11 +1,12 @@
-// Every send for a query keeps the AI rules (editor spec ES§75, ai_query_sends_ruled; ES§19). Asked the first time,
-// refined or merged: off until chosen, nothing above the model's ceiling, each send recorded with what it held, and
-// the answer checked as untrusted before it fills anything.
+// Every send for a query keeps the AI rules (editor spec ES§75, ai_query_sends_ruled; ES§19). That holds asked the
+// first time, refined or merged. AI is off until chosen, and nothing above the model's ceiling goes. Each send is
+// recorded with what it held. The answer is checked as untrusted before it fills anything.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { confirmSend, prepareSend, sendPrepared } from '../src/ai.ts';
 import { settingsFrom } from '../src/settings.ts';
-import { queriesMerged, queryAsk, queryOf, queryResult } from '../src/filter-query.ts';
+import { queriesMerged, queryOf } from '../src/filter.ts';
+import { queryAsk, queryResult } from '../src/filter-send.ts';
 import { BASE, CHOICES, DEAR, G, LATE, LATE_ANSWER, answering } from './filter-query-fixtures.js';
 
 const late = queryOf('q1', 'late tasks', LATE);

@@ -3,7 +3,7 @@
 // back to the one before.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { queryAnswered, queryAskWords, queryBack, queryEdited, queryOf } from '../src/filter-query.ts';
+import { queryAnswered, queryAskWords, queryBack, queryEdited, queryOf } from '../src/filter.ts';
 import { DEAR, LATE, LATE_RULE } from './filter-query-fixtures.js';
 
 const late = queryOf('q1', 'late tasks', LATE);

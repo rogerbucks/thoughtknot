@@ -15,7 +15,7 @@ import {
   queryView,
   queriesMerged,
   querySaid,
-} from '../src/filter-query.ts';
+} from '../src/filter.ts';
 import { BOXES, CHOICES, DEAR, EDGES, G, LATE, NONE } from './filter-query-fixtures.js';
 
 const late = queryOf('q1', 'late tasks', LATE);
