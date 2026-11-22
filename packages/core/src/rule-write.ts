@@ -126,9 +126,9 @@ export interface RuleAsk {
   /**
    * Asks an AI to describe a rule from the person's words, where the host can (rule_look_describe). The host shows what
    * is sent and waits for a yes. `fill` is told the rule that comes back and only fills the form: nothing is tried or
-   * saved by it.
+   * saved by it. `fail` is told why a send came to no rule, in words, where it is asked (ES§75, ai_query_fails_open).
    */
-  describe?(words: string, fill: (rule: RuleWrite) => void): void;
+  describe?(words: string, fill: (rule: RuleWrite) => void, fail?: (why: string) => void): void;
   tryOut(rule: RuleWrite): void;
   save(rule: RuleWrite): void;
   /** Goes back to the rules as saved, forgetting those tried. */

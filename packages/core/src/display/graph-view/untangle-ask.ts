@@ -4,25 +4,38 @@
 // fills the rows, marked as written by AI until the person changes it. The count shows what it keeps. Nothing is shown
 // until the person presses Show these. Only a filter saved by name is written to the note, where it is edited
 // (filter-named.ts). It can be picked again, or deleted with one Undo.
+//
+// Each question asked in words is a query (ES§75), listed under the ask box (filter-query-list.ts).
 import { word } from '@thoughtknot/core';
+import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
-import { blankFilter, filterKeeps, filterOfRule, filterReady, filterSaid } from '../../filter-ask.ts';
+import { blankFilter, filterKeeps, filterReady, filterSaid } from '../../filter-ask.ts';
+import type { QueryShow } from '../../filter.ts';
 import type { NamedFilters } from '../../filter-named.ts';
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
 import { renderFind } from './rule-form-parts.ts';
+import { QueryPanel } from './filter-query-list.ts';
 export { untangledIn } from './stage-untangle.ts';
 import type { FormState } from './rule-form-parts.ts';
 
 /** What the panel asks of its card. */
 export interface FilterAskHost {
+  /** The graph the filter is on: a query's answer is taken only when it keeps something here. */
+  graph: Graph;
   choices: RuleChoices;
   /** How many things the filter keeps, of how many. */
   count: (draft: RuleDraft) => { kept: number; of: number };
-  /** Shows the filter on the drawing, the rest faded or hidden; null clears it. */
-  show: (draft: RuleDraft | null, hide: boolean) => void;
-  /** Asks an AI for a filter from words, where the host can: the host shows what is sent and waits for a yes. */
-  describe?: (words: string, fill: (rule: RuleWrite) => void) => void;
+  /**
+   * Shows the filter on the drawing, the rest faded or hidden; null clears it. A query says how it is shown, as a filter
+   * or a highlight, and what it is called.
+   */
+  show: (draft: RuleDraft | null, hide: boolean, query?: { show: QueryShow; said: string }) => void;
+  /**
+   * Asks an AI for a filter from words, where the host can: the host shows what is sent and waits for a yes. A send
+   * that comes to no rule is told to `fail`, in words, where the host can.
+   */
+  describe?: (words: string, fill: (rule: RuleWrite) => void, fail?: (why: string) => void) => void;
   /** The filters saved by name in the note, and how to save or delete one where it is edited. */
   named?: NamedFilters;
 }
@@ -33,11 +46,6 @@ export interface FilterAskPanel {
   focus: () => void;
 }
 
-/** The words sent for `words`: as they are for a new filter, or with the filter as it is now, to be changed. */
-export function askWords(draft: RuleDraft, words: string): string {
-  return filterReady(draft) ? word('filter.ask.change', { now: filterSaid(draft), words }) : words;
-}
-
 /** Builds the panel at the end of `root`. */
 export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterAskPanel {
   const el = root.createDiv({ cls: 'thoughtknot-filter-ask', attr: { role: 'group' } });
@@ -45,25 +53,11 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   el.createSpan({ cls: 'thoughtknot-rule-step', text: word('filter.ask.title') });
   const state: FormState = { draft: blankFilter(), meansTyped: false, whenTyped: false };
   let byAi = false;
-  let input: HTMLInputElement | null = null;
-  if (host.describe) {
-    const row = el.createDiv({ cls: 'thoughtknot-rule-describe-row' });
-    input = row.createEl('input', {
-      attr: {
-        name: 'filter-ask',
-        type: 'text',
-        placeholder: word('filter.ask.hint'),
-        'aria-label': word('filter.ask.go'),
-      },
-    });
-    button(row, word('filter.ask.go'), 'text', () => ask(), word('filter.ask.go'));
-    // Enter asks, and never sends a form round it
-    input.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
-      ask();
-    });
-  }
+  const input = host.describe ? askBox(el, () => ask()) : null;
+  const list = el.createDiv({
+    cls: 'thoughtknot-query-list',
+    attr: { role: 'list', 'aria-label': word('filter.query.list') },
+  });
   const saved = el.createDiv({ cls: 'thoughtknot-filter-saved' });
   const find = el.createDiv({ cls: 'thoughtknot-rule-find' });
   const said = el.createDiv({ cls: 'thoughtknot-rule-word', attr: { role: 'status', 'aria-live': 'polite' } });
@@ -85,14 +79,32 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     const counted = word('filter.ask.keeps', { count: kept, of });
     said.setText([extra, byAi ? word('filter.ask.by-ai') : '', counted].filter(Boolean).join(' '));
   };
-  // a row changed by the person is theirs from then on
+  // a row changed by the person is theirs from then on; on a query, its words no longer match
   const edited = () => {
     byAi = false;
+    queries.edited();
     tell();
   };
-  const redraw = () => renderFind(find, state, host.choices, edited);
+  // the rows of the query worked on, which cannot be changed while it is locked
+  const redraw = () => {
+    renderFind(find, state, host.choices, edited);
+    const locked = !!queries.worked()?.locked;
+    for (const c of find.querySelectorAll('input, select, button')) (c as HTMLInputElement).disabled = locked;
+  };
+  const queries = new QueryPanel(list, {
+    graph: host.graph,
+    choices: host.choices,
+    ...(host.describe && { describe: host.describe }),
+    show: (draft, hidden, query) => host.show(draft, hidden, query),
+    state,
+    redraw,
+    tell,
+    byAi: (on) => (byAi = on),
+    hidden: () => hide.checked,
+  });
   // a saved filter picked fills the rows as the person saved them; it is shown when they press Show these
   const pick = (draft: RuleDraft, name: string) => {
+    queries.release();
     state.draft = structuredClone(draft);
     byAi = false;
     redraw();
@@ -101,11 +113,13 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   const nameIt = () =>
     saving && namePrompt(saved, filterSaid(state.draft), (name) => saving({ name, draft: state.draft }));
   const show = () => {
-    if (filterReady(state.draft)) host.show(state.draft, hide.checked);
+    if (filterReady(state.draft) && !queries.show()) host.show(state.draft, hide.checked);
   };
+  // the rows start again and nothing is shown; the queries asked stay listed
   const clear = () => {
-    state.draft = blankFilter();
     byAi = false;
+    queries.release();
+    state.draft = blankFilter();
     redraw();
     host.show(null, false);
     tell();
@@ -113,15 +127,7 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   const ask = () => {
     const words = input?.value.trim() ?? '';
     if (!words) return tell(word('filter.ask.no-words'));
-    tell(word('filter.ask.asking'));
-    host.describe?.(askWords(state.draft, words), (rule) => {
-      const draft = filterOfRule(rule);
-      if (!draft) return tell(word('filter.ask.not-filter'));
-      state.draft = draft;
-      byAi = true;
-      redraw();
-      tell(word('filter.ask.filled'));
-    });
+    queries.ask(words);
   };
   hide.addEventListener('change', () => {
     if (filterReady(state.draft)) show();
@@ -130,6 +136,26 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   redraw();
   tell();
   return { el, focus: () => (input ?? find.querySelector('select'))?.focus() };
+}
+
+/** The box to write what to see in, and Ask AI, at the end of `el`; Enter asks too, and never sends a form round it. */
+function askBox(el: HTMLElement, ask: () => void): HTMLInputElement {
+  const row = el.createDiv({ cls: 'thoughtknot-rule-describe-row' });
+  const input = row.createEl('input', {
+    attr: {
+      name: 'filter-ask',
+      type: 'text',
+      placeholder: word('filter.ask.hint'),
+      'aria-label': word('filter.ask.go'),
+    },
+  });
+  button(row, word('filter.ask.go'), 'text', ask, word('filter.ask.go'));
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    ask();
+  });
+  return input;
 }
 
 /** The saved filters to pick in `row`, and Delete for the one picked where the note is edited; none, nothing. */
@@ -176,6 +202,8 @@ export interface ShownAsk {
   said: string;
   things: Set<string>;
   hide: boolean;
+  /** Shown as a filter, the rest fades or hides; as a highlight, nothing does (ES§75, ai_query_highlight). */
+  show: QueryShow;
 }
 
 /**
@@ -194,8 +222,18 @@ export function askPanelIn(
   const kept = (draft: RuleDraft) => new Set(filterKeeps(g, draft, choices).filter((k) => drawn.has(k)));
   const panel = renderFilterAsk(legend, {
     choices,
+    graph: g,
     count: (draft) => ({ kept: kept(draft).size, of: drawn.size }),
-    show: (draft, hide) => show(draft && { draft, said: filterSaid(draft), things: kept(draft), hide }),
+    show: (draft, hide, query) =>
+      show(
+        draft && {
+          draft,
+          said: query?.said ?? filterSaid(draft),
+          things: kept(draft),
+          hide,
+          show: query?.show ?? 'filter',
+        },
+      ),
     ...(card.describe && { describe: card.describe }),
     ...(card.named && { named: card.named }),
   });

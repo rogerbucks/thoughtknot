@@ -103,7 +103,7 @@ export class Selection {
       ...(o.named && { named: o.named }), // the filters saved by name, to pick again (untangle_filter_saved)
       regroup: (only) => this.regrouping.to(only),
       svg: host.svg,
-      ...(o.ruleAsk?.describe && { describe: (w, fill) => o.ruleAsk?.describe?.(w, fill) }), // untangle_ask_filter
+      ...(o.ruleAsk?.describe && { describe: (w, fill, fail) => o.ruleAsk?.describe?.(w, fill, fail) }), // untangle_ask_filter
     });
     this.layers = this.untangle.layers(null);
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
