@@ -1460,5 +1460,15 @@
       "board_first_import",
       "board_first_default"
     ]
+  },
+  "AQ5": {
+    "title": "Saved AI queries: replay, cache and checks",
+    "size": "M",
+    "requirements": [
+      "ai_query_replay",
+      "ai_query_cache",
+      "ai_query_fuzzy",
+      "ai_query_stale"
+    ]
   }
 }
