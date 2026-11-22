@@ -341,6 +341,7 @@ export class SendDialog extends Modal {
     this.prepared = null;
     if ('refused' in result) {
       this.refusal = result.refused;
+      this.rule?.failed?.(result.refused);
       this.drawShown();
       return;
     }
@@ -349,12 +350,14 @@ export class SendDialog extends Modal {
       // its question goes under the person's, to be answered there; nothing is written until a proposal comes
       this.question = `${this.question.trimEnd()}\n\n${word('ai.asked', { question: result.asks })}`;
       new Notice(word('ai.asks', { model: p.model.name }));
+      this.rule?.failed?.(word('filter.query.asks', { asks: result.asks }));
       this.changed(true);
       return;
     }
     if ('failed' in result) {
       new Notice(result.failed);
       this.refusal = result.failed;
+      this.rule?.failed?.(result.failed);
       this.drawShown();
       return;
     }

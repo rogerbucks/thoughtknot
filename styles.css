@@ -5503,6 +5503,41 @@ img.thoughtknot-picture-hidden,
   min-height: 1.5rem;
   margin: 0;
 }
+/* The queries asked in words, each its words beside its filter, then how it is shown, its lock and Step back (ES§75).
+   Every row wraps, so a narrow panel or a phone stacks them rather than scrolling sideways. */
+.thoughtknot-query-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-query-list:empty {
+  display: none;
+}
+.thoughtknot-query {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  padding: var(--gn-space-1);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--radius-s, 4px);
+}
+.thoughtknot-query.is-current {
+  border-color: var(--interactive-accent);
+}
+.thoughtknot-query input[name='query-words'] {
+  width: 100%;
+  min-width: 0;
+}
+.thoughtknot-query-rule {
+  font-size: var(--gn-font-size-s);
+  overflow-wrap: anywhere;
+}
+.thoughtknot-query-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
 /* The filters saved by name, picked from one list, with Delete beside it (untangle_filter_saved). */
 .thoughtknot-filter-saved {
   display: flex;

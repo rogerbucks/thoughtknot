@@ -17,12 +17,15 @@ export interface RuleAsking {
   ask(base: Parameters<typeof ruleDescribeAsk>[0], graph: string, words: string): ReturnType<typeof ruleDescribeAsk>;
   /** Fills the form with the rule that came back, or shows the board proposed. Nothing is tried or saved. */
   fill(got: { rule: RuleWrite } | { board: BoardDraft }, model: string, done: () => void): void;
+  /** Told why a send came to no rule, in words: refused, failed, or a question back (ES§75, ai_query_fails_open). */
+  failed?(why: string): void;
 }
 
 /** The form's way to describe a rule, or nothing while AI is off (ai_off_until_chosen): the box is then not offered. */
 export function describeFor(plugin: ThoughtKnotPlugin, path: string, graph: string) {
   if ('off' in aiReady(plugin.settings)) return undefined;
-  return (words: string, fill: (rule: RuleWrite) => void) => void openDescribe(plugin, path, graph, words, fill);
+  return (words: string, fill: (rule: RuleWrite) => void, fail?: (why: string) => void) =>
+    void openDescribe(plugin, path, graph, words, fill, fail);
 }
 
 /** Opens the send dialog on note `path`, the whole of `graph` chosen, with the person's `words` as the question. */
@@ -32,6 +35,7 @@ async function openDescribe(
   graph: string,
   words: string,
   fill: (rule: RuleWrite) => void,
+  fail?: (why: string) => void,
 ): Promise<void> {
   const file = plugin.app.vault.getFileByPath(path);
   if (!file) return;
@@ -43,14 +47,19 @@ async function openDescribe(
     shared,
   ).world[graph];
   if (!g) return void new Notice(word('ai.suggest.no-graph', { graph }));
-  const start = { graph, things: [], question: words, rule: asking(g, fill) };
+  const start = { graph, things: [], question: words, rule: asking(g, fill, fail) };
   new SendDialog(plugin, file, note, levelFor(plugin, file, note), shared, start).open();
 }
 
 /** What the dialog is asked with: the graph's choices, and a fill that tells the person the form was filled in. */
-function asking(g: Parameters<typeof ruleChoices>[0], fill: (rule: RuleWrite) => void): RuleAsking {
+function asking(
+  g: Parameters<typeof ruleChoices>[0],
+  fill: (rule: RuleWrite) => void,
+  fail?: (why: string) => void,
+): RuleAsking {
   const choices = ruleChoices(g);
   return {
+    ...(fail && { failed: fail }),
     ask: (base, graph, words) => ruleDescribeAsk(base, graph, choices, words),
     fill: (got, model, done) => {
       if (!('rule' in got)) return;

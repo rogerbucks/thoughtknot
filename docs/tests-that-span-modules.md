@@ -261,6 +261,9 @@ after a module nor listed here, and on a listed file that is missing.
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
 - `packages/obsidian/test/text-to-graph.test.js` — text to graph from the editor (spec §47, text_to_graph_in_editor).
   The command takes the selection or the note's words through the send dialog, and a review keeps what is ticked.
+- `packages/obsidian/test/filter-query-list.test.js` — the queries asked in words, listed in the Filter panel (editor
+  spec ES§75). Each shows its words beside its filter, switches between a filter and a highlight, locks and steps back.
+  A failed send says why and keeps the words. It spans the panel, the card, the send dialog and the query engine.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
 - `packages/obsidian/test/placed-fits.test.js` — a card drawn off the page, as Live Preview draws it, fits its frame
   once placed. Centre here leaves no zoom or pan for the card drawn next (editor spec §15).

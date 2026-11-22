@@ -1,5 +1,7 @@
 // The words of the Filter panel's filter by what things hold (editor spec ES§25, untangle_ask_filter), in UK English
-// (words_catalogue). They cover asking an AI to fill it, and saving it by name (untangle_filter_saved).
+// (words_catalogue). They cover asking an AI to fill it, and saving it by name (untangle_filter_saved). The filter.query
+// words are for the queries asked in words (ES§75). Each is listed beside its filter. It can be shown as a highlight,
+// locked and stepped back.
 // display-source-words.ts keeps them with the other display words.
 
 /** The words of the filter by what things hold, by key, in UK English. */
@@ -46,4 +48,20 @@ export const FILTER_SOURCE_WORDS = {
   'filter.query.keeps-none': 'That filter keeps nothing in this graph.',
   'filter.query.asks': 'The AI asks first: {asks}',
   'filter.query.failed': '{why} The graph is shown as it was, and your words are kept to try again.',
+  'filter.query.list': 'Queries asked',
+  'filter.query.words': 'Words asked: change them and press Enter to ask again',
+  'filter.query.became': 'Filter: {rule}',
+  'filter.query.show-as': 'Show as',
+  'filter.query.as-filter': 'Filter',
+  'filter.query.as-highlight': 'Highlight',
+  'filter.query.lock': 'Lock this query',
+  'filter.query.unlock': 'Unlock this query',
+  'filter.query.back': 'Step back',
+  'filter.query.stepped': 'Stepped back to the change before.',
+  'filter.query.pick': 'Work on this query',
+  'filter.query.picked': 'Working on the query: {said}',
+  'filter.query.banner': {
+    one: 'Highlighting {count} thing: {said}',
+    other: 'Highlighting {count} things: {said}',
+  },
 } as const;
