@@ -264,6 +264,22 @@ export function summary(repo) {
   return { baseline: baseline?.head ?? null, files: tally(baseline, replays, exceptionsIn(repo), testFiles(repo)) };
 }
 
+/**
+ * The tests a recorded commit changed a file of and that the file held before, as `<test file> :: <test>`, for the
+ * test files the repository holds now. A replay on another machine may find one new and passing first, when its old
+ * version failed at the parent there: CI on Ubuntu, where the record was made on a Mac (PR 2427). A reason kept for one
+ * names a real test the commit changed, so it is not a reason for no such test.
+ */
+export function heldTests(repo) {
+  const { baseline, commits } = readRecords(repo);
+  const current = testFiles(repo);
+  const out = new Set();
+  for (const c of history(repo, baseline))
+    for (const f of commits.get(c)?.files ?? [])
+      if (current.has(f.file)) for (const name of f.held ?? []) out.add(`${f.file} :: ${name}`);
+  return [...out].sort();
+}
+
 /** `value` with the keys of every object in it sorted, so what is printed of it is stable. */
 const sorted = (value) =>
   Array.isArray(value)

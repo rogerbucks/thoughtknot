@@ -6,7 +6,16 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BASELINE, EXCUSALS, RECORDS, exceptionsIn, excusalName, excuse } from '../scripts/tests-first-records.mjs';
+import {
+  BASELINE,
+  EXCUSALS,
+  RECORDS,
+  exceptionsIn,
+  excusalName,
+  excuse,
+  heldTests,
+  writeRecord,
+} from '../scripts/tests-first-records.mjs';
 import { replay, unexplained } from '../scripts/tests-first.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { repository } from './repository/scratch-repository.js';
@@ -37,6 +46,24 @@ describe('a reason for each test that passed before its code', () => {
         'already true': { seen_failing_first: false, evidence: 'pins behaviour that already existed' },
       });
       assert.notEqual(excusalName('test/twice.test.js', 'one'), excusalName('test/twice.test.js', 'already true'));
+    } finally {
+      r.done();
+    }
+  });
+
+  // PR 2427: a test whose old version failed at the parent on CI's Ubuntu, but passed on the Mac, is new and passing
+  // first there, and held before here. CI asks for a reason; the Mac's record must name the test, so the reason has one
+  test('a test the commit changed that its file held before is named in the record, so a reason asked for elsewhere names a real test', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x * 2;\n', 'test/twice.test.js': TWICE("test('one', () => {});") },
+      { 'test/twice.test.js': TWICE("test('one', () => assert.equal(twice(1), 2));") },
+    ]);
+    try {
+      const replayed = replay(r.dir, r.ids[1]);
+      const [file] = replayed.files;
+      assert.deepEqual([file.failedFirst, file.passedFirst, file.held], [[], [], ['one']]);
+      writeRecord(r.dir, { commit: replayed.commit, files: replayed.files });
+      assert.deepEqual(heldTests(r.dir), ['test/twice.test.js :: one']);
     } finally {
       r.done();
     }

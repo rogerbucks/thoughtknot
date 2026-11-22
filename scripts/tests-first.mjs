@@ -13,7 +13,9 @@
 //   node scripts/tests-first.mjs --complete          exit 1 on a commit since the baseline that changed a test and has
 //                                                    no record (CI). So each is recorded on its own branch.
 //   node scripts/tests-first.mjs --excuse [--force] [--fault] <test file> <test> <reason>
-//                                                    keep the reason a test passed first, in test/seen-failing/. One
+//                                                    keep the reason a test passed first, in test/seen-failing/.
+//                                                    <test> is its full name as --check prints it: its suites and
+//                                                    its own name, joined by " > ". One
 //                                                    kept already is replaced only with --force. With --fault, keep
 //                                                    the reason a test failed at its own commit, so was not replayed
 //                                                    (and which commit fixed it). That is only for a test the records
@@ -200,7 +202,10 @@ export function replay(repo, commit) {
         });
         continue;
       }
-      out.files.push(withFaults(judged(file, fresh, run(before.dir, file, repo))));
+      // the tests it held before and still passes. A replay on another machine may find one new, when its old version
+      // failed at the parent there (PR 2427). The record names them, so a reason asked for there names a real test
+      const held = now.passed.filter((n) => old.includes(n));
+      out.files.push(withFaults(judged(file, fresh, run(before.dir, file, repo), held)));
     }
   } finally {
     at.done();
@@ -213,8 +218,10 @@ export function replay(repo, commit) {
  * What a file's run against the parent's code shows of its new tests (`fresh`): each failed first, or passed first. A run
  * that did not finish — stopped at the time limit, or crashed before its report — shows nothing: every test in it would
  * look failed. The file is then not replayed, and its new tests are named, so a reason may still be kept for one.
+ * `held` names the tests the file held before and still passes; it is kept, when there are any, as the entry's `held`.
  */
-export function judged(file, fresh, then) {
+export function judged(file, fresh, then, held = []) {
+  const kept = held.length ? { held } : {};
   if (!then.ran)
     return {
       file,
@@ -222,11 +229,13 @@ export function judged(file, fresh, then) {
       passedFirst: [],
       notReplayed: 'its run against the code before it did not finish',
       tests: fresh,
+      ...kept,
     };
   return {
     file,
     failedFirst: fresh.filter((n) => !then.passed.includes(n)),
     passedFirst: fresh.filter((n) => then.passed.includes(n)),
+    ...kept,
   };
 }
 
@@ -351,7 +360,7 @@ function main(repo, mode, args, force, fault = false) {
       .filter((f) => !faultExcused(exceptions, f.file ?? '', f.test ?? '', f.commit));
     for (const b of bad)
       console.error(
-        `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason: node scripts/tests-first.mjs --excuse <test file> <test> <reason>`,
+        `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason, naming the test in full as here: node scripts/tests-first.mjs --excuse ${b.file} ${JSON.stringify(b.name)} <reason>`,
       );
     // CI checks every commit of a branch. A test may come a commit before its code, or run slow on a shared runner. So
     // a fault here is a warning, and fails only the record (Roger, 10 Oct 2026)
