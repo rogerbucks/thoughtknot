@@ -5,7 +5,7 @@
 // until the person presses Show these. Only a filter saved by name is written to the note, where it is edited
 // (filter-named.ts). It can be picked again, or deleted with one Undo.
 //
-// Each question asked in words is a query (ES§75), listed under the ask box (untangle-queries.ts).
+// Each question asked in words is a query (ES§75), listed under the ask box (filter-query-list.ts).
 import { word } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
@@ -15,7 +15,7 @@ import type { NamedFilters } from '../../filter-named.ts';
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
 import { renderFind } from './rule-form-parts.ts';
-import { QueryPanel } from './untangle-queries.ts';
+import { QueryPanel } from './filter-query-list.ts';
 export { untangledIn } from './stage-untangle.ts';
 import type { FormState } from './rule-form-parts.ts';
 
