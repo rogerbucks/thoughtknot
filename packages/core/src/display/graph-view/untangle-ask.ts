@@ -319,7 +319,7 @@ function queryList(list: HTMLElement, qs: readonly Query[], current: string | nu
     as.value = q.show;
     as.addEventListener('change', () => acts.shown(q, as.value === 'highlight' ? 'highlight' : 'filter'));
     const lockLabel = word(q.locked ? 'filter.query.unlock' : 'filter.query.lock');
-    const lock = button(row, lockLabel, q.locked ? 'lock' : 'unlock', () => acts.lock(q));
+    const lock = button(row, lockLabel, 'lock', () => acts.lock(q)); // pressed while locked, as a board layer's
     lock.setAttribute('aria-pressed', String(q.locked));
     const back = button(row, word('filter.query.back'), 'undo-2', () => acts.back(q));
     back.disabled = q.locked || !q.back.length;
