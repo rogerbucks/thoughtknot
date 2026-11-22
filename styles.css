@@ -5523,6 +5523,7 @@ img.thoughtknot-picture-hidden,
 }
 .thoughtknot-query.is-current {
   border-color: var(--gn-accent);
+  box-shadow: inset 3px 0 0 var(--gn-accent);
 }
 .thoughtknot-query input[name='query-words'] {
   width: 100%;
