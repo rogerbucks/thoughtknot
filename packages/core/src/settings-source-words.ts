@@ -65,6 +65,12 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.ai-images.private': 'Private reviewer only',
   'settings.ai-images.off': 'Off: never describe pictures',
   'settings.ai-images.public': 'A public reviewer too: it is sent the picture',
+  // what a note opens on (settings-first-view.ts, ES§76 board_first_default)
+  'settings.first-view.name': 'Notes open on',
+  'settings.first-view.sentence':
+    'What a note opens on: its whiteboard, or its graph drawn first. A note you turned to its graph stays so.',
+  'settings.first-view.board': 'The whiteboard',
+  'settings.first-view.graph': 'The graph',
   // a time box and quiet hours for AI (settings-time-box.ts, ai_time_box)
   'settings.ai-time-box.name': 'Time box for AI',
   'settings.ai-time-box.sentence':

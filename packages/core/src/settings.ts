@@ -14,12 +14,17 @@ import { DEFAULT_TIME_BOX, TIME_BOX_OPTIONS, timeBoxFrom, type TimeBoxSettings }
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
 import { ownFields, OWN_PRESETS_OPTION } from './settings-own.ts';
+import {
+  DEFAULT_FIRST_VIEW,
+  FIRST_VIEW_OPTIONS,
+  firstViewFrom,
+  type FirstViewSettings,
+} from './settings-first-view.ts';
 import { OWN_PRESET, STARTERS } from './view-presets.ts';
+import { INDENT_OPTION, type Indent } from './settings-indent.ts';
 
 export { aiModel, type AiModel } from './ai-model.ts';
-
-/** How a line the editor writes is indented. */
-export type Indent = 'two' | 'four' | 'tab';
+export { indentText, type Indent } from './settings-indent.ts';
 
 /** How far focus reaches (§25): `one` step, the default, or `two`. */
 export type FocusDepthSetting = 'one' | 'two';
@@ -35,7 +40,8 @@ export type AiUse = 'off' | 'on';
 export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
-export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings, ReachSettings, TimeBoxSettings {
+export interface Settings
+  extends StrictnessSettings, PictureSettings, TypingSettings, ReachSettings, TimeBoxSettings, FirstViewSettings {
   /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
   language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -129,6 +135,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ...DEFAULT_TYPING,
   ...DEFAULT_REACH,
   ...DEFAULT_TIME_BOX,
+  ...DEFAULT_FIRST_VIEW,
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -157,12 +164,6 @@ const LEVELS: Choice[] = [
     sentence: 'A slip is read as meant, reported as a warning, and offered its fix.',
   },
   { value: 'simplified', name: 'Simplified', sentence: 'The departures chosen below are allowed as written.' },
-];
-
-const INDENTS: Choice[] = [
-  { value: 'two', name: 'Two spaces' },
-  { value: 'four', name: 'Four spaces' },
-  { value: 'tab', name: 'A tab' },
 ];
 
 /** Every option, in the order the settings page shows them. */
@@ -224,14 +225,9 @@ export const OPTIONS: Option[] = [
   ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
   ...REACH_OPTIONS, // what a public reviewer may have (ES§19)
   ...TIME_BOX_OPTIONS, // a time box and quiet hours for AI (ES§74)
-  {
-    key: 'indent',
-    section: 'Formatting',
-    name: 'Indent',
-    sentence: 'How the editor indents the later lines of a thing it writes.',
-    choices: INDENTS,
-  },
+  INDENT_OPTION, // how a line the editor writes is indented
   ...TYPING_OPTIONS, // when the drawing is redrawn while typing (§4, NEURO-7)
+  ...FIRST_VIEW_OPTIONS, // what a note opens on: the whiteboard or the graph (ES§76)
   {
     key: 'viewPreset',
     section: 'Drawing',
@@ -380,8 +376,6 @@ export function settingsFrom(saved: unknown): Settings {
     ...typingFrom(s),
     ...reachFrom(s),
     ...timeBoxFrom(s),
+    ...firstViewFrom(s),
   };
 }
-
-/** The text an indent setting writes. */
-export const indentText = (indent: Indent): string => (indent === 'two' ? '  ' : indent === 'tab' ? '\t' : '    ');
