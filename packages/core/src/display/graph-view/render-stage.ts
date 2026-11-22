@@ -9,7 +9,6 @@ import type { Scene } from '../../render/render-scene.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import { detailAt, roomSizes } from '../../render/render-detail.ts';
 import { DARK, LIGHT } from '../../render/render-look.ts';
-import { PALETTES } from '../../palette.ts';
 import { coloursOf, marksOf, type Mark, type View } from '../../render/render-marks.ts';
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
@@ -340,12 +339,7 @@ export class RenderStage {
     const detail = { ...detailAt(this.sizes, this.view.scale), faintRoads: this.faint.drawn() };
     const focus = this.focus.of(this.hands?.selected() ?? this.rooms.picked);
     this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
-    this.marks = this.shown.of(
-      this.marks,
-      this.viewport,
-      this.scene,
-      this.look() === DARK ? PALETTES.dark : PALETTES.light,
-    );
+    this.marks = this.shown.of(this.marks, this.viewport, this.scene, this.look());
     this.marks = this.cardsOn.cards?.under(this.marks, this.view, this.hands?.selected()) ?? this.marks; // cards for dots
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);

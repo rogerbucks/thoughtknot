@@ -68,7 +68,8 @@ export const QUERY_MARKS: readonly QueryMark[] = Object.freeze([
   { badge: 'down', colour: 'red' },
 ]);
 
-const FIRST_MARK: QueryMark = { badge: 'flag', colour: 'blue' };
+/** The mark a query is given first. */
+export const FIRST_MARK: QueryMark = { badge: 'flag', colour: 'blue' };
 const refused = (key: WordKey): QueryRefused => ({ refused: word(key) });
 const stepOf = (q: Query): QueryStep => ({
   words: q.words,

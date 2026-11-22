@@ -10,7 +10,11 @@ import { word } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
 import { blankFilter, filterKeeps, filterReady, filterSaid } from '../../filter-ask.ts';
+import { FIRST_MARK } from '../../filter.ts';
 import type { QueryMark, QueryShow } from '../../filter.ts';
+import type { AskedFilter } from '../../filter-ask.ts';
+import { markedBy } from '../../query-marks.ts';
+import type { Marked } from '../../query-marks.ts';
 import type { NamedFilters } from '../../filter-named.ts';
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
@@ -206,6 +210,12 @@ export interface ShownAsk {
   show: QueryShow;
   /** The badge and colour a highlight marks what it finds with (query-marks.ts). */
   mark?: QueryMark;
+}
+
+/** What the untangling shows for `asked`: a filter fades or hides, and a highlight only marks (ES§75, query-marks.ts). */
+export function askedOf(asked: ShownAsk | null): { asked: AskedFilter | null; lit: Marked | null } {
+  if (asked?.show === 'filter') return { asked: { things: asked.things, hide: asked.hide }, lit: null };
+  return { asked: null, lit: asked ? markedBy(asked.things, asked.mark ?? FIRST_MARK) : null };
 }
 
 /**

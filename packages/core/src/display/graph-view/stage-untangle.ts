@@ -7,7 +7,9 @@ import type { StageLayers } from '../../render/render-untangle.ts';
 import type { Mark } from '../../render/render-marks.ts';
 import type { Scene } from '../../render/render-scene.ts';
 import type { Layers } from '../../untangle.ts';
-import type { Palette } from '../../palette.ts';
+import { PALETTES } from '../../palette.ts';
+import { DARK } from '../../render/render-look.ts';
+import type { Look } from '../../render/render-look.ts';
 
 /** Each card's untangling, by the card's element: what it brings forward and hides now. */
 export const untangledIn = new WeakMap<Element, () => Layers>();
@@ -47,13 +49,14 @@ export class StageUntangle {
   }
 
   /**
-   * `marks` as the card's untangling shows them, a highlight's marks in `p`'s colours. From the first drawing on, it
+   * `marks` as the card's untangling shows them, a highlight's marks in the colours of the theme's `look`. From the first drawing on, it
    * watches the card, to draw again.
    */
-  of(marks: Mark[], viewport: HTMLElement, scene: Scene, p?: Palette): Mark[] {
+  of(marks: Mark[], viewport: HTMLElement, scene: Scene, look?: Look): Mark[] {
     this.watch(viewport);
     const layers = layersOf(viewport);
     this.stamp = stampOf(layers);
+    const p = look === DARK ? PALETTES.dark : PALETTES.light;
     return untangles(layers) ? untangledMarks(marks, scene, layers, p) : marks;
   }
 
