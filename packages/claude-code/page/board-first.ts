@@ -1,12 +1,13 @@
 // The board as the page's main screen (editor spec §45, board_main_screen). The page is the one VS Code's tab, the
 // desktop app and the phone app run. A note opens on its board, above the graph drawn as before.
-// - A note with no board yet opens on a starter board: one View item for each of its graphs, side by side. It is not
-//   written to the note until the person changes it, so opening a note never changes it.
+// - A note with no board yet opens on a starter board: one View item for each of its graphs, side by side. A note with
+//   no graph either opens on an empty board (ES§76, board_first_new_note). Neither is written to the note until the
+//   person changes it, so opening a note never changes it.
 // - Until the person first chooses, one line says what changed, with a way back: the graph drawn first, as before.
 //   The choice is kept for this person in this browser only.
 import { word } from '@thoughtknot/core';
 
-export { starterBoard, withStarter } from '@thoughtknot/core';
+export { openingBoard, starterBoard, withStarter } from '@thoughtknot/core';
 
 /** Where the choice of what comes first is kept for this person, in this browser. */
 const FIRST_KEY = 'thoughtknot-board-first';

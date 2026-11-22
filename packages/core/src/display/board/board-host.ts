@@ -8,6 +8,7 @@ import type { ArrangeHooks } from './board-arrange-bar.ts';
 import type { Nested } from './board-nest.ts';
 import type { Pictures } from './board-images.ts';
 import type { Viewer } from './board-view-items.ts';
+import type { BeginHost } from './board-ways.ts';
 
 /** What a board needs of its host. */
 export interface BoardHost extends Nested {
@@ -25,4 +26,6 @@ export interface BoardHost extends Nested {
   views?: Viewer;
   /** Keeps and shows the pictures of the board; without it an Image item shows only its frame and name. */
   images?: Pictures;
+  /** What the ways to begin on an empty board open (board_first_ways_in): text to graph and import. */
+  begin?: BeginHost;
 }

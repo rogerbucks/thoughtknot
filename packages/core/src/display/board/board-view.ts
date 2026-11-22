@@ -36,6 +36,7 @@ import type { BoardHost } from './board-host.ts';
 import { born, current, keep, keptOf, placeFrom, saying } from './board-kept.ts';
 import { listProblems } from './board-problems.ts';
 import { recorded, undoKey } from './board-undo.ts';
+import { showWaysIn, waysAfter } from './board-ways.ts';
 
 export { boardEditInNote, boardOf };
 export type { BoardHost };
@@ -61,6 +62,8 @@ class BoardView {
   private readonly rail: ToolRail;
   private readonly format: FormatBar | null = null;
   private readonly layers: LayerList | null;
+  /** The ways to begin, while the board is empty (board_first_ways_in). */
+  private ways: HTMLElement | null = null;
   private readonly sel = new BoardSelection({ changed: (n) => this.bar?.chosen(n), key: () => this.host.key });
   /** The text of the shared board as last read, to tell when someone else has changed it. */
   private seen = '';
@@ -99,6 +102,7 @@ class BoardView {
       () => this.zoom,
       () => this.frame,
     );
+    if (!this.readOnly) this.ways = showWaysIn(root, this.vp, this.board, host.begin, (w) => this.say(w));
     const text = word(this.readOnly ? 'board.help-read' : 'board.help');
     root.createEl('p', { cls: 'thoughtknot-board-help', text, attr: { id: helpId } });
     this.rail = new ToolRail(root, this.vp, host.key, (w) => this.say(w), this.readOnly);
@@ -159,6 +163,7 @@ class BoardView {
     for (const g of Array.from(next.querySelectorAll('[data-item]')))
       g.toggleClass('is-focused', g.getAttribute('data-item') === this.cursor.focus);
     outlined(this.list, this.board);
+    this.ways = waysAfter(this.ways, this.board);
     this.sel.paint(next, this.board.items);
     this.layers?.paint();
     paintOver(next, this.board, this.cursor.focus, this.readOnly, this.host);

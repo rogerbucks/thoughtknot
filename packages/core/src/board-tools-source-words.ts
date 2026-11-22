@@ -168,4 +168,24 @@ export const BOARD_TOOLS_SOURCE_WORDS = {
   'board.slides.said-untitled': 'Slide {n} of {of}',
   'board.slides.gone': 'There is no frame {id} on the board now.',
   'board.slides.edge': 'This slide is already at the end of the show.',
+  // the whiteboard first (ES§76): the ways to begin on an empty board, and what text to graph and imports say
+  'board.first.ways': 'Ways to begin',
+  'board.first.type': 'Type a note',
+  'board.first.type.sentence': 'Type anywhere on the board to make a sticky note; Enter makes the next, Tab a child.',
+  'board.first.text-to-graph': 'Text to graph',
+  'board.first.text-to-graph.sentence': 'Give an AI some text to turn into things and links, shown for you to accept.',
+  'board.first.import': 'Import',
+  'board.first.import.sentence': 'Bring in a JSON Canvas, an Excalidraw drawing, a deck or another note’s graph.',
+  'board.first.frame-text': 'From text: {graph}',
+  'board.first.drafted':
+    'Proposed: {things} things and {links} links for {graph}. Nothing is written until you accept.',
+  'board.first.other-graph': 'The board {board} is on the graph {graph}; it can show the things of that graph alone.',
+  'board.first.none-ticked': 'Nothing was ticked, so nothing was written.',
+  'board.first.nothing-in': 'There is nothing in {file} to bring onto the board.',
+  'board.first.brought': 'Brought in {what}: {items} items in a frame of their own.',
+  'board.first.no-graph-there': 'The note {note} holds no graph to bring.',
+  'board.first.graph-taken':
+    'This note has a graph named {graph} already, so another of that name cannot be brought in.',
+  'board.first.changed-since':
+    'The note has changed since then, so the import is not taken back; undo the later changes first.',
 } as const;

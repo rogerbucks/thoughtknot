@@ -549,6 +549,8 @@ export const VALUES_LATE = [
   // a note with no board opens on a starter board, in every host (ES§45, board_main_screen), 15 Nov 2026
   'starterBoard',
   'withStarter',
+  // a note with no graph and no board opens on an empty board, in every host (ES§76, board_first_new_note), 22 Nov 2026
+  'openingBoard',
   // a board asked of an AI in plain words (ES§45, board_proposed), 15 Nov 2026
   'boardMakeAsk',
   // the board layers shown over a graph's views (ES§70, board_layers_over), 15 Nov 2026

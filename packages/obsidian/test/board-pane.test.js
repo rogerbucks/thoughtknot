@@ -52,10 +52,14 @@ describe('a note opened in Obsidian', () => {
   test('the way back shows the note alone from then on, and the command brings the board back', async () => {
     const env = await load({ files: { [PATH]: NOTE, 'Words.md': '# Just words\n' } });
     try {
+      // a note with no graph and no board opens on an empty board, and nothing is written (ES§76, board_first_new_note)
       opened(env, 'Words.md');
-      for (let i = 0; i < 5; i++) await settled();
-      assert.equal(panes(env).length, 0, 'a note with no graph opens alone');
+      await until(() => !!pane(env)?.querySelector('.thoughtknot-board-ways'), 8000);
+      assert.equal(pane(env).querySelectorAll('[data-item]').length, 0, 'an empty board');
+      assert.equal(env.state.files.get('Words.md'), '# Just words\n', 'the note is unchanged');
       opened(env, PATH);
+      // the pane has turned to this note's board before its way back is pressed
+      await until(() => !!pane(env)?.querySelector('[data-item="view1"]'), 8000);
       await until(() => !!pane(env)?.querySelector('.thoughtknot-board-first button'), 8000);
       pane(env).querySelector('.thoughtknot-board-first button').click();
       assert.equal(panes(env).length, 0, 'the note alone');

@@ -6,6 +6,7 @@ export type { BoardChange } from './board-edit.ts';
 export { arrangerOf } from './board-arrange.ts';
 export { viewerOf } from './view-types/board-views.ts';
 export { starterBoard, withStarter } from './board-starter.ts';
+export { openingBoard } from './board-first.ts';
 export { boardMakeAsk } from './view-types/board-ask.ts';
 export { layersOver } from './sketch-board-layers.ts';
 export { accessRefused, mayChange } from './board-access.ts';

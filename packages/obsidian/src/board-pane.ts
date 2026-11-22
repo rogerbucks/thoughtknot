@@ -6,7 +6,7 @@
 // in this vault on this device.
 import { ItemView, TFile } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
-import { arrangerOf, gqlBlocks, PALETTES, starterBoard, viewerOf, withStarter, word } from '@thoughtknot/core';
+import { arrangerOf, gqlBlocks, openingBoard, PALETTES, viewerOf, withStarter, word } from '@thoughtknot/core';
 import {
   boardFromGraph,
   draftFor,
@@ -47,15 +47,15 @@ function choose(plugin: ThoughtKnotPlugin, first: 'board' | 'note'): void {
   plugin.app.saveLocalStorage(FIRST_KEY, first);
 }
 
-/** The boards a note opens on: those written, else its starter board alone, else none. */
+/** The boards a note opens on: those written, else its starter board alone, else an empty one (ES§76). */
 function boardsIn(note: string): { name: string; text: string; starter: boolean }[] {
   const written = gqlBlocks(note).flatMap((b) => {
     const name = boardOf(b.text)?.name;
     return name === undefined ? [] : [{ name, text: b.text, starter: false }];
   });
   if (written.length) return written;
-  const s = starterBoard(note, (t) => !!boardOf(t));
-  return s ? [{ ...s, starter: true }] : [];
+  const s = openingBoard(note, (t) => !!boardOf(t));
+  return s ? [s] : [];
 }
 
 /** The board pane: the board of one note, drawn again whenever the note changes. */
@@ -217,12 +217,12 @@ export async function openBoard(plugin: ThoughtKnotPlugin, path: string): Promis
   await leaf.setViewState({ type: BOARD_PANE, state: { path }, active: false });
 }
 
-/** Whether a note holds a graph or a board, so it has a board to open on. */
+/** Whether a note has a board to open on: its own, a starter board, or an empty one (ES§76, board_first_new_note). */
 function hasBoard(note: string): boolean {
   return boardsIn(note).length > 0;
 }
 
-/** Opens each note with graphs on its board, beside it, unless the person chose the note alone. */
+/** Opens each note on its board, beside it, unless the person chose the note alone. */
 export function followNotes(plugin: ThoughtKnotPlugin): void {
   plugin.registerEvent(
     plugin.app.workspace.on('file-open', (file) => {

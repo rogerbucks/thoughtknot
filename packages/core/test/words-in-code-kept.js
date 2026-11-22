@@ -32,6 +32,8 @@ export const CORE_KEPT = {
   'packages/core/src/settings-typing.ts': '*',
   'packages/core/src/settings-reach.ts': '*',
   'packages/core/src/settings-time-box.ts': '*',
+  'packages/core/src/settings-first-view.ts': '*',
+  'packages/core/src/settings-indent.ts': '*',
   'packages/core/src/settings-own.ts': '*',
   // what each open number governs, for a developer reading the register: no host shows it
   'packages/core/src/thresholds.ts': '*',
