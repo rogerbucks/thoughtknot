@@ -230,13 +230,31 @@ describe('the painters on the graphics chip, in a real browser', () => {
           if (pixels[i + 3] > 200 && ring.every((c, k) => Math.abs(pixels[i + k] - c) < 24)) n++;
         return n;
       };
+      const at = (pic, x, y) => pic.pixels.slice((y * pic.width + x) * 4, (y * pic.width + x) * 4 + 4);
+      /** The rows the ring takes above the first box, which starts at y 20: its rings lie 2 to 4 pixels out. */
+      const band = (pic, rows = [15, 16, 17, 18]) =>
+        rows.flatMap((y) => Array.from({ length: 41 }, (_, i) => at(pic, 30 + i, y)));
       for (const name of ['canvas', 'webgl2']) {
         const { plain, lit } = out[name];
         assert.equal(lit?.kind, name);
-        assert.equal(ringed(plain), 0, `${name}: no ring with no highlight`);
-        assert.ok(ringed(lit) > 200, `${name}: the ring is painted in the highlight's colour`);
+        // with no highlight the ring's rows are bare paper, exactly
+        const paper = at(plain, 5, 5);
+        assert.deepEqual(
+          band(plain).filter((px) => px.some((c, k) => c !== paper[k])),
+          [],
+          `${name}: no ring with no highlight`,
+        );
+        // the rings' lines are antialiased on the transparent paper: the two middle rows, where they overlap, are the solid part
+        const solid = band(lit, [16, 17]);
+        const inBand = solid.filter((px) => px[3] >= 128 && ring.every((c, k) => Math.abs(px[k] - c) < 24)).length;
+        assert.equal(
+          inBand,
+          solid.length,
+          `${name}: every pixel of the ring's middle rows holds the highlight's colour`,
+        );
+        // antialiased edges can come near the colour, so the whole picture is judged by what the highlight adds
+        assert.ok(ringed(lit) - ringed(plain) > 200, `${name}: the ring is painted in the highlight's colour`);
         // inside each box nothing changed: the ring lies wholly outside it
-        const at = (pic, x, y) => pic.pixels.slice((y * pic.width + x) * 4, (y * pic.width + x) * 4 + 4);
         const inside = (pic) => [at(pic, 50, 35), at(pic, 150, 35), at(pic, 21, 21)];
         assert.deepEqual(inside(lit), inside(plain), `${name}: each box is painted as it was`);
       }
