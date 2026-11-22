@@ -5519,10 +5519,10 @@ img.thoughtknot-picture-hidden,
   gap: var(--gn-space-1);
   padding: var(--gn-space-1);
   border: 1px solid var(--gn-border);
-  border-radius: var(--radius-s, 4px);
+  border-radius: var(--gn-radius-s);
 }
 .thoughtknot-query.is-current {
-  border-color: var(--interactive-accent);
+  border-color: var(--gn-accent);
 }
 .thoughtknot-query input[name='query-words'] {
   width: 100%;
