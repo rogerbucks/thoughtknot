@@ -44,6 +44,13 @@ CI. A change that breaks one fails before it is merged.
   that already existed. Its reason goes in `test/seen-failing/`, one file for each test. It is written by
   `node scripts/tests-first.mjs --excuse <test file> <test> <reason>`. The file is named after the test file and a
   digest of the test.
+- **`<test>` is the test's full name, as `--check` prints it:** its suites and its own name, joined by ` > `. A reason
+  under the short name excuses nothing. `--check`'s message gives the whole command, with the name quoted.
+- **A reason CI asks for that the Mac's record did not.** The records are made on a Mac and CI replays on Ubuntu. A test
+  whose old version fails at the parent on one, but not the other, is new there and held before here. Each replayed
+  file's record names, as `held`, the tests it held before and still passes. A reason for one of those is for a real
+  test the commit changed, so the records' own test accepts it (PR 2427). A reason for a test no record names still
+  fails.
 - **What a reason holds.** A reason holds only `file`, `test`, `seen_failing_first`, `evidence` and, for a fault,
   `fault` (true) and `commits`. `--excuse` never overwrites one without `--force`. Its flags come before its arguments.
 - **`--excuse --fault` keeps the reason a recorded fault is accepted, and which commit fixed it.** A recorded fault is a
