@@ -11,7 +11,7 @@ name: Claude review
 #
 # It reviews once: when a pull request opens ready, or when a draft is marked ready. A later push gets no new review,
 # as each review costs the owner's Claude use (64 reviews in 7 hours on 24 Oct 2026, one per push). It runs on Sonnet
-# with a cap on its turns, for the same reason.
+# with a cap of 25 turns, for the same reason. A large pull request needed 21 on 22 Nov 2026, past the old cap of 15.
 on:
   pull_request:
     types: [opened, ready_for_review]
@@ -75,5 +75,5 @@ jobs:
             comment on the pull request: the findings by severity, or that you found none. Never approve, request
             changes, push or edit files.
           claude_args: |
-            --model claude-sonnet-5-5 --max-turns 15
+            --model claude-sonnet-5-5 --max-turns 25
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
