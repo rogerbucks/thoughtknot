@@ -202,8 +202,9 @@ export function replay(repo, commit) {
         });
         continue;
       }
-      // the tests it held before and still passes. A replay on another machine may find one new, when its old version
-      // failed at the parent there (PR 2427). The record names them, so a reason asked for there names a real test
+      // the tests it held before and still passes, changed by the commit or not. A replay on another machine may find
+      // one new, when its old version failed at the parent there (PR 2427). The record names them, so a reason asked
+      // for there names a test the file held at that commit
       const held = now.passed.filter((n) => old.includes(n));
       out.files.push(withFaults(judged(file, fresh, run(before.dir, file, repo), held)));
     }
@@ -238,6 +239,13 @@ export function judged(file, fresh, then, held = []) {
     ...kept,
   };
 }
+
+/** `text` in POSIX single quotes, so a shell takes it as it is: no `$`, backtick, `\\` or `!` in it acts. */
+export const shellQuoted = (text) => `'${text.replaceAll("'", "'\\''")}'`;
+
+/** The command that keeps a reason for `test` in `file`, each quoted for a shell, the reason left to write. */
+export const excuseCommand = (file, test) =>
+  `node scripts/tests-first.mjs --excuse ${shellQuoted(file)} ${shellQuoted(test)} <reason>`;
 
 /** The new tests that passed against their parent's code with no reason recorded for them. */
 export function unexplained(replays, exceptions) {
@@ -360,7 +368,7 @@ function main(repo, mode, args, force, fault = false) {
       .filter((f) => !faultExcused(exceptions, f.file ?? '', f.test ?? '', f.commit));
     for (const b of bad)
       console.error(
-        `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason, naming the test in full as here: node scripts/tests-first.mjs --excuse ${b.file} ${JSON.stringify(b.name)} <reason>`,
+        `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason, naming the test in full as here: ${excuseCommand(b.file, b.name)}`,
       );
     // CI checks every commit of a branch. A test may come a commit before its code, or run slow on a shared runner. So
     // a fault here is a warning, and fails only the record (Roger, 10 Oct 2026)
