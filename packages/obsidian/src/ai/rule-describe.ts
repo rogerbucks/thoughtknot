@@ -4,7 +4,7 @@
 // stays in Obsidian's secret store on this device. What comes back only fills the form: it is never tried or saved.
 import { Notice } from 'obsidian';
 import { aiReady, gqlBlocks, readNote, ruleChoices, ruleDescribeAsk, word } from '@thoughtknot/core';
-import type { RuleWrite } from '@thoughtknot/core';
+import type { RuleWrite, SendResult } from '@thoughtknot/core';
 import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
 import type ThoughtKnotPlugin from '../main';
 import { levelFor } from './ai';
@@ -17,8 +17,8 @@ export interface RuleAsking {
   ask(base: Parameters<typeof ruleDescribeAsk>[0], graph: string, words: string): ReturnType<typeof ruleDescribeAsk>;
   /** Fills the form with the rule that came back, or shows the board proposed. Nothing is tried or saved. */
   fill(got: { rule: RuleWrite } | { board: BoardDraft }, model: string, done: () => void): void;
-  /** Told why a send came to no rule, in words: refused, failed, or a question back (ES§75, ai_query_fails_open). */
-  failed?(why: string): void;
+  /** Told of a send that came to no rule: refused, failed, or a question back (ES§75, ai_query_fails_open). */
+  failed?(result: SendResult): void;
 }
 
 /** The form's way to describe a rule, or nothing while AI is off (ai_off_until_chosen): the box is then not offered. */
@@ -59,7 +59,7 @@ function asking(
 ): RuleAsking {
   const choices = ruleChoices(g);
   return {
-    ...(fail && { failed: fail }),
+    ...(fail && { failed: (result: SendResult) => fail(whyNoRule(result)) }),
     ask: (base, graph, words) => ruleDescribeAsk(base, graph, choices, words),
     fill: (got, model, done) => {
       if (!('rule' in got)) return;
@@ -68,4 +68,11 @@ function asking(
       done();
     },
   };
+}
+
+/** Why a send came to no rule, in words: its refusal, its failure, or the question the model asked back. */
+function whyNoRule(result: SendResult): string {
+  if ('refused' in result) return result.refused;
+  if ('failed' in result) return result.failed;
+  return 'asks' in result ? word('filter.query.asks', { asks: result.asks }) : word('filter.ask.not-filter');
 }

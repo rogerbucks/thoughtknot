@@ -84,9 +84,7 @@ export class UntangleView {
   private readonly legend: LegendPanel;
   /** The filter by what things hold, built the first time the panel opens: until then it costs nothing. */
   private asker: FilterAskPanel | null | undefined;
-  private askedSaid = ''; // the filter shown, in words, for the banner
-  /** A query shown as a highlight: nothing fades or hides, and its marks are drawn by the painters (ES§75). */
-  private highlighted: ShownAsk | null = null;
+  private shown: ShownAsk | null = null; // the filter, or query shown as a highlight (ES§75), for the banner
   private readonly finder: FindRow;
   private readonly sidebar: ExploreSidebar;
   private readonly host: UntangleHost;
@@ -135,10 +133,8 @@ export class UntangleView {
 
   /** Shows a filter by what things hold, the rest faded or hidden; null shows all again. */
   private showAsked(asked: ShownAsk | null): void {
-    const filter = asked?.show === 'filter' ? asked : null;
-    this.core.asked = filter && { things: filter.things, hide: filter.hide };
-    this.highlighted = asked?.show === 'highlight' ? asked : null;
-    this.askedSaid = asked?.said ?? '';
+    this.shown = asked; // a highlight fades and hides nothing: its marks are the painters'
+    this.core.asked = asked?.show === 'filter' ? { things: asked.things, hide: asked.hide } : null;
     this.changed();
   }
 
@@ -311,7 +307,7 @@ export class UntangleView {
     this.core.legend.reset();
     this.core.clearRoute();
     this.core.asked = null;
-    this.highlighted = null;
+    this.shown = null;
     this.asking = null;
     this.legend.refresh();
     this.changed();
@@ -373,14 +369,11 @@ export class UntangleView {
           },
         ],
       });
-    // a filter shown, or a query shown as a highlight
-    const asked = this.core.asked ?? this.highlighted;
+    const asked = this.shown;
+    const banner = asked?.show === 'highlight' ? 'filter.query.banner' : 'filter.ask.banner';
     if (asked)
       rows.push({
-        words: word(this.highlighted ? 'filter.query.banner' : 'filter.ask.banner', {
-          count: asked.things.size,
-          said: this.askedSaid,
-        }),
+        words: word(banner, { count: asked.things.size, said: asked.said }),
         actions: [
           { label: word('filter.ask.edit'), run: () => this.openAsk() },
           { label: word('filter.ask.off'), run: () => this.showAsked(null) },

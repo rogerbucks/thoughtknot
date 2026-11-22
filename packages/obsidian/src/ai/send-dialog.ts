@@ -337,27 +337,24 @@ export class SendDialog extends Modal {
     this.drawShown();
     const key = p.model.keyName ? this.app.secretStorage.getSecret(p.model.keyName) : null;
     const result = await sendPrepared(p, confirmSend(p), { transport: obsidianTransport, key });
-    this.sending = false;
-    this.prepared = null;
+    [this.sending, this.prepared] = [false, null];
+    if (!('rule' in result || 'proposal' in result || 'board' in result)) this.rule?.failed?.(result); // no rule came
     if ('refused' in result) {
       this.refusal = result.refused;
-      this.rule?.failed?.(result.refused);
       this.drawShown();
       return;
     }
     await this.plugin.recordAiSend(result.record);
     if ('asks' in result) {
-      // its question goes under the person's, to be answered there; nothing is written until a proposal comes
+      // its question goes under the person's, to be answered; nothing is written until a proposal comes
       this.question = `${this.question.trimEnd()}\n\n${word('ai.asked', { question: result.asks })}`;
       new Notice(word('ai.asks', { model: p.model.name }));
-      this.rule?.failed?.(word('filter.query.asks', { asks: result.asks }));
       this.changed(true);
       return;
     }
     if ('failed' in result) {
       new Notice(result.failed);
       this.refusal = result.failed;
-      this.rule?.failed?.(result.failed);
       this.drawShown();
       return;
     }
