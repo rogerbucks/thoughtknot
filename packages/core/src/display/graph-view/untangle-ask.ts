@@ -5,22 +5,17 @@
 // until the person presses Show these. Only a filter saved by name is written to the note, where it is edited
 // (filter-named.ts). It can be picked again, or deleted with one Undo.
 //
-// Each question asked in words is a query (ES§75), listed under the ask box. It shows its words beside the filter they
-// became, and the words can be changed to ask again (ai_query_words_kept). A hand edit of the rows marks them as no
-// longer matching. Each query is shown as a filter or a highlight (ai_query_highlight), can be locked (ai_query_lock)
-// and stepped back. A send that fails says why, keeps the words and leaves the drawing as it was (ai_query_fails_open).
-// The query and its rules are filter.ts and filter-send.ts: the AI only turns words into a filter.
+// Each question asked in words is a query (ES§75), listed under the ask box (untangle-queries.ts).
 import { word } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
-import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite, SendResult } from '@thoughtknot/core';
+import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
 import { blankFilter, filterKeeps, filterReady, filterSaid } from '../../filter-ask.ts';
-import { queryAskWords, queryBack, queryEdited, queryLocked, querySaid, queryShown } from '../../filter.ts';
-import type { Query, QueryShow } from '../../filter.ts';
-import { queryResult } from '../../filter-send.ts';
+import type { QueryShow } from '../../filter.ts';
 import type { NamedFilters } from '../../filter-named.ts';
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
 import { renderFind } from './rule-form-parts.ts';
+import { QueryPanel } from './untangle-queries.ts';
 export { untangledIn } from './stage-untangle.ts';
 import type { FormState } from './rule-form-parts.ts';
 
@@ -58,30 +53,7 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   el.createSpan({ cls: 'thoughtknot-rule-step', text: word('filter.ask.title') });
   const state: FormState = { draft: blankFilter(), meansTyped: false, whenTyped: false };
   let byAi = false;
-  // the queries asked, the one the rows show, and the one on the drawing
-  let queries: Query[] = [];
-  let current: string | null = null;
-  let shownId: string | null = null;
-  let made = 0;
-  let input: HTMLInputElement | null = null;
-  if (host.describe) {
-    const row = el.createDiv({ cls: 'thoughtknot-rule-describe-row' });
-    input = row.createEl('input', {
-      attr: {
-        name: 'filter-ask',
-        type: 'text',
-        placeholder: word('filter.ask.hint'),
-        'aria-label': word('filter.ask.go'),
-      },
-    });
-    button(row, word('filter.ask.go'), 'text', () => ask(), word('filter.ask.go'));
-    // Enter asks, and never sends a form round it
-    input.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
-      ask();
-    });
-  }
+  const input = host.describe ? askBox(el, () => ask()) : null;
   const list = el.createDiv({
     cls: 'thoughtknot-query-list',
     attr: { role: 'list', 'aria-label': word('filter.query.list') },
@@ -107,102 +79,32 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     const counted = word('filter.ask.keeps', { count: kept, of });
     said.setText([extra, byAi ? word('filter.ask.by-ai') : '', counted].filter(Boolean).join(' '));
   };
-  const queryAt = (id: string | null) => queries.find((q) => q.id === id) ?? null;
-  const put = (q: Query) => {
-    queries = queries.some((p) => p.id === q.id) ? queries.map((p) => (p.id === q.id ? q : p)) : [...queries, q];
-    drawList();
-  };
   // a row changed by the person is theirs from then on; on a query, its words no longer match
   const edited = () => {
     byAi = false;
-    const q = queryAt(current);
-    if (q) {
-      const draft = structuredClone(state.draft);
-      const next = q.matches ? queryEdited(q, draft) : { ...q, draft };
-      if ('refused' in next) {
-        state.draft = structuredClone(q.draft);
-        redraw();
-        return tell(next.refused);
-      }
-      put(next);
-    }
+    queries.edited();
     tell();
   };
   // the rows of the query worked on, which cannot be changed while it is locked
   const redraw = () => {
     renderFind(find, state, host.choices, edited);
-    const locked = !!queryAt(current)?.locked;
+    const locked = !!queries.worked()?.locked;
     for (const c of find.querySelectorAll('input, select, button')) (c as HTMLInputElement).disabled = locked;
   };
-  const work = (q: Query | null) => {
-    current = q?.id ?? null;
-    state.draft = q ? structuredClone(q.draft) : blankFilter();
-    redraw();
-    drawList();
-  };
-  // a query shown again when how it is shown changes
-  const showQuery = (q: Query) => {
-    shownId = q.id;
-    host.show(q.draft, hide.checked, { show: q.show, said: querySaid(q) });
-  };
-  const drawList = () =>
-    queryList(list, queries, current, {
-      ask: (q, words) => {
-        work(q);
-        askFor(q, words);
-      },
-      pick: (q) => {
-        work(q);
-        tell(word('filter.query.picked', { said: querySaid(q) }));
-      },
-      shown: (q, show) => {
-        const next = queryShown(q, show);
-        put(next);
-        if (shownId === q.id) showQuery(next);
-      },
-      lock: (q) => {
-        put(queryLocked(q, !q.locked));
-        if (current === q.id) redraw();
-      },
-      back: (q) => {
-        const next = queryBack(q);
-        if ('refused' in next) return tell(next.refused);
-        put(next);
-        if (current === q.id) {
-          state.draft = structuredClone(next.draft);
-          redraw();
-        }
-        tell(word('filter.query.stepped'));
-      },
-    });
-  // what came of asking: the query filled, or why not, with the words kept and the drawing as it was
-  const settle = (id: string | null, words: string, result: SendResult) => {
-    const asked = queryResult(queryAt(id), words, result, host.graph, host.choices, `query-${++made}`);
-    if ('failed' in asked) return tell(asked.failed);
-    put(asked.query);
-    current = asked.query.id;
-    state.draft = structuredClone(asked.query.draft);
-    byAi = true;
-    redraw();
-    drawList();
-    tell(word('filter.ask.filled'));
-  };
-  const askFor = (q: Query | null, words: string) => {
-    const sent = queryAskWords(q, words);
-    if (typeof sent !== 'string') return tell(sent.refused);
-    tell(word('filter.ask.asking'));
-    const id = q?.id ?? null;
-    // the host hands back only the rule, or why there is none; queryResult needs no more of the send
-    host.describe?.(
-      sent,
-      (rule) => settle(id, words, { rule } as SendResult),
-      (why) => settle(id, words, { refused: why }),
-    );
-  };
+  const queries = new QueryPanel(list, {
+    graph: host.graph,
+    choices: host.choices,
+    ...(host.describe && { describe: host.describe }),
+    show: (draft, hidden, query) => host.show(draft, hidden, query),
+    state,
+    redraw,
+    tell,
+    byAi: (on) => (byAi = on),
+    hidden: () => hide.checked,
+  });
   // a saved filter picked fills the rows as the person saved them; it is shown when they press Show these
   const pick = (draft: RuleDraft, name: string) => {
-    current = null;
-    drawList();
+    queries.release();
     state.draft = structuredClone(draft);
     byAi = false;
     redraw();
@@ -211,24 +113,21 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   const nameIt = () =>
     saving && namePrompt(saved, filterSaid(state.draft), (name) => saving({ name, draft: state.draft }));
   const show = () => {
-    if (!filterReady(state.draft)) return;
-    const q = queryAt(current);
-    if (q) return showQuery(q);
-    shownId = null;
-    host.show(state.draft, hide.checked);
+    if (filterReady(state.draft) && !queries.show()) host.show(state.draft, hide.checked);
   };
   // the rows start again and nothing is shown; the queries asked stay listed
   const clear = () => {
     byAi = false;
-    shownId = null;
-    work(null);
+    queries.release();
+    state.draft = blankFilter();
+    redraw();
     host.show(null, false);
     tell();
   };
   const ask = () => {
     const words = input?.value.trim() ?? '';
     if (!words) return tell(word('filter.ask.no-words'));
-    askFor(queryAt(current), words);
+    queries.ask(words);
   };
   hide.addEventListener('change', () => {
     if (filterReady(state.draft)) show();
@@ -237,6 +136,26 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   redraw();
   tell();
   return { el, focus: () => (input ?? find.querySelector('select'))?.focus() };
+}
+
+/** The box to write what to see in, and Ask AI, at the end of `el`; Enter asks too, and never sends a form round it. */
+function askBox(el: HTMLElement, ask: () => void): HTMLInputElement {
+  const row = el.createDiv({ cls: 'thoughtknot-rule-describe-row' });
+  const input = row.createEl('input', {
+    attr: {
+      name: 'filter-ask',
+      type: 'text',
+      placeholder: word('filter.ask.hint'),
+      'aria-label': word('filter.ask.go'),
+    },
+  });
+  button(row, word('filter.ask.go'), 'text', ask, word('filter.ask.go'));
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    ask();
+  });
+  return input;
 }
 
 /** The saved filters to pick in `row`, and Delete for the one picked where the note is edited; none, nothing. */
@@ -274,58 +193,6 @@ function namePrompt(row: HTMLElement, said: string, save: (name: string) => void
   });
   input.focus();
   input.select();
-}
-
-/** What a person does to a query in the list. */
-interface QueryActs {
-  ask: (q: Query, words: string) => void;
-  pick: (q: Query) => void;
-  shown: (q: Query, show: QueryShow) => void;
-  lock: (q: Query) => void;
-  back: (q: Query) => void;
-}
-
-/**
- * The queries `qs` in `list`, `current` the one the rows show. Each holds its words, to change and ask again, beside
- * the filter they became. It says when the words no longer match, and shows a lock mark while locked. Then come how it
- * is shown, the lock, Step back, and a button to work on it in the rows.
- */
-function queryList(list: HTMLElement, qs: readonly Query[], current: string | null, acts: QueryActs): void {
-  list.empty();
-  for (const q of qs) {
-    const item = list.createDiv({ cls: 'thoughtknot-query', attr: { role: 'listitem' } });
-    if (q.id === current) item.addClass('is-current');
-    const words = item.createEl('input', {
-      attr: { name: 'query-words', type: 'text', 'aria-label': word('filter.query.words') },
-    });
-    words.value = q.words;
-    words.disabled = q.locked;
-    words.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
-      const said = words.value.trim();
-      if (said) acts.ask(q, said);
-    });
-    const rule = [
-      q.locked ? word('filter.query.lock-mark') : '',
-      word('filter.query.became', { rule: filterSaid(q.draft) }),
-      q.matches ? '' : word('filter.query.unmatched'),
-    ];
-    item.createDiv({ cls: 'thoughtknot-query-rule', text: rule.filter(Boolean).join(' ') });
-    const row = item.createDiv({ cls: 'thoughtknot-query-acts' });
-    const as = row.createEl('select', { attr: { name: 'query-show', 'aria-label': word('filter.query.show-as') } });
-    as.createEl('option', { text: word('filter.query.as-filter'), attr: { value: 'filter' } });
-    as.createEl('option', { text: word('filter.query.as-highlight'), attr: { value: 'highlight' } });
-    as.value = q.show;
-    as.addEventListener('change', () => acts.shown(q, as.value === 'highlight' ? 'highlight' : 'filter'));
-    const lockLabel = word(q.locked ? 'filter.query.unlock' : 'filter.query.lock');
-    const lock = button(row, lockLabel, 'lock', () => acts.lock(q)); // pressed while locked, as a board layer's
-    lock.setAttribute('aria-pressed', String(q.locked));
-    const back = button(row, word('filter.query.back'), 'undo-2', () => acts.back(q));
-    back.disabled = q.locked || !q.back.length;
-    const pick = button(row, word('filter.query.pick'), 'pencil', () => acts.pick(q));
-    if (q.id === current) pick.setAttribute('aria-current', 'true');
-  }
 }
 
 /** A filter shown on the drawing: as built, the drawn things it keeps, and whether the rest is hidden. */
