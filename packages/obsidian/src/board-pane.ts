@@ -6,7 +6,7 @@
 // in this vault on this device.
 import { ItemView, TFile } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
-import { arrangerOf, gqlBlocks, openingBoard, PALETTES, viewerOf, withStarter, word } from '@thoughtknot/core';
+import { arrangerOf, gqlBlocks, openingBoard, opensOn, PALETTES, viewerOf, withStarter, word } from '@thoughtknot/core';
 import {
   boardFromGraph,
   draftFor,
@@ -222,11 +222,17 @@ function hasBoard(note: string): boolean {
   return boardsIn(note).length > 0;
 }
 
-/** Opens each note on its board, beside it, unless the person chose the note alone. */
+/**
+ * Opens each note on its board, beside it. The person may choose the note alone, or the board again. That choice wins
+ * over the setting of what notes open on (ES§76, board_first_default).
+ */
 export function followNotes(plugin: ThoughtKnotPlugin): void {
   plugin.registerEvent(
     plugin.app.workspace.on('file-open', (file) => {
-      if (!(file instanceof TFile) || file.extension !== 'md' || chosen(plugin) === 'note') return;
+      if (!(file instanceof TFile) || file.extension !== 'md') return;
+      const choice = chosen(plugin);
+      if (opensOn(plugin.settings, choice === 'note' ? 'graph' : choice === 'board' ? 'board' : null) === 'graph')
+        return;
       void noteText(plugin.app, file.path).then((note) => {
         if (note !== null && hasBoard(note)) void openBoard(plugin, file.path);
       });

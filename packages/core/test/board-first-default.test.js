@@ -1,5 +1,5 @@
-// What a note opens on (editor spec ES§76, board_first_default). The whiteboard is the default view in settings; a
-// person can make the graph their default instead; and a note's own choice, the graph first again, wins over both.
+// What a note opens on (editor spec ES§76, board_first_default). The whiteboard is the default view in settings. A
+// person can make the graph their default instead. A note's own choice, the graph first again, wins over both.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';

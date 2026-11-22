@@ -95,8 +95,8 @@ export function boardSection(
   pictures?: Pictures,
 ): HTMLElement | null {
   const written = gqlBlocks(note.text).filter((b) => boardOf(b.text));
-  // a note with no board opens on a starter board, or an empty one with no graph either (ES§76, board_first_new_note),
-  // written to the note only once it is changed
+  // a note with no board opens on a starter board, or an empty one with no graph either (ES§76, board_first_new_note).
+  // It is written to the note only once it is changed
   const starter = written.length ? null : openingBoard(note.text, (t) => !!boardOf(t));
   const boards = starter ? [{ text: starter.text }] : written;
   const names = boards.map((b) => boardOf(b.text)?.name ?? '');

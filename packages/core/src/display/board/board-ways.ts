@@ -1,5 +1,5 @@
 // The ways to begin on an empty board (editor spec ES§76, board_first_ways_in): type a note, text to graph, or import.
-// They are folded small into one line beside the board, never over it, so they cover nothing, and they go once the
+// They are folded small into one line beside the board, never over it, so they cover nothing. They go once the
 // first item is made. Typing needs nothing of the host; text to graph and import are the host's to open.
 import type { Board } from '../../board.ts';
 import { waysIn } from '../../board-first.ts';
@@ -40,12 +40,12 @@ export function showWaysIn(
     button.setAttribute('title', w.off ?? w.sentence);
     const open = w.way === 'text-to-graph' ? host?.textToGraph : w.way === 'import' ? host?.importing : undefined;
     const off = w.off ?? (w.way !== 'type' && !open ? w.sentence : undefined);
-    if (w.off) button.setAttribute('aria-disabled', 'true');
+    if (off) button.setAttribute('aria-disabled', 'true'); // off, or not one this host opens yet
     button.addEventListener('click', () => {
       if (w.way === 'type') {
         vp.focus();
         say(w.sentence);
-      } else if (w.off || !open) say(off ?? w.sentence);
+      } else if (off || !open) say(off ?? w.sentence);
       else open();
     });
   }

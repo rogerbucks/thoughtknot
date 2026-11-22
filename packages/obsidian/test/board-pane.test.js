@@ -75,6 +75,26 @@ describe('a note opened in Obsidian', () => {
   });
 });
 
+describe('a note opened in Obsidian with the graph chosen as what notes open on', () => {
+  // proves: board_first_default
+  test('opens no board beside it, and the command still brings the board', async () => {
+    const env = await load({
+      files: { [PATH]: NOTE, 'Words.md': '# Just words\n' },
+      data: { settings: { firstView: 'graph' } },
+    });
+    try {
+      opened(env, 'Words.md');
+      opened(env, PATH);
+      for (let i = 0; i < 5; i++) await settled();
+      assert.equal(panes(env).length, 0, 'the note alone, as the setting says');
+      await env.state.commands.find((c) => c.id === 'open-board').callback();
+      await until(() => !!pane(env)?.querySelector('[data-item="view1"]'), 8000);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 const MANY_PATH = 'Ideas.md';
 const MANY = [
   '# Ideas',

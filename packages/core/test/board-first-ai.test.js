@@ -1,7 +1,7 @@
 // Text on a whiteboard to a graph by AI (editor spec ES§76, board_first_ai; ES§47 text_to_graph_in_editor). Text typed,
-// pasted or chosen on a board goes to an AI through text to graph, under the AI rules of ES§19: off until chosen,
+// pasted or chosen on a board goes to an AI through text to graph. The AI rules of ES§19 hold: off until chosen,
 // within the model's ceiling, seen and said yes to, and recorded. The answer is drawn on the board as proposed cards and
-// connectors linked to their things, and written to the board and the graph block only when accepted. A failed answer
+// connectors linked to their things. It is written to the board and the graph block only when accepted. A failed answer
 // changes nothing and says why. Every send goes through a fake transport, so no test reaches the network.
 import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';

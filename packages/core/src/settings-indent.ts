@@ -1,4 +1,4 @@
-// How a line the editor writes is indented (spec §21): the option, and the text each choice writes. Host-free and pure.
+// How a line the editor writes is indented (ES§21): the option, and the text each choice writes. Host-free and pure.
 import type { Option } from './settings.ts';
 
 /** How a line the editor writes is indented. */

@@ -1,6 +1,6 @@
-// Starting a graph on a whiteboard by importing (editor spec ES§76, board_first_import). A JSON Canvas, an Excalidraw
-// drawing or a deck (board_exchange), another note's graph as live cards (graph_on_board), or plain text through text
-// to graph. Each lands in a frame of its own on clear space, and one undo takes the whole import away.
+// Starting a graph on a whiteboard by importing (editor spec ES§76, board_first_import). It may be a JSON Canvas, an
+// Excalidraw drawing or a deck (board_exchange). It may be another note's graph as live cards (graph_on_board), or
+// plain text through text to graph. Each lands in a frame of its own on clear space, and one undo takes the whole import away.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks } from '../src/blocks.ts';

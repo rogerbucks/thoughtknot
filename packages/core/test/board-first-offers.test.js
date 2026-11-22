@@ -1,5 +1,5 @@
-// The ways to begin on an empty board (editor spec ES§76, board_first_ways_in): type a note, give text to an AI to turn
-// into a graph, or import. They are folded small beside the board, cover no part of it, and go once an item is made.
+// The ways to begin on an empty board (editor spec ES§76, board_first_ways_in). A person types a note, gives text to an
+// AI to turn into a graph, or imports. They are folded small beside the board, cover no part of it, and go once an item is made.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
@@ -73,6 +73,18 @@ describe('board_first_ways_in', () => {
     b.click();
     assert.equal(opened, false);
     assert.deepEqual(said, ['AI is off.']);
+  });
+
+  test('a way the host does not open yet is marked as not usable, and says what it would do', () => {
+    const { root, vp } = page();
+    const said = [];
+    const box = showWaysIn(root, vp, EMPTY, {}, (w) => said.push(w));
+    const way = (w) => box.querySelector(`[data-way="${w}"]`);
+    assert.equal(way('type').getAttribute('aria-disabled'), null, 'typing needs nothing of the host');
+    assert.equal(way('text-to-graph').getAttribute('aria-disabled'), 'true');
+    assert.equal(way('import').getAttribute('aria-disabled'), 'true');
+    way('import').click();
+    assert.equal(said.length, 1);
   });
 
   test('the offer goes once the first item is made', () => {

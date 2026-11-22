@@ -1,12 +1,12 @@
 // The whiteboard first: a graph built from nothing (editor spec ES§76). Host-free and pure.
-// - A note with no graph and no board opens on an empty board (board_first_new_note). Like the starter board of a note
-//   with graphs (board-starter.ts), it is written to the note only when the person first makes something on it.
+// - A note with no graph and no board opens on an empty board (board_first_new_note). It is like the starter board
+//   of a note with graphs (board-starter.ts). It is written to the note only when the person first makes something.
 // - An empty board offers the ways to begin: type, text to graph and import (board_first_ways_in). They go once the
 //   first item is made.
-// - Text on a board goes to an AI through text to graph and the one way anything is sent (ai.ts), under the AI rules
-//   of ES§19 (board_first_ai). The answer is drawn as proposed cards and connectors, written only when accepted.
-// - A whiteboard file, a deck, another note's graph or a text graph lands in a frame of its own on clear space, as one
-//   change and one undo (board_first_import).
+// - Text on a board goes to an AI through text to graph and the one way anything is sent (ai.ts). The AI rules of
+//   ES§19 hold (board_first_ai). The answer is drawn as proposed cards and connectors, written only when accepted.
+// - A whiteboard file, a deck, another note's graph or a text graph lands in a frame of its own on clear space. It is
+//   one change and one undo (board_first_import).
 import type { SendAsk, SendRefused } from './ai.ts';
 import { gqlBlocks, gqlSpans } from './blocks.ts';
 import { boardOf, readBoard, writeBoard } from './board.ts';
@@ -92,9 +92,8 @@ export function graphOfBoard(note: string, board: Board): string {
 }
 
 /**
- * The ask that sends text from a board to an AI to become a graph: text to graph (ES§47) for the graph the board
- * builds, ready for `prepareSend`, which keeps to the AI rules. `note` is the note as written, with or without the
- * board.
+ * The ask that sends text from a board to an AI to become a graph. It is text to graph (ES§47) for the board's graph,
+ * ready for `prepareSend`, which keeps to the AI rules. `note` is the note as written, with or without the board.
  */
 export function boardTextAsk(
   base: Omit<SendAsk, 'question' | 'answers' | 'choice'>,
@@ -200,8 +199,8 @@ export interface BoardGraphDraft {
 }
 
 /**
- * A text graph's proposal drawn on a board: a frame of cards, one for each new thing and linked to it, with a
- * connector for each new link between them. It is for showing; nothing is written. The note is read as it is.
+ * A text graph's proposal drawn on a board: a frame of cards, one for each new thing and linked to it. Each new link
+ * between them gets a connector. It is for showing; nothing is written. The note is read as it is.
  */
 export function boardGraphDraft(
   note: string,
@@ -244,7 +243,7 @@ function withBoard(note: string, name: string, board: Board): string {
   return span ? replaceSpan(note, span, text).note : withStarter(note, text);
 }
 
-/** A change to a note that can be taken back in one step: the note before and after, what was said, and what was left out. */
+/** A change to a note that one step takes back: the note before and after, what was said, and what was left out. */
 export interface Imported {
   before: string;
   note: string;
@@ -253,8 +252,8 @@ export interface Imported {
 }
 
 /**
- * The note with a text graph's proposal accepted on its board: the changes ticked, by id, written to the graph block,
- * and their cards and connectors to the board, which is put on the graph. One change, taken back by one undo. A
+ * The note with a text graph's proposal accepted on its board. The changes ticked, by id, go to the graph block. Their
+ * cards and connectors go to the board, which is put on the graph. One change, taken back by one undo. A
  * board still to be written is written now. Refused, changing nothing, when any part cannot be written.
  */
 export function boardGraphAccepted(
@@ -295,8 +294,8 @@ function thingsOf(note: string, graph: string) {
 
 /**
  * The note with something brought onto its board `boardText`, in a frame of its own on clear space; or why it cannot
- * be, changing nothing. A board still to be written is written now. Another note's graph comes as live cards: a block
- * that reads the graph from that note (`FROM [[note]]`), and a card linked to each of its things.
+ * be, changing nothing. A board still to be written is written now. Another note's graph comes as live cards. A block
+ * reads the graph from that note (`FROM [[note]]`), and a card is linked to each of its things.
  */
 export function importOnBoard(note: string, boardText: string, what: Bringing): Imported | { refused: string } {
   const { board } = readBoard(boardText);

@@ -1,5 +1,5 @@
 // The whiteboard first (editor spec ES§76, board_first_new_note). A new note, or one with no graph and no board, opens on
-// an empty whiteboard, the same in every host: each host asks the core for the board a note opens on. Nothing is
+// an empty whiteboard. It is the same in every host: each host asks the core for the board a note opens on. Nothing is
 // written to the note until the person makes something on it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
