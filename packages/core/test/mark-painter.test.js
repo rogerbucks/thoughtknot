@@ -138,3 +138,33 @@ test('each style token is painted from the palette; one not named takes the pain
   assert.equal(p('thing.dashed'), p('thing'));
   assert.deepEqual(p('nothing-named'), { line: PALETTES.light.edge, text: PALETTES.light.text });
 });
+
+// proves: ai_query_highlight
+test('ai_query_highlight: the 2D canvas painter paints a highlight’s ring in its colour and its badge, the box as it was', async () => {
+  const { QUERY_MARKS } = await import('../src/filter.ts');
+  const { QUERY_RINGS, markedBy, queryLine, withQueryMarks, withQueryPaints } = await import('../src/query-marks.ts');
+  const marks = [
+    { id: 'b', kind: 'box', style: 'thing', of: 'roof', x: 20, y: 30, width: 40, height: 10 },
+    { id: 't', kind: 'label', style: 'name', of: 'roof', x: 40, y: 38, text: 'Roof', size: 8, anchor: 'middle' },
+  ];
+  const plain = fakeCanvas(),
+    lit = fakeCanvas();
+  const camera = { x: 0, y: 0, scale: 1 };
+  canvasPainter(plain.canvas).paint(marks, camera, paints);
+  const p = PALETTES.light;
+  canvasPainter(lit.canvas).paint(
+    withQueryMarks(marks, markedBy(['roof'], QUERY_MARKS[2])),
+    camera,
+    withQueryPaints(paints, p),
+  );
+  const line = queryLine('green', p);
+  assert.deepEqual(lit.calls.slice(3, 7), plain.calls.slice(3, 7), 'the box is painted as it was, where it was');
+  const rings = lit.calls.filter((c) => c[0] === 'stroke' && c[1] === line);
+  assert.equal(rings.length, QUERY_RINGS.length, 'a ring in the colour');
+  assert.ok(!lit.calls.some((c) => c[0] === 'fill' && c[1] === line), 'a ring fills nothing');
+  assert.deepEqual(
+    lit.calls.find((c) => c[0] === 'fillText').slice(0, 4),
+    ['fillText', '✓ Roof', 40, 38],
+    'the badge before its name, the name where it was',
+  );
+});

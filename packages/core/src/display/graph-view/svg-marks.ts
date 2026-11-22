@@ -113,7 +113,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: shape ? labelOf(g, key, text) : (text?.textContent ?? '').trim(), // a matrix names its column the same
+        text: shape ? labelOf(g, key, text) : badgedBare(g, text), // a matrix names its column the same
         size,
         anchor: 'middle',
       });
@@ -260,10 +260,17 @@ function touching(
 /** The size of `text`'s letters, as Graphviz writes them; 14 when it says none. */
 const sizeOf = (text: Element) => Number.parseFloat(text.getAttribute('font-size') ?? '') || 14;
 
-/** A box's name as drawn, with a rule's badge before it, so the look is told apart in space too (§56). */
+/** A thing drawn as its name alone: its name once, with a query's highlight badge before it (ES§75). */
+const badgedBare = (g: Element, text: Element) =>
+  [g.getAttribute('data-query-badge'), (text.textContent ?? '').trim()].filter(Boolean).join(' ');
+
+/**
+ * A box's name as drawn, with a rule's badge before it, so the look is told apart in space too (§56). A query's
+ * highlight badge comes first (ES§75, focus-marks.ts): its ring is the outline's colour, read as the box's line.
+ */
 function labelOf(g: Element, key: string, text: Element): string {
   const name = isCluster(key) ? clusterName(g, text) : wholeName(g, text);
-  return `${g.getAttribute('data-badge') ?? ''} ${name}`.trim();
+  return [g.getAttribute('data-query-badge'), g.getAttribute('data-badge'), name].filter(Boolean).join(' ').trim();
 }
 
 /**
@@ -272,7 +279,9 @@ function labelOf(g: Element, key: string, text: Element): string {
  */
 function nameOf(g: Element): Element | null {
   let best: Element | null = null;
-  for (const t of Array.from(g.querySelectorAll('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag)')))
+  for (const t of Array.from(
+    g.querySelectorAll('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag, .thoughtknot-query-badge)'),
+  ))
     if (t.textContent?.trim() && (!best || sizeOf(t) > sizeOf(best))) best = t;
   return best;
 }
@@ -282,7 +291,9 @@ function nameOf(g: Element): Element | null {
  * another, and each row after it is joined on. Roger, 24 Oct 2026: a name in 3D was cut after its first row.
  */
 function wholeName(g: Element, first: Element): string {
-  const texts = Array.from(g.querySelectorAll<Element>('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag)')),
+  const texts = Array.from(
+      g.querySelectorAll<Element>('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag, .thoughtknot-query-badge)'),
+    ),
     rows: string[] = [];
   for (const t of texts.slice(texts.indexOf(first))) {
     if (sizeOf(t) !== sizeOf(first)) break;

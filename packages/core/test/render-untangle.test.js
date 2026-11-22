@@ -81,3 +81,32 @@ test('what is all hidden is not drawn, nor the roads to it', () => {
   );
   assert.equal(out.find((m) => m.key === 'sam').alpha, 1, 'nothing fades when nothing is brought forward');
 });
+
+// proves: ai_query_highlight
+test('ai_query_highlight: the stage marks what a highlight finds by its badge and colour, fades nothing, moves nothing', async () => {
+  const { QUERY_MARKS } = await import('../src/filter.ts');
+  const { markedBy, queryLine } = await import('../src/query-marks.ts');
+  const { PALETTES } = await import('../src/palette.ts');
+  const layers = { kept: null, hidden: new Set(), marked: markedBy(['r1'], QUERY_MARKS[0]) };
+  assert.ok(untangles(layers), 'a highlight alone is drawn');
+  const before = structuredClone(MARKS);
+  for (const p of [PALETTES.light, PALETTES.dark]) {
+    const out = untangledMarks(MARKS, SCENE, layers, p);
+    const line = queryLine('blue', p);
+    assert.equal(out.length, MARKS.length, 'nothing hidden');
+    assert.ok(
+      out.every((m) => m.alpha === 1),
+      'nothing faded',
+    );
+    const of = (kind, key) => out.find((m) => m.kind === kind && m.key === key);
+    assert.equal(of('label', 'r1').text, '⚑ r1', 'the badge on its name');
+    assert.equal(of('label', 'r1').edge, line, 'its card edged in the colour');
+    assert.equal(of('dot', 'r1').ring, line, 'its dot ringed in the colour');
+    assert.equal(of('label', 'sam').text, '⚑ sam', 'the group holding it is marked too');
+    assert.equal(of('label', 'r2').text, 'r2', 'a thing not found is as it was');
+    assert.equal(of('label', 'ana').text, 'ana');
+    for (const [i, m] of out.entries())
+      assert.deepEqual([m.x, m.y, m.r, m.w, m.h], [before[i].x, before[i].y, before[i].r, before[i].w, before[i].h]);
+  }
+  assert.deepEqual(MARKS, before, 'the marks given are untouched');
+});

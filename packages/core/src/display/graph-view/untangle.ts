@@ -27,6 +27,8 @@ import { levelPath } from '../../detail-levels.ts';
 import type { FindRow } from './untangle-find';
 import { renderLegend } from './untangle-legend';
 import { askPanelIn, untangledIn } from './untangle-ask.ts';
+import { QUERY_MARKS } from '../../filter.ts';
+import { markedBy } from '../../query-marks.ts';
 import type { FilterAskHost, FilterAskPanel, ShownAsk } from './untangle-ask.ts';
 import type { LegendPanel } from './untangle-legend';
 
@@ -133,8 +135,10 @@ export class UntangleView {
 
   /** Shows a filter by what things hold, the rest faded or hidden; null shows all again. */
   private showAsked(asked: ShownAsk | null): void {
-    this.shown = asked; // a highlight fades and hides nothing: its marks are the painters'
+    this.shown = asked; // a highlight fades and hides nothing: it only marks what it finds (query-marks.ts)
     this.core.asked = asked?.show === 'filter' ? { things: asked.things, hide: asked.hide } : null;
+    const mark = asked?.mark ?? QUERY_MARKS[0];
+    this.core.lit = asked?.show === 'highlight' && mark ? markedBy(asked.things, mark) : null;
     this.changed();
   }
 
@@ -307,6 +311,7 @@ export class UntangleView {
     this.core.legend.reset();
     this.core.clearRoute();
     this.core.asked = null;
+    this.core.lit = null;
     this.shown = null;
     this.asking = null;
     this.legend.refresh();

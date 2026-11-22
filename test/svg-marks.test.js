@@ -2,12 +2,14 @@
 // - A thing drawn as its name alone, as a matrix or a plan draws its rows, is read as a pale box round its name.
 // - Its label is its name once, though the matrix writes it again as its column.
 // - A thing drawn in a box is read as before.
+// - A thing a query's highlight marks (ES§75, ai_query_highlight) is read where it was, with its badge before its name.
+//   Its line is its ring's colour, as the stylesheet paints it. So the 3D view's painters show the same marks.
 //
 // Chrome is the one THOUGHTKNOT_CHROME names, or the first on the PATH. Where none is found the cases skip, except in CI.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -17,6 +19,28 @@ import { ROOT } from './repository/repo.js';
 /** The page's script: reads a matrix's rows and one boxed thing as marks. */
 const PAGE = `
 import { marksOfSvg } from './packages/core/src/display/graph-view/svg-marks.ts';
+import { DrawingMarks } from './packages/core/src/display/graph-view/focus-marks.ts';
+import { QUERY_MARKS } from './packages/core/src/filter.ts';
+import { markedBy } from './packages/core/src/query-marks.ts';
+window.readHighlight = (css) => {
+  const holder = document.body.appendChild(document.createElement('div'));
+  holder.setAttribute('style', '--color-orange: rgb(236, 117, 0); --text-normal: rgb(34, 34, 34)');
+  holder.innerHTML = \`<style>\${css}</style><svg class="thoughtknot-svg" xmlns="http://www.w3.org/2000/svg" width="400" height="200"><g class="graph">
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" stroke="rgb(9, 9, 9)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
+    <g class="node" data-key="cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(9, 9, 9)" points="20,140 80,140 80,180 20,180"/><text x="50" y="165" font-size="14">Cy</text></g>
+  </g></svg>\`;
+  const svg = holder.querySelector('svg');
+  const read = () => {
+    const { marks, paints } = marksOfSvg(svg);
+    return { marks, paints: Object.fromEntries(marks.map((m) => [m.id, paints(m.style)])) };
+  };
+  const plain = read();
+  const none = { things: new Set(), edges: new Set() };
+  new DrawingMarks(svg).all({ kept: null, hidden: none, hot: null, marked: markedBy(['bob'], QUERY_MARKS[1]) });
+  const lit = read();
+  holder.remove();
+  return { plain, lit };
+};
 window.readBare = () => {
   const holder = document.body.appendChild(document.createElement('div'));
   holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><g class="graph">
@@ -97,6 +121,29 @@ describe('the marks of a drawing on screen, in a real browser', () => {
     assert.deepEqual([bob.x, bob.y, bob.width, bob.height], [200, 140, 80, 40], 'a boxed thing is read as before');
     assert.equal(byId.get('l:bob').text, 'Bob');
   });
+
+  // proves: ai_query_highlight
+  test(
+    "ai_query_highlight: the 3D view reads a highlight's badge and colour, each thing where it was",
+    options,
+    async () => {
+      // the stylesheet's own rules for a highlight, so the colour read is the one the card shows
+      const css = readFileSync(join(ROOT, 'styles.css'), 'utf8')
+        .match(/[^}]*thoughtknot-query[^{]*\{[^}]*\}/g)
+        .join('\n');
+      const { plain, lit } = JSON.parse(await browser.run(`JSON.stringify(readHighlight(${JSON.stringify(css)}))`));
+      const at = (r, id) => r.marks.find((m) => m.id === id);
+      assert.equal(at(lit, 'l:bob').text, '★ Bob', 'the badge before its name');
+      assert.equal(at(lit, 'l:cy').text, 'Cy', 'a thing not found is as it was');
+      assert.equal(plain.paints['t:bob'].line, 'rgb(9, 9, 9)');
+      assert.notEqual(lit.paints['t:bob'].line, 'rgb(9, 9, 9)', 'its outline is read in the colour');
+      assert.equal(lit.paints['t:cy'].line, 'rgb(9, 9, 9)');
+      for (const id of ['t:bob', 't:cy']) {
+        const [a, b] = [at(plain, id), at(lit, id)];
+        assert.deepEqual([b.x, b.y, b.width, b.height], [a.x, a.y, a.width, a.height], `${id} where it was`);
+      }
+    },
+  );
 
   // proves: space_density_tiles
   test('a shaded square of the drawing, as a density view draws, is a box of its own shade', options, async () => {

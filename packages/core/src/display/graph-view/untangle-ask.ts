@@ -10,7 +10,7 @@ import { word } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
 import { blankFilter, filterKeeps, filterReady, filterSaid } from '../../filter-ask.ts';
-import type { QueryShow } from '../../filter.ts';
+import type { QueryMark, QueryShow } from '../../filter.ts';
 import type { NamedFilters } from '../../filter-named.ts';
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
@@ -30,7 +30,7 @@ export interface FilterAskHost {
    * Shows the filter on the drawing, the rest faded or hidden; null clears it. A query says how it is shown, as a filter
    * or a highlight, and what it is called.
    */
-  show: (draft: RuleDraft | null, hide: boolean, query?: { show: QueryShow; said: string }) => void;
+  show: (draft: RuleDraft | null, hide: boolean, query?: { show: QueryShow; said: string; mark?: QueryMark }) => void;
   /**
    * Asks an AI for a filter from words, where the host can: the host shows what is sent and waits for a yes. A send
    * that comes to no rule is told to `fail`, in words, where the host can.
@@ -204,6 +204,8 @@ export interface ShownAsk {
   hide: boolean;
   /** Shown as a filter, the rest fades or hides; as a highlight, nothing does (ES§75, ai_query_highlight). */
   show: QueryShow;
+  /** The badge and colour a highlight marks what it finds with (query-marks.ts). */
+  mark?: QueryMark;
 }
 
 /**
@@ -232,6 +234,7 @@ export function askPanelIn(
           things: kept(draft),
           hide,
           show: query?.show ?? 'filter',
+          ...(query?.mark && { mark: query.mark }),
         },
       ),
     ...(card.describe && { describe: card.describe }),
