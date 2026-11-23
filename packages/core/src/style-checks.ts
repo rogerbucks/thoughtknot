@@ -12,6 +12,7 @@ import type { SavedFilter } from './filter-saved.ts';
 import { exploreOf } from './explore-saved.ts';
 import type { SavedExplore } from './explore-saved.ts';
 import { namedFilterOf, type NamedFilter } from './filter-named.ts';
+import { savedQueriesResolved, savedQueryOf, type SavedQuery, type SavedQueryRead } from './filter-manage.ts';
 import { pictureOf } from './picture.ts';
 import { arrowsOf, diagramOf, linksOf, presetOf, renderOf } from './style-choice-checks.ts';
 import type { Render } from './render-choice.ts';
@@ -96,6 +97,7 @@ export interface Checked {
   renders: Render[];
   explores: SavedExplore[];
   named: NamedFilter[];
+  queries: SavedQuery[];
   problems: Problem[];
 }
 
@@ -323,8 +325,12 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     renders: [],
     explores: [],
     named: [],
+    queries: [],
     problems: [],
   };
+  const reads: SavedQueryRead[] = [];
+  // each NamedFilter as written, a kind the graph lacks too, so a saved query on it reads as no longer fitting
+  const written = new Map<string, { kind?: string; when?: string }>();
   for (const raw of raws) {
     const kinds = raw.labels.filter((l) => (STYLE_KINDS as readonly string[]).includes(l));
     if (kinds.length !== 1 || raw.labels.length !== 1) {
@@ -363,9 +369,18 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Preset') push(c.presets, kept(presetOf(thing, names, p)));
     else if (kinds[0] === 'Render') push(c.renders, kept(renderOf(thing, names, p)));
     else if (kinds[0] === 'Explore') push(c.explores, kept(exploreOf(thing, names, p)));
-    else if (kinds[0] === 'NamedFilter') push(c.named, kept(namedFilterOf(thing, names, p)));
+    else if (kinds[0] === 'NamedFilter') {
+      const { name, kind, when } = raw.props;
+      if (typeof name === 'string' && !written.has(name.trim()))
+        written.set(name.trim(), {
+          ...(typeof kind === 'string' && { kind }),
+          ...(typeof when === 'string' && { when }),
+        });
+      push(c.named, kept(namedFilterOf(thing, names, p)));
+    } else if (kinds[0] === 'SavedQuery') push(reads, kept(savedQueryOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
+  c.queries = savedQueriesResolved(reads, written);
   return c;
 }
 

@@ -75,6 +75,7 @@ STYLE_KINDS = (
     "Render",
     "Explore",
     "NamedFilter",
+    "SavedQuery",
 )
 # The keys each kind of style thing may have (editor spec §2, style_words_checked); a thing's
 # id is its name.
@@ -133,6 +134,8 @@ STYLE_KEYS = {
     "Explore": ("centre", "shown", "shape", "per_branch", "view"),
     # a filter saved by name (editor spec §25): only the plug-in picks it, not checked here
     "NamedFilter": ("name", "kind", "when"),
+    # a query saved by name (editor spec ES§75): only the plug-in opens it, not checked here
+    "SavedQuery": ("name", "filter", "words", "show", "locked", "join", "parts"),
 }
 
 

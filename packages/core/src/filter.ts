@@ -49,6 +49,8 @@ export interface Query extends QueryStep {
   mark: QueryMark;
   /** The changes before this one, the latest last. */
   back: readonly QueryStep[];
+  /** The prompts asked before it was opened from a save, in order (ai_query_replay): kept, never stepped back to. */
+  asked?: readonly string[];
 }
 
 /** One line of a highlight's legend: a part, or the query itself, with its mark and what it is called. */
