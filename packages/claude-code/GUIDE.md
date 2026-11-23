@@ -196,9 +196,16 @@ So a change to the open note is never applied by Claude's own tools while `guard
   note may carry a classification, such as a screenshot's `.png.md` sidecar.
 - **An existing note:** a heredoc sent by `cat` to a note that exists is judged as a Write is. That holds whether the
   command names `classification` or not, so an existing note's may not change.
+- **A code file:** a known write to an existing code or data file is allowed, whether the command names
+  `classification` or not (ES§26, Roger, 23 Nov 2026). The kinds are `.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.py`,
+  `.json`, `.css`, `.html`, `.sh` and `.rs`, in lower case. `gate-code.ts` judges it. The path and its real path,
+  links settled, must both be one. The file must have no other hard link: `real-path.mjs --links` counts them. Its
+  text must be read, and hold no front matter with a classification. Any other kind is judged as a note, such as
+  `.md`, `.canvas` or one not known. So are `settings.json`, `data.json` and `settings.local.json`, which may set a
+  gate.
 - **Other Bash that names `classification`** is refused unless each step only reads, searches or prints, or writes
-  only to files not yet made. Such a step is on the `READERS` list with no argument that writes. Or it is `git` that
-  only reads, `sed` whose script only prints, or `cp` or `mv` to new files.
+  only to files not yet made or to code files. Such a step is on the `READERS` list with no argument that writes. Or
+  it is `git` that only reads, `sed` whose script only prints, or `cp` or `mv` to new files or code files.
 - **What may be sent to a new file:** only `cat`, `echo` and `printf`; `/dev/null` does not count. A heredoc onto a
   note that exists, whose text the shell would expand, is refused when the command names it.
 - **What is not read:** a command that names it is refused if it holds backticks, `$((…))`, brackets, a comment or an
@@ -212,7 +219,7 @@ So a change to the open note is never applied by Claude's own tools while `guard
 `gate-python.ts` reads a Python heredoc (`python3 - <<'PY'`) for `gate-shell.ts`. Roger ruled on 8 Nov 2026 that it
 may make new notes, as `cat` may.
 
-- **Allowed:** a script whose every write goes to a file not yet made.
+- **Allowed:** a script whose every write goes to a file not yet made, or to a code file as above (23 Nov 2026).
 - **What is read:** writes by `open(…)` or `.write_text(…)`. The path is made of string literals, `Path`,
   `os.path.join`, `expanduser` and `/`. Or it is a name given one such path once.
 - **What is not read:** a script that defines a function, imports an unlisted module or renames an import. Nor one

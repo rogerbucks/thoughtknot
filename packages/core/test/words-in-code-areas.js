@@ -164,6 +164,7 @@ export const KEPT = {
     'The path is not there.',
     'The real path could not be found.',
     'The link could not be read.',
+    'The links could not be counted.',
   ],
   // what the editor server tells Claude alone: the answers to Claude's propose tool and the key it proposes with
   'packages/claude-code/server/editor-proposals.ts': '*',

@@ -55,6 +55,8 @@ export type GatePorts = Omit<GuardPorts, 'data'> & {
   classMap?: Record<string, string>;
   /** The classes Claude may raise a note to (settings.json `classificationRaises`). With none, no raise is allowed. */
   raises?: readonly string[];
+  /** How many hard links a file has. With none, Bash may not rewrite an existing code file that names it (ES§26). */
+  links?: (path: string) => Promise<number>;
 };
 
 /** A line that sets a classification, top-level or not: what the gate's own reader looks for. */

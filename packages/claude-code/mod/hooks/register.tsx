@@ -33,6 +33,7 @@ import {
   editArgs,
   followSystemLanguage,
   layOut,
+  linkCountVia,
   notePath,
   PANE_PALETTE,
   readLinkVia,
@@ -377,6 +378,12 @@ export const register: Register = (on) => {
         $.plugin.root,
       ),
       readLink: readLinkVia(
+        (request) => $.process.spawn(request),
+        ['node', `${$.plugin.root}/bin/real-path.mjs`],
+        (ms, fn) => $.clock.after(ms, fn),
+        $.plugin.root,
+      ),
+      links: linkCountVia(
         (request) => $.process.spawn(request),
         ['node', `${$.plugin.root}/bin/real-path.mjs`],
         (ms, fn) => $.clock.after(ms, fn),

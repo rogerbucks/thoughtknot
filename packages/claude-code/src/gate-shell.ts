@@ -6,10 +6,11 @@
 // A write to a file not yet made is allowed, whatever it holds. Roger ruled so on 7 Nov 2026: a new note may carry a
 // classification, such as a screenshot's sidecar does. A heredoc that `cat` sends to a note that exists is judged as a
 // Write is, whether the command names `classification` or not. Beyond that, a command that names it is refused unless
-// every step only reads, or writes only to files not yet made. What a command changes without naming it, such as
-// cutting the front matter by line numbers, is not seen. GUIDE.md says so.
+// every step only reads, or writes only to files not yet made or to code files (gate-code.ts, 23 Nov 2026). What a
+// command changes without naming it, such as cutting the front matter by line numbers, is not seen. GUIDE.md says so.
 import { classificationOf } from '@thoughtknot/core';
 import type { GatePorts } from './gate-guard.ts';
+import { codeFile } from './gate-code.ts';
 import { nodeOnlyMakes } from './gate-node.ts';
 import { pythonHeredocWrites } from './gate-python.ts';
 import { LITERAL_DOLLAR, UNKNOWN, shellSteps } from './shell-steps.ts';
@@ -188,24 +189,30 @@ async function copyTargets(args: readonly string[], scope: Scope, ports: GatePor
 /** How a step writes a file: its heredoc and whether its text is known, whether it appends, and whether it is `cat`'s. */
 type Writing = { body: string | null; literal: boolean; append: boolean; cat: boolean };
 
+/** Whether an existing file is a code file gate-code.ts lets a known write change: `before` is what stateOf gave. */
+const isCode = (path: string, before: string, ports: GatePorts) =>
+  codeFile(path, before === MISSING || before === UNREAD ? null : before, ports);
+
 /**
- * Whether a step's write to `path` is allowed. A file not yet made has no classification to change. A heredoc `cat`
- * sends to a note that exists is judged by what it leaves. Any other write to a file that exists is refused when the
- * command names `classification`, as is a heredoc whose text the shell would expand.
+ * Whether a step's write to `path` is allowed. A file not yet made has no classification to change. Nor has a code
+ * file. A heredoc `cat` sends to a note that exists is judged by what it leaves. Any other write to a file that exists
+ * is refused when the command names `classification`, as is a heredoc whose text the shell would expand.
  */
 async function mayWrite(path: string, how: Writing, named: boolean, ports: GatePorts): Promise<boolean> {
   const before = await stateOf(path, ports);
   if (before === MISSING) return true;
+  if (named && (await isCode(path, before, ports))) return true;
   if (before === UNREAD || how.body === null || !how.cat || (named && !how.literal)) return !named;
   return sameClassification(before, how.append ? before + how.body : how.body);
 }
 
-/** Whether a Python heredoc writes only files not yet made (Roger, 8 Nov 2026): gate-python.ts reads the script. */
+/** Whether a Python heredoc writes only files not yet made (8 Nov 2026), or code files: gate-python.ts reads it. */
 async function pythonOnlyMakes(step: ShellStep, command: readonly string[], scope: Scope, ports: GatePorts) {
   const writes = step.writes.length || !step.literal ? null : pythonHeredocWrites(command, step.body, ports.home);
   for (const write of writes ?? []) {
     const path = PATH_NOT_KNOWN.test(write) || write.includes('\\') ? null : pathsOf(write, scope)?.[0];
-    if (!path || (await stateOf(path, ports)) !== MISSING) return false;
+    const before = path ? await stateOf(path, ports) : UNREAD;
+    if (!path || (before !== MISSING && !(await isCode(path, before, ports)))) return false;
   }
   return writes !== null;
 }
