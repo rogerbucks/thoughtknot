@@ -9,9 +9,9 @@ export interface HostPartsAsk {
   doc: Document;
   settings: Settings;
   note: { readonly text: string; readonly path: string };
-  say(text: string): void;
+  say: (text: string) => void;
   /** Draws the boards again, so a change in the host's part shows on them. */
-  changed(): void;
+  changed: () => void;
 }
 
 /** What a host adds: a part of the More view, and the board's way to ask its AI. Either may be left out. */
