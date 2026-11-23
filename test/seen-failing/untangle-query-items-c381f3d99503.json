@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/untangle-query-items.test.js",
+  "test": "each query is a line of the list, its words beside the filter they became, and Enter asks again",
+  "seen_failing_first": false,
+  "evidence": "A test named after untangle-query-items.ts, moved unchanged from filter-query-list.ts earlier on this branch, so it passes on its parent."
+}

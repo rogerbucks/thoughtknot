@@ -82,7 +82,7 @@ export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-
 export { Permissions, readable, type Guarded } from './permissions.ts';
 export * from './index-pictures.ts';
 export { savedExploreFor, type ExploreSave, type SavedExplore } from './explore-saved.ts';
-export { namedFilterRemoved, namedFiltersOf, type NamedFilterSave, type NamedFilters } from './filter-named.ts';
+export * from './index-queries.ts';
 // editing a thing where it is drawn, for the Copilot Cowork skill (§46, cowork_same_bytes)
 export {
   addedNear,

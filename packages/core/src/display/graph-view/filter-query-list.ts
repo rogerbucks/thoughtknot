@@ -5,27 +5,26 @@
 // (ai_query_fails_open). Two or more can be chosen and merged, all of them or any (ai_query_merge). The merged query
 // holds a copy of each part, so changing another query never changes it. Each part has its own mark, can be worked on
 // in the rows, and taken out again. The query and its rules are filter.ts and filter-send.ts: the AI only turns words
-// into a filter. Merging runs here, with nothing sent. The panel round it is untangle-ask.ts.
+// into a filter. Merging runs here, with nothing sent. The panel round it is untangle-ask.ts; the list is drawn by
+// untangle-query-items.ts.
 import { word } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
-import type { RuleChoices, RuleDraft, RuleWrite, SendResult } from '@thoughtknot/core';
-import { blankFilter, filterReady, filterSaid } from '../../filter-ask.ts';
-import { filterWords, queryAskWords, queryBack, queryEdited, queryJoined, queryLocked } from '../../filter.ts';
+import type { RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
+import { blankFilter, filterReady } from '../../filter-ask.ts';
+import { queryAskWords, queryBack, queryEdited, queryJoined, queryLocked } from '../../filter.ts';
 import { queryPart, queryPartOut, querySaid, queryShown, queriesMerged } from '../../filter.ts';
-import type { Query, QueryJoin, QueryRefused, QueryShow } from '../../filter.ts';
+import type { Query, QueryJoin, QueryRefused } from '../../filter.ts';
+import { queryCacheKey } from '../../filter-cache.ts';
+import type { QueryAnswer } from '../../filter-cache.ts';
+import type { SavedQueries } from '../../filter-manage.ts';
+import type { QueryAsker } from '../../filter-replay.ts';
 import { queryResult } from '../../filter-send.ts';
-import { button } from '../button.ts';
 import type { FormState } from './rule-form-parts.ts';
-import { legendBadge } from './untangle-query-legend.ts';
+import { queryList } from './untangle-query-items.ts';
+import type { Target } from './untangle-query-items.ts';
 
 /** Whether every filter of `q` is ready: its own, or each of its parts'. */
 const ready = (q: Query): boolean => (q.parts ? q.parts.every(ready) : filterReady(q.draft));
-
-/** Which query the rows show: a query listed, or one part of a merged one. */
-interface Target {
-  id: string;
-  part?: string;
-}
 
 /** What the list needs of the panel: the graph, the send, the drawing, and the rows it shares with the panel. */
 export interface QueryHost {
@@ -41,6 +40,8 @@ export interface QueryHost {
   /** Whether the rows were just filled by an AI. */
   byAi: (on: boolean) => void;
   hidden: () => boolean;
+  /** Answers kept on this device: a key kept is answered with nothing sent (ai_query_cache). */
+  answers?: SavedQueries['answers'];
 }
 
 /** The queries asked, the one the rows show, the ones chosen to merge, and the one on the drawing. */
@@ -109,6 +110,38 @@ export class QueryPanel {
     this.current = null;
     this.shownId = null;
     this.draw();
+  }
+
+  /** A fresh id for a query opened from a save or asked again. */
+  fresh(): string {
+    return `query-${++this.made}`;
+  }
+
+  /** `q`, opened from a save or asked again, put in the list, worked on and shown as it says. Nothing is sent. */
+  adopt(q: Query): void {
+    this.put(q);
+    this.work({ id: q.id });
+    this.showQuery(q);
+  }
+
+  /** The query worked on, a merged one whole, to save by name; none when no query is worked on. */
+  held(): Query | null {
+    return this.top();
+  }
+
+  /** Each prompt asked the way the ask box asks: shown by the host and sent, or why not. */
+  asker(): QueryAsker {
+    return (q, prompt) =>
+      new Promise<QueryAnswer>((done) => {
+        const sent = queryAskWords(q, prompt);
+        if (typeof sent !== 'string') return done(sent);
+        if (!this.host.describe) return done({ refused: word('filter.replay.no-send') });
+        this.host.describe(
+          sent,
+          (rule) => done({ rule }),
+          (why) => done({ refused: why }),
+        );
+      });
   }
 
   private at(t: Target | null): Query | null {
@@ -239,17 +272,24 @@ export class QueryPanel {
     if (t && this.at({ id: t.id })?.locked) return this.host.tell(word('filter.query.locked'));
     const sent = queryAskWords(this.at(t), words);
     if (typeof sent !== 'string') return this.host.tell(sent.refused);
+    // the same words of the same rule, for a note of the same kinds and properties, are answered as before
+    const key = queryCacheKey(words, this.at(t), this.host.choices);
+    const kept = this.host.answers?.answer(key);
+    if (kept) return this.settle(t, words, { rule: kept }, word('filter.cache.reused'));
     this.host.tell(word('filter.ask.asking'));
     // the host hands back only the rule, or why there is none; queryResult needs no more of the send
     this.host.describe?.(
       sent,
-      (rule) => this.settle(t, words, { rule } as SendResult),
+      (rule) => {
+        this.host.answers?.keep(key, rule);
+        this.settle(t, words, { rule });
+      },
       (why) => this.settle(t, words, { refused: why }),
     );
   }
 
   /** What came of asking: the query filled, or why not, with the words kept and the drawing as it was. */
-  private settle(t: Target | null, words: string, result: SendResult): void {
+  private settle(t: Target | null, words: string, result: QueryAnswer, said = word('filter.ask.filled')): void {
     const { graph, choices } = this.host;
     const asked = queryResult(this.at(t), words, result, graph, choices, `query-${++this.made}`);
     if ('failed' in asked) return this.host.tell(asked.failed);
@@ -257,118 +297,6 @@ export class QueryPanel {
     if ('refused' in placed) return this.host.tell(placed.refused);
     this.work(t ?? { id: asked.query.id });
     this.host.byAi(true);
-    this.host.tell(word('filter.ask.filled'));
-  }
-}
-
-/** What a person does to a query in the list. */
-interface QueryActs {
-  ask: (t: Target, words: string) => void;
-  pick: (t: Target) => void;
-  shown: (q: Query, show: QueryShow) => void;
-  lock: (q: Query) => void;
-  back: (q: Query) => void;
-  choose: (q: Query, on: boolean) => void;
-  joinAs: (join: QueryJoin) => void;
-  merge: () => void;
-  joined: (q: Query, join: QueryJoin) => void;
-  partOut: (q: Query, part: string) => void;
-}
-
-/** What the list draws: the queries, the one the rows show, those chosen to merge and how they would be joined. */
-interface ListView {
-  qs: readonly Query[];
-  current: Target | null;
-  chosen: ReadonlySet<string>;
-  join: QueryJoin;
-}
-
-/** A list to pick all of them or any of them, in `row`, named `name`. */
-function joinPick(row: HTMLElement, name: string, join: QueryJoin, change: (join: QueryJoin) => void): void {
-  const pick = row.createEl('select', { attr: { name, 'aria-label': word('filter.query.merge-as') } });
-  pick.createEl('option', { text: word('filter.query.join-all'), attr: { value: 'all' } });
-  pick.createEl('option', { text: word('filter.query.join-any'), attr: { value: 'any' } });
-  pick.value = join;
-  pick.addEventListener('change', () => change(pick.value === 'any' ? 'any' : 'all'));
-}
-
-/** The queries of `v` in `list`, each a query item, and below them a bar to merge the chosen, for two or more. */
-function queryList(list: HTMLElement, v: ListView, acts: QueryActs): void {
-  list.empty();
-  for (const q of v.qs) queryItem(list, q, v, acts);
-  if (v.qs.length < 2) return;
-  // a line of the list of its own, as a list holds only its lines
-  const bar = list.createDiv({ cls: 'thoughtknot-query-merge', attr: { role: 'listitem' } });
-  joinPick(bar, 'query-merge-join', v.join, acts.joinAs);
-  const merge = button(bar, word('filter.query.merge'), 'layers', acts.merge, word('filter.query.merge'));
-  merge.disabled = v.chosen.size < 2;
-}
-
-/**
- * The query `q` in `list`. It holds its words, to change and ask again, beside the filter they became. It says when
- * the words no longer match, and shows a lock mark while locked. Then come a box to choose it to merge and how it
- * is shown. A merged one says how its parts are joined. Last come the lock, Step back, and a button to work on it. A merged query lists
- * its parts below.
- */
-function queryItem(list: HTMLElement, q: Query, v: ListView, acts: QueryActs): void {
-  const item = list.createDiv({ cls: 'thoughtknot-query', attr: { role: 'listitem', 'data-query': q.id } });
-  if (q.id === v.current?.id) item.addClass('is-current');
-  if (v.qs.length > 1) {
-    const box = item.createEl('label', { cls: 'thoughtknot-query-choose' });
-    const named = word('filter.query.choose-one', { said: querySaid(q) });
-    const choose = box.createEl('input', { attr: { name: 'query-choose', type: 'checkbox', 'aria-label': named } });
-    box.createSpan({ text: word('filter.query.choose') });
-    choose.checked = v.chosen.has(q.id);
-    choose.addEventListener('change', () => acts.choose(q, choose.checked));
-  }
-  const words = item.createEl('input', {
-    attr: { name: 'query-words', type: 'text', 'aria-label': word('filter.query.words') },
-  });
-  words.value = q.words;
-  words.disabled = q.locked;
-  words.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    const said = words.value.trim();
-    if (said) acts.ask({ id: q.id }, said);
-  });
-  const rule = [
-    q.locked ? word('filter.query.lock-mark') : '',
-    word('filter.query.became', { rule: q.parts ? filterWords(q) : filterSaid(q.draft) }),
-    q.matches ? '' : word('filter.query.unmatched'),
-  ];
-  item.createDiv({ cls: 'thoughtknot-query-rule', text: rule.filter(Boolean).join(' ') });
-  const row = item.createDiv({ cls: 'thoughtknot-query-acts' });
-  const as = row.createEl('select', { attr: { name: 'query-show', 'aria-label': word('filter.query.show-as') } });
-  as.createEl('option', { text: word('filter.query.as-filter'), attr: { value: 'filter' } });
-  as.createEl('option', { text: word('filter.query.as-highlight'), attr: { value: 'highlight' } });
-  as.value = q.show;
-  as.addEventListener('change', () => acts.shown(q, as.value === 'highlight' ? 'highlight' : 'filter'));
-  if (q.parts) joinPick(row, 'query-join', q.join ?? 'all', (join) => acts.joined(q, join));
-  const lockLabel = word(q.locked ? 'filter.query.unlock' : 'filter.query.lock');
-  const lock = button(row, lockLabel, 'lock', () => acts.lock(q)); // pressed while locked, as a board layer's
-  lock.setAttribute('aria-pressed', String(q.locked));
-  const back = button(row, word('filter.query.back'), 'undo-2', () => acts.back(q));
-  back.disabled = q.locked || !q.back.length;
-  const pick = button(row, word('filter.query.pick'), 'pencil', () => acts.pick({ id: q.id }));
-  if (q.id === v.current?.id && !v.current.part) pick.setAttribute('aria-current', 'true');
-  if (q.parts) partsOf(item, q, v, acts);
-}
-
-/** The parts of the merged `q` in `item`: each with its own mark, a button to work on it, and one to take it out. */
-function partsOf(item: HTMLElement, q: Query, v: ListView, acts: QueryActs): void {
-  const parts = item.createDiv({
-    cls: 'thoughtknot-query-parts',
-    attr: { role: 'list', 'aria-label': word('filter.query.parts') },
-  });
-  for (const p of q.parts ?? []) {
-    const row = parts.createDiv({ cls: 'thoughtknot-query-part', attr: { role: 'listitem', 'data-part': p.id } });
-    legendBadge(row, p.mark);
-    row.createSpan({ cls: 'thoughtknot-query-part-said', text: querySaid(p) });
-    const said = { said: querySaid(p) };
-    const pick = button(row, word('filter.query.part-pick', said), 'pencil', () => acts.pick({ id: q.id, part: p.id }));
-    if (v.current?.id === q.id && v.current.part === p.id) pick.setAttribute('aria-current', 'true');
-    const out = button(row, word('filter.query.part-out', said), 'x', () => acts.partOut(q, p.id));
-    out.disabled = q.locked;
+    this.host.tell(said);
   }
 }

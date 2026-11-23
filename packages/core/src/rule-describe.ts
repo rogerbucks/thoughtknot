@@ -124,19 +124,24 @@ export function ruleIn(
 /**
  * The ask to describe a rule, ready for `prepareSend`; or why there is none. It needs the person's own words, and the
  * graph to read. The whole graph is what goes with them, shown before it is sent as every send is. The answer is read
- * only as one rule (`answers`), held to the kinds, types and properties the graph has.
+ * only as one rule (`answers`), held to the kinds, types and properties the graph has. `unfit` says more of one not read.
  */
 export function ruleDescribeAsk(
   base: Omit<SendAsk, 'question' | 'answers' | 'choice'>,
   graph: string,
   choices: RuleChoices,
   words: string,
+  unfit?: (why: string) => string,
 ): SendAsk | SendRefused {
   if (!words.trim()) return { refused: word('ai.rule.no-words') };
   if (!GRAPH_NAME.test(graph)) return { refused: word('ai.rule.graph-name') };
   const answers: AnswerShape = {
     instructions: ruleDescribeInstructions(),
-    read: (content) => ruleIn(content, choices),
+    // an answer not read as a rule may be said with more: words that fit no rule (ES§75, ai_query_fuzzy)
+    read: (content) => {
+      const read = ruleIn(content, choices);
+      return unfit && 'unread' in read ? { unread: unfit(read.unread) } : read;
+    },
   };
   return { ...base, choice: { graph, what: 'graph' }, question: oneLine(words), answers };
 }

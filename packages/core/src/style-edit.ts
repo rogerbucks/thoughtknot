@@ -1,9 +1,8 @@
-// Writing to the style graph (editor spec ES§2, ES§6, ES§7, ES§14, ES§15). It writes nudges, looks, and a view's
-// fade or hide. It writes how a view was shown, properties inline, arrowheads and the diagram type. It writes a huge
-// graph's filter (ES§53), a rule (ES§56), an exploration (ES§71) and a filter saved by name (ES§25). Each is text in the
-// graph's style block, never a data block. A note with no style block for the graph gets one after its last block.
-// It has its graph line and a comment saying whose style it is. A view's setting, a choice, a rule of one meaning
-// and a filter of one name are each changed in place where already written. None is ever written twice.
+// Writing to the style graph (editor spec ES§2, ES§6, ES§7, ES§14, ES§15). It writes nudges, looks, a view's fade or
+// hide, how a view was shown, properties inline, arrowheads and the diagram type. And a huge graph's filter (ES§53), a
+// rule (ES§56) and an exploration (ES§71). And a filter or query saved by name (ES§25, ES§75). Each is text in
+// the graph's style block, never a data block. A note with none gets one after its last block, with its graph line and
+// a comment saying whose style it is. A setting, choice, rule or name is changed in place where written, never twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
@@ -22,7 +21,7 @@ import {
 } from './style-edit-checks.ts';
 import { filterRefusal, filterText, type FilterKeep } from './filter-saved.ts';
 import { exploreRefusal, shownText, type ExploreSave } from './explore-saved.ts';
-import { namedFilterThing, type NamedFilterSave } from './filter-named.ts';
+import { savedThing, type SavedChange } from './filter-manage.ts';
 import { OUTSIDE } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
@@ -121,7 +120,7 @@ export type StyleChange =
   | { filter: FilterWrite }
   | { rule: RuleWrite }
   | { explore: ExploreSave }
-  | { named: NamedFilterSave };
+  | SavedChange;
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
@@ -245,7 +244,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
     };
   }
   if ('explore' in change) return exploreThing(change.explore);
-  if ('named' in change) return namedFilterThing(change.named); // a filter saved by name (ES§25, untangle_filter_saved)
+  if ('named' in change || 'query' in change) return savedThing(change); // saved by name (ES§25, ES§75)
   if ('outside' in change) {
     const { view, outside } = change.outside;
     if (!view) return { refused: noViewName() };
@@ -322,6 +321,7 @@ const PREFIX: Record<string, string> = {
   Filter: 'filter',
   Explore: 'explore',
   NamedFilter: 'named',
+  SavedQuery: 'query',
 };
 
 /** The block with a thing written after its last item, comma-joined, the rest of the block kept as it was. */

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/untangle-query-items.test.js",
+  "test": "a merged query lists its parts, each to work on or take out",
+  "seen_failing_first": false,
+  "evidence": "A test named after untangle-query-items.ts, moved unchanged from filter-query-list.ts earlier on this branch, so it passes on its parent."
+}

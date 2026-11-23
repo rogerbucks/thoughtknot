@@ -11,6 +11,8 @@
 // 2026 (rule_look_builder). That is LINKS_FIELD, NUMBER_OPS, RULE_OPS and savedRules. It is also ruleChoices,
 // ruleFinds, ruleStarts, sayDraft, testsOf and whenOf. ruleRemoved and ruleMovedUp (rule_look_remove) came the same day.
 // INTENT_LINK_TYPES, INTENT_MARKS, UNSTATED and the intent functions (§58, intents) came on 3 Nov 2026.
+// queryCache, queryFitless and savedQueryRemove, savedQueryRenamed, savedQueryWritten (ai_query_saved, ai_query_cache,
+// ai_query_fuzzy) came on 23 Nov 2026.
 export const VALUES_LATE = [
   // Claude presents and decides (§49), 5 Nov 2026
   'CAPTION_MOST',
@@ -151,6 +153,11 @@ export const VALUES_LATE = [
   // a filter saved by name (ES§25, untangle_filter_saved), 13 Nov 2026
   'namedFilterRemoved',
   'namedFiltersOf',
+  'queryCache',
+  'queryFitless',
+  'savedQueryRemove',
+  'savedQueryRenamed',
+  'savedQueryWritten',
   'sayWords',
   'scaledMarks',
   'scenarioText',

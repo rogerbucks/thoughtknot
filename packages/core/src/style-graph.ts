@@ -8,6 +8,7 @@ import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
 import type { SavedExplore } from './explore-saved.ts';
 import type { NamedFilter } from './filter-named.ts';
+import type { SavedQuery } from './filter-manage.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Render } from './render-choice.ts';
 import { RULE_KEYS } from './rule-words.ts';
@@ -76,32 +77,11 @@ export const ON_OFF = ['on', 'off'] as const;
 /** On or off. */
 export type OnOff = (typeof ON_OFF)[number];
 
-/** The kinds of thing a style graph holds, by label. */
-export const STYLE_KINDS = [
-  'Nudge',
-  'Show',
-  'Look',
-  'ViewStyle',
-  'Shown',
-  'Arrows',
-  'Diagram',
-  'Flow',
-  'Links',
-  'Picture',
-  'Filter',
-  'Preset',
-  'Render',
-  'Explore',
-  'NamedFilter',
-] as const;
-/** One of the kinds of thing a style graph holds. */
-export type StyleKind = (typeof STYLE_KINDS)[number];
-
 /**
  * The keys each kind of style thing may have (ES§2, style_words_checked), as `styleEdit` writes them and the checks read.
  * Any other is a problem, its fix the nearest of these. A thing's `id` is its name, not a key.
  */
-export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
+export const STYLE_KEYS = {
   Nudge: ['word', 'thing', 'other', 'group', 'direction'],
   Show: ['property', 'kind', 'thing', 'type', 'view', 'inline'],
   Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means', ...RULE_KEYS],
@@ -137,7 +117,12 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Render: ['space', 'painter', 'lens', 'view'],
   Explore: ['centre', 'shown', 'shape', 'per_branch', 'view'],
   NamedFilter: ['name', 'kind', 'when'],
-};
+  SavedQuery: ['name', 'filter', 'words', 'show', 'locked', 'join', 'parts'],
+} satisfies Record<string, readonly string[]>;
+/** One of the kinds of thing a style graph holds. */
+export type StyleKind = keyof typeof STYLE_KEYS;
+/** The kinds of thing a style graph holds, by label, in the order the keys are listed. */
+export const STYLE_KINDS = Object.freeze(Object.keys(STYLE_KEYS)) as readonly StyleKind[];
 
 /** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */
 export const PRESET_IDS = ['default', 'focus', 'calm', 'detail', 'big-picture', 'reading'] as const;
@@ -337,6 +322,8 @@ export interface StyleGraph {
   explores: SavedExplore[];
   /** The filters saved by name (ES§25, untangle_filter_saved), in the order written; the first of a name is used. */
   named: NamedFilter[];
+  /** The queries saved by name (ES§75, ai_query_saved), in the order written, each with its filter found. */
+  queries: SavedQuery[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -379,6 +366,7 @@ export function emptyStyle(): StyleGraph {
     renders: [],
     explores: [],
     named: [],
+    queries: [],
   };
 }
 

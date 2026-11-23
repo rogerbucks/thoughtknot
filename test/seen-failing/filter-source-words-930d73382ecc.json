@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/filter-source-words.test.js",
+  "test": "the words of the Filter panel > the words that act on a saved query name it, and a broken one says why",
+  "seen_failing_first": false,
+  "evidence": "A test named after a word catalogue whose words came with their code earlier on this branch, so it passes on its parent."
+}

@@ -20,6 +20,7 @@ import { reader } from './style-reader.ts';
 import { replaceBlock } from './store.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
+import type { SavedQueries } from './filter-manage.ts';
 
 /** The style graph's kind for a filter saved by name. */
 export const NAMED_FILTER = 'NamedFilter';
@@ -40,6 +41,8 @@ export interface NamedFilters {
   saved: readonly NamedFilterSave[];
   save?: (f: NamedFilterSave) => void;
   remove?: (name: string) => void;
+  /** The queries saved by name, beside the filters (ES§75, ai_query_saved). */
+  queries?: SavedQueries;
 }
 
 /**

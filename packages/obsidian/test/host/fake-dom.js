@@ -1,5 +1,6 @@
 // A small stand-in for the browser DOM and Obsidian's element helpers. It is enough to load the built plugin in Node and
 // see what it puts on the page. Not a browser: layout sizes are fixed, and the SVG parser reads only tags and attributes.
+import { fakeStorage } from './fake-storage.js';
 
 export class FakeElement {
   constructor(tag, doc) {
@@ -523,6 +524,7 @@ export function installGlobals(doc) {
   set('document', doc);
   set('activeWindow', doc.defaultView);
   set('window', doc.defaultView);
+  doc.defaultView.localStorage = fakeStorage(); // one per load, so a test's kept answers never reach another
   set('createDiv', doc.defaultView.createDiv);
   set('createSpan', doc.defaultView.createSpan);
   set('createFragment', doc.defaultView.createFragment);

@@ -20,6 +20,7 @@ import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
 import { renderFind } from './rule-form-parts.ts';
 import { QueryPanel } from './filter-query-list.ts';
+import { saveByName, savedQueriesIn } from './untangle-saved.ts';
 export { untangledIn } from './stage-untangle.ts';
 import type { FormState } from './rule-form-parts.ts';
 
@@ -65,6 +66,7 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     attr: { role: 'list', 'aria-label': word('filter.query.list') },
   });
   const saved = el.createDiv({ cls: 'thoughtknot-filter-saved' });
+  const kept = el.createDiv({ cls: 'thoughtknot-saved-queries-row' });
   const find = el.createDiv({ cls: 'thoughtknot-rule-find' });
   const said = el.createDiv({ cls: 'thoughtknot-rule-word', attr: { role: 'status', 'aria-live': 'polite' } });
   const acts = el.createDiv({ cls: 'thoughtknot-filter-ask-acts' });
@@ -74,14 +76,16 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   const showButton = button(acts, word('filter.ask.show'), 'filter', () => show(), word('filter.ask.show'));
   button(acts, word('filter.ask.clear'), 'rotate-ccw', () => clear(), word('filter.ask.clear'));
   const saving = host.named?.save;
-  const saveButton = saving && button(acts, word('filter.saved.save'), 'bookmark', () => nameIt());
+  const qs = host.named?.queries;
+  const savingQuery = qs?.save;
+  const saveButton = (saving || savingQuery) && button(acts, word('filter.saved.save'), 'bookmark', () => nameIt());
 
-  // a merged query worked on whole is counted, and shown, by its parts; only a single filter is saved by name
+  // a merged query worked on whole is counted, and shown, by its parts; it is saved only as a query (ES§75)
   const tell = (extra = '') => {
     const whole = queries.whole();
     const ready = !!whole || filterReady(state.draft);
     showButton.disabled = !ready;
-    if (saveButton) saveButton.disabled = !ready || !!whole;
+    if (saveButton) saveButton.disabled = !ready || (!!whole && !savingQuery);
     if (!ready) return said.setText(extra || word('filter.ask.empty'));
     const { kept, of } = host.count(state.draft, whole ?? undefined);
     const counted = word('filter.ask.keeps', { count: kept, of });
@@ -109,6 +113,7 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     tell,
     byAi: (on) => (byAi = on),
     hidden: () => hide.checked,
+    ...(qs?.answers && { answers: qs.answers }),
   });
   // a saved filter picked fills the rows as the person saved them; it is shown when they press Show these
   const pick = (draft: RuleDraft, name: string) => {
@@ -118,8 +123,8 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     redraw();
     tell(word('filter.saved.picked', { name }));
   };
-  const nameIt = () =>
-    saving && namePrompt(saved, filterSaid(state.draft), (name) => saving({ name, draft: state.draft }));
+  const prompt = (said: string, save: (name: string) => void) => namePrompt(saved, said, save);
+  const nameIt = () => saveByName({ held: queries.held(), qs, saving, draft: state.draft, tell, prompt });
   const show = () => {
     if (queries.whole() || filterReady(state.draft)) {
       if (!queries.show()) host.show(state.draft, hide.checked);
@@ -141,6 +146,8 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   };
   hide.addEventListener('change', () => show());
   if (host.named) savedRow(saved, host.named, pick);
+  const panel = { queries, graph: host.graph, choices: host.choices, tell, byAi: (on: boolean) => (byAi = on) };
+  if (qs) savedQueriesIn(kept, qs, { ...panel, asks: !!host.describe });
   redraw();
   tell();
   return { el, focus: () => (input ?? find.querySelector('select'))?.focus(), off: () => queries.off() };

@@ -3,7 +3,7 @@
 // request is shown. Only a Send pressed on exactly that sends it, once, and records it. The key
 // stays in Obsidian's secret store on this device. What comes back only fills the form: it is never tried or saved.
 import { Notice } from 'obsidian';
-import { aiReady, gqlBlocks, readNote, ruleChoices, ruleDescribeAsk, word } from '@thoughtknot/core';
+import { aiReady, gqlBlocks, queryFitless, readNote, ruleChoices, ruleDescribeAsk, word } from '@thoughtknot/core';
 import type { RuleWrite, SendResult } from '@thoughtknot/core';
 import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
 import type ThoughtKnotPlugin from '../main';
@@ -38,7 +38,7 @@ async function openDescribe(
   fail?: (why: string) => void,
 ): Promise<void> {
   const file = plugin.app.vault.getFileByPath(path);
-  if (!file) return;
+  if (!file) return fail?.(word('blocks.view-note-gone'));
   const note = (await noteText(plugin.app, path)) ?? '';
   const shared = await plugin.sharedSchemas();
   const g = readNote(
@@ -46,10 +46,29 @@ async function openDescribe(
     undefined,
     shared,
   ).world[graph];
-  if (!g) return void new Notice(word('ai.suggest.no-graph', { graph }));
-  const start = { graph, things: [], question: words, rule: asking(g, fill, fail) };
-  new SendDialog(plugin, file, note, levelFor(plugin, file, note), shared, start).open();
+  if (!g) {
+    fail?.(word('ai.suggest.no-graph', { graph }));
+    return void new Notice(word('ai.suggest.no-graph', { graph }));
+  }
+  // closed with no rule and no failure, it says nothing was sent, so a host waiting on it hears back
+  let settled = false;
+  const settle =
+    <A extends unknown[]>(f: (...a: A) => void) =>
+    (...a: A) => ((settled = true), f(...a));
+  const rule = asking(g, settle(fill), fail && settle(fail));
+  const dialog = new SendDialog(plugin, file, note, levelFor(plugin, file, note), shared, {
+    ...start(graph, words),
+    rule,
+  });
+  const closed = dialog.onClose.bind(dialog);
+  dialog.onClose = () => {
+    closed();
+    if (!settled) fail?.(word('filter.replay.declined'));
+  };
+  dialog.open();
 }
+
+const start = (graph: string, words: string) => ({ graph, things: [], question: words });
 
 /** What the dialog is asked with: the graph's choices, and a fill that tells the person the form was filled in. */
 function asking(
@@ -60,7 +79,8 @@ function asking(
   const choices = ruleChoices(g);
   return {
     ...(fail && { failed: (result: SendResult) => fail(whyNoRule(result)) }),
-    ask: (base, graph, words) => ruleDescribeAsk(base, graph, choices, words),
+    // words that fit no rule are told so, with a wording to try (ai_query_fuzzy)
+    ask: (base, graph, words) => ruleDescribeAsk(base, graph, choices, words, (why) => queryFitless(choices, why)),
     fill: (got, model, done) => {
       if (!('rule' in got)) return;
       fill(got.rule);
