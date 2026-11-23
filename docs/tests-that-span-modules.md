@@ -1050,6 +1050,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/tests-first-passed.test.js` — that replay when a new test passes against the code before it. It is reported,
   unless a reason is kept, and never excused by a name every object has.
+- `test/tests-first-held.test.js` — the tests a file held before its commit, named in its record. A reason CI's replay
+  asks for, where the Mac's did not, may name one; a reason for a file no recorded commit changed may not.
 - `test/tests-first-python.test.js` — that replay over a Python test, and a failure inside a subTest read as a failure.
 - `test/tests-first-records.test.js` — the records of that replay: a file for each commit, so two branches never conflict in them.
 - `test/tests-first-records-history.test.js` — this repository's own records. The old single files' entries are all
