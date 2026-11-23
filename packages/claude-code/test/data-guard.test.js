@@ -562,8 +562,9 @@ describe('a session whose working folder was deleted (20 Nov 2026)', () => {
 
   test('the mod runs every real-path and link check from its own folder, never the session’s', () => {
     const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
-    const calls = register.match(/(realPathVia|readLinkVia)\([^;]*?\$\.clock\.after\(ms, fn\),\s*([^)]*)\)/g) ?? [];
-    assert.equal(calls.length, (register.match(/(realPathVia|readLinkVia)\(/g) ?? []).length);
+    const calls =
+      register.match(/(realPathVia|readLinkVia|linkCountVia)\([^;]*?\$\.clock\.after\(ms, fn\),\s*([^)]*)\)/g) ?? [];
+    assert.equal(calls.length, (register.match(/(realPathVia|readLinkVia|linkCountVia)\(/g) ?? []).length);
     for (const call of calls) assert.match(call, /\$\.plugin\.root,?\s*\)$/);
     assert.match(register, /cwdGone/);
   });

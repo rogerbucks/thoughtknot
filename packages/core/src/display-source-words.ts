@@ -320,6 +320,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'summary.recent-thing': '{thing}, in {graph}, in {note}',
   // a whiteboard drawn, and announced item by item to a screen reader (board-svg.ts, editor spec §45)
   'board.title': 'Whiteboard {name}',
+  'board.query.no-graph':
+    'This board is on the graph {graph}, which the note no longer has, so there is nothing to ask about.',
   'board.kind.sticky': 'Sticky note',
   'board.kind.card': 'Card',
   'board.kind.text': 'Text',

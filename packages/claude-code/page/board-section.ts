@@ -1,7 +1,7 @@
 // The note's whiteboards on the browser editor's page (editor spec §45, board_view). It is the page VS Code's tab, the
 // desktop app and the phone app run too. The board in front opens as the display layer's board, to pan, zoom and edit
 // by pointer, touch and keyboard, offline. The list above it switches between the note's boards (board_many). Each edit goes through the page's own version-checked write.
-import { arrangerOf, gqlBlocks, PALETTES, viewerOf, word } from '@thoughtknot/core';
+import { arrangerOf, gqlBlocks, namedFiltersOf, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import type { Pictures } from '@thoughtknot/core/display/board/board-images';
 import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
@@ -23,6 +23,8 @@ import {
   showBoardList,
 } from '@thoughtknot/core/display/board/board-list';
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
+import { boardGraphIn } from '@thoughtknot/core/display/board/board-queries';
+import type { BoardQueryHost } from '@thoughtknot/core/display/board/board-queries';
 import { exchangeBar } from './board-exchange.ts';
 import { boardFirst, chooseFirst, firstLine, firstTimeLine, keptIn, openingBoard, withStarter } from './board-first.ts';
 
@@ -54,6 +56,19 @@ export function seatsOf(win: Window, key: string): SeatFor | undefined {
 /** Asks the host to call `then` once its seats are ready. A host with no shared boards never calls it. */
 export function whenSeatsReady(win: Window, then: () => void): void {
   (win as Window & WithSeats).thoughtknotSeatsReady?.(then);
+}
+
+/**
+ * A board's queries on the page (ES§75): hand filters and saved queries over the graph it is on, and their marks.
+ * The page has no AI, so nothing is asked in words and Ask again is not offered; the panel says so.
+ */
+function pageQueries(note: BoardNote): BoardQueryHost {
+  return async (board) => {
+    const read = board.on ? boardGraphIn(note.text, board.on) : null;
+    if (!read) return null;
+    const queries = { saved: read.style.queries, confirm: () => false };
+    return { graph: read.graph, named: { saved: namedFiltersOf(read.style.named), queries } };
+  };
 }
 
 /** The board proposed for the note shown in `section`, in place of its board in front; kept, it is written. */
@@ -156,6 +171,7 @@ export function boardSection(
     palette: dark ? PALETTES.dark : PALETTES.light,
     key: `${key}\n${name}`,
     images: pictures,
+    queries: pageQueries(note),
   };
   // a board proposed is shown in place of the board in front, until it is kept or dropped (board_proposed)
   const draft = draftFor(key);

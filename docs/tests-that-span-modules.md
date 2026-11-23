@@ -183,6 +183,9 @@ after a module nor listed here, and on a listed file that is missing.
     as it was. What is typed is written by the server and drawn again. Undo and Redo work.
   - A block changed on disk meanwhile is never overwritten, and is kept as a draft. Undo never goes over another
     program's change. Nothing is written while the note is above the gate.
+- `packages/claude-code/test/board-queries-page.test.js` — a whiteboard's queries on the page the phone app runs
+  (editor spec ES§75). With no AI there, a saved query reopens with nothing sent and marks its cards. The panel says
+  why Ask again is not offered. It spans the page's board, the core's board queries and the query panel.
 
 ## The Claude Code editor: parity with Obsidian
 
@@ -241,6 +244,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The Obsidian plugin
 
+- `packages/obsidian/test/filter-query-phone.test.js` — the Filter panel and its AI queries in the phone's sheet (editor
+  spec ES§75, controls_sheet). Every send goes through the send dialog. It spans the sheet, the bar and the query panel.
 - `packages/obsidian/test/fake-dom-frames.test.js` — the stand-in page's animation frames, which end with its globals.
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/focus-support.test.js` — the Focus support view preset (editor spec §69). The rest is

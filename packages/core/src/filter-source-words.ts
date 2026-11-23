@@ -87,6 +87,7 @@ export const FILTER_SOURCE_WORDS = {
   'filter.saved-query.rename': 'Name of the saved query',
   'filter.saved-query.open': 'Open',
   'filter.saved-query.again': 'Ask again',
+  'filter.saved-query.no-again': 'Ask again is not offered: no AI can be asked here. Open still runs each saved rule.',
   'filter.saved-query.remove': 'Remove',
   'filter.saved-query.opened': 'Opened the saved query {name}. Nothing was sent.',
   'filter.saved-query.done': 'Saved the query {name}.',

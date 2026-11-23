@@ -186,6 +186,8 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
 
 /** The panels the bar opens, by their class: each lies over the drawing (panels_over_drawing). */
 const OVER = ['thoughtknot-problems', 'thoughtknot-find', 'thoughtknot-filter'];
+/** The panels that go in the phone's sheet instead, in reach of a thumb: the filter and its queries (ES§75). */
+const IN_SHEET = ['thoughtknot-filter'];
 
 /**
  * Puts the panels the bar opens in one layer just above the card's drawing, `viewport`. Export opens there too
@@ -203,11 +205,11 @@ export function overDrawing(
   // the top start corner: the chip of what the drawing shows, then the docks, under any panel opened (§25)
   const corner = layer.createDiv({ cls: 'thoughtknot-corner' }),
     chip = renderChip(corner);
-  if (isPhone()) renderSheet(layer, root, corner); // on a phone, in a sheet at the foot of the drawing (controls_sheet)
+  const sheet = isPhone() ? renderSheet(layer, root, corner) : null; // on a phone, at the foot of the drawing (controls_sheet)
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
   const is = (el: Element, classes: string[]) => classes.some((cls) => el.classList.contains(cls));
   for (const el of Array.from(root.children))
-    if (is(el, OVER)) panels.appendChild(el);
+    if (is(el, OVER)) (sheet && is(el, IN_SHEET) ? sheet.controls : panels).appendChild(el);
     else if (is(el, ['thoughtknot-dock'])) {
       corner.appendChild(el); // controls_dock
       keepPlace(el as HTMLElement, el.getAttribute('aria-label') ?? ''); // where it was left (controls_panels)

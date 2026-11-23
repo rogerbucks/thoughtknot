@@ -81,3 +81,20 @@ export function readLinkVia(
     return out;
   };
 }
+
+/**
+ * How many hard links a file has, links settled: a file with more than one may be a note under another name (ES§26).
+ * A process that cannot run, fails or gives no whole number is a rejection. It runs from `cwd`, as `realPathVia` does.
+ */
+export function linkCountVia(
+  spawn: EditorPorts['spawn'],
+  program: readonly string[],
+  after: EditorPorts['after'],
+  cwd?: string,
+): (path: string) => Promise<number> {
+  return async (path) => {
+    const { out, code } = await ask(spawn, [...program, '--links', '--', path], after, cwd);
+    if (code !== 0 || !/^\d+$/.test(out)) throw new Error('The links could not be counted.');
+    return Number(out);
+  };
+}

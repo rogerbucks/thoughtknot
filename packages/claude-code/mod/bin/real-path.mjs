@@ -1,14 +1,14 @@
 // bin/real-path-process.ts
-import { readlinkSync, realpathSync } from "node:fs";
+import { readlinkSync, realpathSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 var NOT_THERE = /* @__PURE__ */ new Set(["ENOENT", "ENOTDIR"]);
 var args = process.argv.slice(2);
 try {
-  const link = args[0] === "--link";
-  const rest = link ? args.slice(1) : args;
+  const mode = args[0] === "--link" || args[0] === "--links" ? args[0] : null;
+  const rest = mode ? args.slice(1) : args;
   if (rest.length !== 2 || rest[0] !== "--" || !rest[1]) throw new Error("not `-- <path>`");
   const path = rest[1];
-  if (link) {
+  if (mode === "--link") {
     try {
       process.stdout.write(resolve(realpathSync.native(dirname(path)), readlinkSync(path)));
     } catch (err) {
@@ -18,7 +18,7 @@ try {
     }
   } else {
     try {
-      process.stdout.write(realpathSync.native(path));
+      process.stdout.write(mode === "--links" ? String(statSync(path).nlink) : realpathSync.native(path));
     } catch (err) {
       if (NOT_THERE.has(err.code ?? "")) process.exitCode = 2;
       else throw err;
