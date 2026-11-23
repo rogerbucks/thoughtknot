@@ -82,12 +82,7 @@ export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-
 export { Permissions, readable, type Guarded } from './permissions.ts';
 export * from './index-pictures.ts';
 export { savedExploreFor, type ExploreSave, type SavedExplore } from './explore-saved.ts';
-export { namedFilterRemoved, namedFiltersOf, type NamedFilterSave, type NamedFilters } from './filter-named.ts';
-// queries saved by name, opened, asked again and kept on the device (ES§75)
-export { type SavedQueries, type SavedQuery, type SavedQuerySave } from './filter-manage.ts';
-export { savedQueryRemove, savedQueryRenamed, savedQueryWritten } from './filter-manage-note.ts';
-export { queryCache, type DeviceStore } from './filter-cache.ts';
-export { queryFitless } from './filter-fuzzy.ts';
+export * from './index-queries.ts';
 // editing a thing where it is drawn, for the Copilot Cowork skill (§46, cowork_same_bytes)
 export {
   addedNear,

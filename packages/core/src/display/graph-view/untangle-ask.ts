@@ -16,14 +16,11 @@ import type { AskedFilter } from '../../filter-ask.ts';
 import { markedBy } from '../../query-marks.ts';
 import type { Marked } from '../../query-marks.ts';
 import type { NamedFilters } from '../../filter-named.ts';
-import { savedQueryFrom } from '../../filter-manage.ts';
-import type { SavedQuery } from '../../filter-manage.ts';
-import { askedAgain, savedQueryOpened } from '../../filter-replay.ts';
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
 import { renderFind } from './rule-form-parts.ts';
 import { QueryPanel } from './filter-query-list.ts';
-import { savedQueryList } from './untangle-saved.ts';
+import { saveByName, savedQueriesIn } from './untangle-saved.ts';
 export { untangledIn } from './stage-untangle.ts';
 import type { FormState } from './rule-form-parts.ts';
 
@@ -126,36 +123,8 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     redraw();
     tell(word('filter.saved.picked', { name }));
   };
-  // a query worked on is saved whole, with its prompts, look and lock; else the rows are saved as a filter
-  const nameIt = () => {
-    const held = queries.held();
-    if (held && savingQuery)
-      return namePrompt(saved, querySaid(held), (name) => savingQuery(savedQueryFrom(name, held)));
-    // a saved query's filter line is its own: saving a plain filter over it would change its rule unseen
-    const save = (name: string) =>
-      qs?.saved.some((q) => q.name === name.trim())
-        ? tell(word('filter.saved-query.taken', { name }))
-        : saving?.({ name, draft: state.draft });
-    if (saving) namePrompt(saved, filterSaid(state.draft), save);
-  };
-  // a saved query opened runs its rule on the graph as it is now, with nothing sent (ai_query_replay)
-  const open = (s: SavedQuery) => {
-    const o = savedQueryOpened(s, queries.fresh(), host.choices);
-    if ('broken' in o) return tell(o.broken);
-    byAi = false;
-    queries.adopt(o.query);
-    tell(o.stale ?? word('filter.saved-query.opened', { name: s.name }));
-  };
-  // Ask again sends only after the person says yes to each prompt it will send, in order
-  const again = async (s: SavedQuery) => {
-    if (!qs) return;
-    const deps = { now: host.graph, choices: host.choices, confirm: qs.confirm, ask: queries.asker() };
-    const out = await askedAgain(s, queries.fresh(), { ...deps, ...(qs.answers && { cache: qs.answers }) });
-    if (!('query' in out)) return tell('failed' in out ? out.failed : out.declined);
-    byAi = true;
-    queries.adopt(out.query);
-    tell(word('filter.ask.filled'));
-  };
+  const prompt = (said: string, save: (name: string) => void) => namePrompt(saved, said, save);
+  const nameIt = () => saveByName({ held: queries.held(), qs, saving, draft: state.draft, tell, prompt });
   const show = () => {
     if (queries.whole() || filterReady(state.draft)) {
       if (!queries.show()) host.show(state.draft, hide.checked);
@@ -177,7 +146,8 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   };
   hide.addEventListener('change', () => show());
   if (host.named) savedRow(saved, host.named, pick);
-  if (qs) savedQueryList(kept, qs, host.choices, { open, tell, ...(host.describe && { again: (s) => void again(s) }) });
+  const panel = { queries, graph: host.graph, choices: host.choices, tell, byAi: (on: boolean) => (byAi = on) };
+  if (qs) savedQueriesIn(kept, qs, { ...panel, asks: !!host.describe });
   redraw();
   tell();
   return { el, focus: () => (input ?? find.querySelector('select'))?.focus(), off: () => queries.off() };

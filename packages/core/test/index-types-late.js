@@ -256,6 +256,7 @@ export const TYPES_LATE = [
   'SavedQueries',
   'SavedQuery',
   'SavedQuerySave',
+  'DeviceStore',
   'Scenario',
   'Scheduler',
   'SchemaMove',

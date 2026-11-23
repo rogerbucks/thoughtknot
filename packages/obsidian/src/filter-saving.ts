@@ -115,7 +115,7 @@ function queriesFor(
   };
   if (readOnly()) return kept;
   const told = (done: { refused: string } | object, said: string) =>
-    new Notice('refused' in done ? word('blocks.style-failed', { why: done.refused }) : said);
+    new Notice(!('refused' in done) ? said : word('blocks.style-failed', { why: done.refused }));
   return {
     ...kept,
     save: (s) =>

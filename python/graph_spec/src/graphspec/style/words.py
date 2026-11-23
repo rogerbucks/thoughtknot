@@ -134,7 +134,7 @@ STYLE_KEYS = {
     "Explore": ("centre", "shown", "shape", "per_branch", "view"),
     # a filter saved by name (editor spec §25): only the plug-in picks it, not checked here
     "NamedFilter": ("name", "kind", "when"),
-    # a query saved by name (editor spec ES§75): only the plug-in opens it, not checked here
+    # a query saved by name (editor spec §75): only the plug-in opens it, not checked here
     "SavedQuery": ("name", "filter", "words", "show", "locked", "join", "parts"),
 }
 
