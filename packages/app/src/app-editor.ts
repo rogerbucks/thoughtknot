@@ -4,7 +4,7 @@
 // read at once is kept in the app's file on disk (tauri-parts-store.ts).
 import { setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import type { NoteStorage, WriteOptions } from '@thoughtknot/core';
-import type { HostPartsAsk } from '../../claude-code/page/host-parts.ts';
+import type { HostPartsAsk } from '@thoughtknot/core/display/host-parts';
 import { aiHostParts, tauriAiPorts } from './app-ai.ts';
 import { appFetch } from './app-api.ts';
 import { indexedShelves } from './app-shelves.ts';

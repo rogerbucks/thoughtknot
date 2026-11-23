@@ -50,7 +50,7 @@ Rust (src-tauri/)
 ## AI on the iPhone, in `src/`
 
 AI on the iPhone (ES§19, app_ai_host to app_ai_on_device). The core keeps every rule of a send, as in Obsidian.
-The page holds only a generic hook (`claude-code/page/host-parts.ts`), and the app fills it:
+The page holds only a generic hook (the core's `display/host-parts.ts`), and the app fills it:
 
 - `app-ai.ts`: `tauriAiPorts`, the AI ports over the AI plug-in's commands. A device whose plug-in does not host
   AI, or cannot be asked, gets none. `aiHostParts` makes the page's parts: the AI group and the Ask AI box.

@@ -1,8 +1,19 @@
 // What a host may add to the page (editor spec ES§19, app_ai_host). The phone app adds its AI this way: a group of the
 // More view, and the board's way to ask. The page itself holds none of it. So a page no host adds to, as in Claude
-// Code or VS Code, offers no model (cc_claude_only). The host puts a function on the window before the page starts.
-import type { Settings } from '@thoughtknot/core';
-import type { BoardAskOf } from './board-section.ts';
+// Code or VS Code, offers no model (cc_claude_only). The host puts a function on the window before the page starts. The
+// browser editor's page asks for it (claude-code/page/page-main.ts).
+import type { BoardDraft } from '../ai-request.ts';
+import type { Settings } from '../settings.ts';
+
+/**
+ * How the board asks the person's AI for a board, where the host has AI on (ES§19, app_ai_host). It is given the graph
+ * the board is on, and what to do with the board that comes back. It gives the words handler, or nothing, so the list
+ * offers no box.
+ */
+export type BoardAskOf = (
+  graph: string | undefined,
+  got: (board: BoardDraft) => void,
+) => ((words: string) => void) | undefined;
 
 /** What the page hands a host's parts: the page, its settings, the note, and its way to say something. */
 export interface HostPartsAsk {

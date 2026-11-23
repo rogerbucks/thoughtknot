@@ -683,10 +683,12 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
 
 ### AI on the phone app (ES§19, app_ai_host to app_ai_on_device)
 
-The page holds no AI itself, so its source names no model (cc_claude_only). It holds only `host-parts.ts`.
-`hostPartsOf` asks the window's `thoughtknotHostParts` for what a host adds: a group of the More view, and the board's
-way to ask. Where there is no host, or it fails, it adds none. The phone app puts its AI there, and its modules and
-tests are in `packages/app` (its GUIDE). Any other window adds nothing, so the page offers no AI.
+The page holds no AI itself, so its source names no model (cc_claude_only). It asks the core's hook
+(`core/src/display/host-parts.ts`). `hostPartsOf` asks the window's `thoughtknotHostParts` for what a host adds: a
+group of the More view, and the board's way to ask. Where there is no host, or it fails, it adds none.
+
+The phone app puts its AI there, and its modules and tests are in `packages/app` (its GUIDE). Any other window adds
+nothing, so the page offers no AI.
 
 ### Export from the page
 

@@ -24,7 +24,7 @@ import { exportCalls } from './export-calls.ts';
 import { windowAttachments } from './board-attachments.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { boardsKept, seatsOf } from './board-section.ts';
-import { hostPartsOf } from './host-parts.ts';
+import { hostPartsOf } from '@thoughtknot/core/display/host-parts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
 import { reviewSection } from './review-section.ts';

@@ -4,7 +4,7 @@
 import { arrangerOf, gqlBlocks, namedFiltersOf, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import type { Pictures } from '@thoughtknot/core/display/board/board-images';
-import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
+import type { BoardAskOf } from '@thoughtknot/core/display/host-parts';
 import {
   boardFromGraph,
   draftFor,
@@ -95,16 +95,6 @@ function proposedIn(
   });
   return section;
 }
-
-/**
- * How the board asks the person's AI for a board, where the host has AI on (ES§19, app_ai_host). It is given the graph
- * the board is on, and what to do with the board that comes back. It gives the words handler, or nothing, so the list
- * offers no box.
- */
-export type BoardAskOf = (
-  graph: string | undefined,
-  got: (board: BoardDraft) => void,
-) => ((words: string) => void) | undefined;
 
 /**
  * A section with the note's board in front opened, under the list of its boards, or null when the note holds none.
