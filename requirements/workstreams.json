@@ -286,7 +286,8 @@
     "size": "S",
     "requirements": [
       "cc_classified_asks",
-      "cc_credential_never"
+      "cc_credential_never",
+      "cc_gate_code_files"
     ]
   },
   "C4": {

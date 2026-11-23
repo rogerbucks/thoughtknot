@@ -5,7 +5,8 @@
 // that defines functions or classes, imports a module not listed below, or renames one it imports.
 //
 // Roger ruled on 8 Nov 2026 that a new note made through a Python heredoc may carry a classification, as one made with
-// `cat` may. gate-shell.ts allows the script only when every file it writes is not there yet.
+// `cat` may. gate-shell.ts allows the script only when every file it writes is not there yet. Since 23 Nov 2026, a
+// code file that gate-code.ts lets off may be written too.
 
 /** The modules a plain script may import, none of which writes a file but through a handle `open` gave. */
 const MODULES = new Set([
