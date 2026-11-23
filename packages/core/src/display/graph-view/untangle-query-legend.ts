@@ -8,8 +8,9 @@ import type { QueryLegendEntry, QueryMark } from '../../filter.ts';
 import { PALETTES } from '../../palette.ts';
 import { drawnOf, queryLabel, queryLine } from '../../query-marks.ts';
 
-/** The class of the legend list, and of each badge in it. */
+/** The class of the legend list. */
 export const QUERY_LEGEND = 'thoughtknot-query-legend';
+/** The class of each badge in the legend, and beside each part of a merged query. */
 export const QUERY_LEGEND_BADGE = 'thoughtknot-query-legend-badge';
 
 /** The mark `mark` in words, such as "Star mark, Orange", so it is never told by its look alone. */
@@ -28,11 +29,10 @@ export function legendBadge(el: Element, mark: QueryMark): HTMLElement {
   badge.setAttribute('role', 'img');
   badge.setAttribute('aria-label', markSaid(mark));
   badge.setAttribute('data-query-badge', d?.glyph ?? '');
-  if (d) {
-    const line = queryLine(d.hue, PALETTES.obsidian);
-    const label = queryLabel(d.hue, PALETTES.obsidian);
-    badge.setAttribute('style', `--thoughtknot-query-line: ${line}; --thoughtknot-query-label: ${label}`);
-  }
+  // the colours as custom properties, as the drawing's marks set them (focus-marks.ts), for the stylesheet to paint
+  const style = (badge as HTMLElement & { style?: CSSStyleDeclaration }).style;
+  if (d) style?.setProperty('--thoughtknot-query-line', queryLine(d.hue, PALETTES.obsidian));
+  if (d) style?.setProperty('--thoughtknot-query-label', queryLabel(d.hue, PALETTES.obsidian));
   el.appendChild(badge);
   return badge;
 }
