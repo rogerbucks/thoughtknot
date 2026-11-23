@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/filter-source-words.test.js",
+  "test": "the words of the Filter panel > words that fit no rule suggest a wording, and a stale rule names what is gone and offers Ask again",
+  "seen_failing_first": false,
+  "evidence": "A test named after a word catalogue whose words came with their code earlier on this branch, so it passes on its parent."
+}

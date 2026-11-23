@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/filter-source-words.test.js",
+  "test": "the words of the Filter panel > the words said when nothing is sent say so",
+  "seen_failing_first": false,
+  "evidence": "A test named after a word catalogue whose words came with their code earlier on this branch, so it passes on its parent."
+}

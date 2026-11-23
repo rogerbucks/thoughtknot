@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/filter-source-words.test.js",
+  "test": "the words of the Filter panel > every key is a filter key, lower-case and dotted, and every wording is a sentence or a name",
+  "seen_failing_first": false,
+  "evidence": "A test named after a word catalogue whose words came with their code earlier on this branch, so it passes on its parent."
+}
