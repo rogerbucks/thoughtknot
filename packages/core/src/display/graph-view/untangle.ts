@@ -25,7 +25,7 @@ import { renderFind } from './untangle-find';
 import { levelsOf } from './level-clouds-svg.ts';
 import { levelPath } from '../../detail-levels.ts';
 import type { FindRow } from './untangle-find';
-import { renderLegend } from './untangle-legend';
+import { legendShown, renderLegend } from './untangle-legend';
 import { askedOf, askPanelIn, untangledIn } from './untangle-ask.ts';
 import type { FilterAskHost, FilterAskPanel, ShownAsk } from './untangle-ask.ts';
 import type { LegendPanel } from './untangle-legend';
@@ -225,13 +225,13 @@ export class UntangleView {
 
   /** Opens the legend panel on the filter by what things hold, to change it (the banner's Change the filter). */
   private openAsk(): void {
-    this.legend.el.hidden = false;
+    legendShown(this.legend.el, true);
     this.ask()?.focus();
   }
 
   /** Opens or closes the legend panel (the bar's button). */
   toggleLegend(b: HTMLElement): void {
-    this.legend.el.hidden = !this.legend.el.hidden;
+    legendShown(this.legend.el, this.legend.el.hidden !== false);
     if (!this.legend.el.hidden) this.ask();
     b.setAttribute('aria-expanded', String(!this.legend.el.hidden));
   }

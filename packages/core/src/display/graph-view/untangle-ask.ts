@@ -242,8 +242,21 @@ export function askPanelIn(
 ): FilterAskPanel | null {
   const g = card.reading.world[card.graph];
   if (!g) return null;
+  return askPanelOver(legend, g, new Set(card.drawing.boxes.map((b) => b.key)), card, show);
+}
+
+/**
+ * The panel first in `legend`, over the graph `g`, counting only the things `drawn`: a card's boxes, or a board's linked
+ * items (AQ6). `show` is told the filter to show, or null to show all again.
+ */
+export function askPanelOver(
+  legend: HTMLElement,
+  g: Graph,
+  drawn: ReadonlySet<string>,
+  card: Pick<FilterAskHost, 'describe' | 'named'>,
+  show: (asked: ShownAsk | null) => void,
+): FilterAskPanel {
   const choices = ruleChoices(g);
-  const drawn = new Set(card.drawing.boxes.map((b) => b.key));
   // a query is kept by its own filter, or its parts joined: worked out afresh, and counted among the things drawn
   const kept = (draft: RuleDraft, q?: Query) =>
     new Set([...(q ? queryKeeps(g, q, choices) : filterKeeps(g, draft, choices))].filter((k) => drawn.has(k)));

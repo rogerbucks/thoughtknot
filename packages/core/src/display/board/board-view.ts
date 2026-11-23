@@ -27,7 +27,7 @@ import { Presenter } from './board-present.ts';
 import { LayerList } from './board-layer-list.ts';
 import { lockedOn } from '../../board-layers.ts';
 import { BoardDrag, SLOP } from './board-drag.ts';
-import { paintOver } from './board-view-items.ts';
+import { BoardQueries, paintOver } from './board-view-items.ts';
 import { copyKey } from './board-copy.ts';
 import { BoardInk } from './board-ink.ts';
 import { FormatBar } from './board-format-bar.ts';
@@ -121,6 +121,7 @@ class BoardView {
     new BoardInk(this.vp, host.palette, this.rail, this.space, this.zoom, this.hooks(), this.readOnly);
     host.together?.watch(() => this.othersChanged());
     new Presenter(root, this.vp, this.hooks(), this.zoom, this.space);
+    BoardQueries.on(root, this.vp, host, () => this.board, this.draw.bind(this));
     this.draw();
     if (was) this.zoom.restore(...placeFrom(was, this.frame.x, this.frame.y));
     else this.space.open(this.board);

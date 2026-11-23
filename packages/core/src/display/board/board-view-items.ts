@@ -10,6 +10,8 @@ import { viewSpace } from '../../view-types/board-views.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 import { drawHandle } from './board-drag.ts';
 import { paintImages, type Pictures } from './board-images.ts';
+import { paintBoardQueries } from './board-queries.ts';
+export { BoardQueries } from './board-queries.ts'; // for board-view.ts, which keeps its imports few
 
 /** What draws a View item of a board: an SVG picture its own size, or why not, in words. */
 export type Viewer = (board: Board, id: string) => Promise<{ svg: string } | { refused: string }>;
@@ -67,7 +69,10 @@ export function paintViews(svg: SVGSVGElement, board: Board, viewer: Viewer | un
   }
 }
 
-/** The marks the board draws over its picture once drawn: the views and pictures painted in, and the focus's handle. */
+/**
+ * The marks the board draws over its picture once drawn: the views and pictures painted in, what a query shows, and the
+ * focus's handle.
+ */
 export function paintOver(
   svg: SVGSVGElement,
   board: Board,
@@ -77,5 +82,6 @@ export function paintOver(
 ): void {
   paintViews(svg, board, host.views, host.key);
   paintImages(svg, board, host.images);
+  paintBoardQueries(svg, board); // what a query shows on the board's cards (ES§75)
   if (!readOnly) drawHandle(svg, board, focus);
 }

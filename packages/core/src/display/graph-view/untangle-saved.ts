@@ -95,6 +95,9 @@ export function savedQueryList(root: HTMLElement, qs: SavedQueries, choices: Rul
     attr: { role: 'list', 'aria-label': word('filter.saved-query.list') },
   });
   for (const s of qs.saved) savedItem(list, s, qs, choices, acts);
+  // with no AI to ask here, Ask again is not offered, and the list says why, so it is never just missing
+  if (qs.saved.length && !acts.again)
+    root.createDiv({ cls: 'thoughtknot-saved-queries-no-again', text: word('filter.saved-query.no-again') });
   const answers = qs.answers;
   if (answers)
     button(root, word('filter.cache.clear'), 'eraser', () => {

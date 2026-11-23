@@ -2965,6 +2965,25 @@ button.thoughtknot-stage-card-pin {
   display: inline-flex;
   vertical-align: top;
 }
+/* A board's AI queries (ES§75): its Filter and what is shown sit on the same row, taking no height of their own. */
+.thoughtknot-board-queries-bar,
+.thoughtknot-board-queries-said {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+  vertical-align: top;
+}
+.thoughtknot-board-queries-bar {
+  margin-inline-start: var(--gn-space-2);
+}
+.thoughtknot-board-queries-bar button {
+  min-height: 24px;
+  min-width: 24px;
+}
+.thoughtknot-board-queries {
+  margin-bottom: var(--gn-space-1);
+}
 /* The format bar sits on the same row; its looks wrap under it on a narrow board. */
 .thoughtknot-board-bar + .thoughtknot-board-format,
 .thoughtknot-board-tools + .thoughtknot-board-format {

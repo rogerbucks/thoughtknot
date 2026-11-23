@@ -28,6 +28,7 @@ import {
 import { boardEditInNote, boardOf, showBoard } from '@thoughtknot/core/display/board/board-view';
 import type ThoughtKnotPlugin from './main';
 import { boardAskFor } from './ai/board-make';
+import { boardQueriesFor } from './board-queries';
 import type { HostCommand } from './host-commands';
 import { changeVaultNote, noteText } from './storage/plugin-notes';
 
@@ -192,6 +193,7 @@ export class BoardPane extends ItemView {
       },
       arrange: board.starter ? undefined : arrangerOf(async () => (await noteText(app, path)) ?? '', board.name),
       views: viewerOf(async () => (await noteText(app, path)) ?? '', PALETTES.obsidian),
+      queries: boardQueriesFor(this.plugin, path, () => false), // AI queries (ES§75)
       // zooming in on a view of a board goes into it, and zooming out comes back (board_nested)
       nest: {
         depth: boardTrail(path).length,
