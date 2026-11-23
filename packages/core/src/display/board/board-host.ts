@@ -9,6 +9,7 @@ import type { Nested } from './board-nest.ts';
 import type { Pictures } from './board-images.ts';
 import type { Viewer } from './board-view-items.ts';
 import type { BeginHost } from './board-ways.ts';
+import type { BoardQueryHost } from './board-queries.ts';
 
 /** What a board needs of its host. */
 export interface BoardHost extends Nested {
@@ -28,4 +29,6 @@ export interface BoardHost extends Nested {
   images?: Pictures;
   /** What the ways to begin on an empty board open (board_first_ways_in): text to graph and import. */
   begin?: BeginHost;
+  /** The graph a board on one asks about, with an AI where there is one; with it the board offers its Filter (ES§75). */
+  queries?: BoardQueryHost;
 }

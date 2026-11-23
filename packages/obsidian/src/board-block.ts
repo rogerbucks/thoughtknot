@@ -7,6 +7,7 @@ import { readOnlyHere } from '@thoughtknot/core/display/graph-view/placement';
 import type { BlockContext } from './block-context';
 import type ThoughtKnotPlugin from './main';
 import { boardPictures } from './board-pictures';
+import { boardQueriesFor } from './board-queries';
 import { vaultOps } from './export/vault-write';
 import { changeVaultNote, noteText } from './storage/plugin-notes';
 
@@ -39,6 +40,7 @@ export function renderBoardBlock(
     arrange: writable ? arrangerOf(async () => (await noteText(plugin.app, path)) ?? '', line.name) : undefined,
     views: viewerOf(async () => (await noteText(plugin.app, path)) ?? '', PALETTES.obsidian),
     images: boardPictures(plugin.app, path, writable ? (to, bytes) => vaultOps(plugin).write(to, bytes) : undefined),
+    queries: boardQueriesFor(plugin, path, () => !writable || readOnlyHere(el)), // AI queries (ES§75)
   });
   return true;
 }
