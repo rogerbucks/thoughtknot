@@ -11,7 +11,6 @@ import type { Board, BoardItem } from '../../board.ts';
 import { itemBox } from '../../board-svg.ts';
 import { gqlBlocks } from '../../fences.ts';
 import { readNote } from '../../drawing.ts';
-import type { NamedFilters } from '../../filter-named.ts';
 import { FIRST_MARK } from '../../filter.ts';
 import type { Palette } from '../../palette.ts';
 import { drawnOf, markedBy, QUERY_RINGS, queryLabel, queryLine } from '../../query-marks.ts';
