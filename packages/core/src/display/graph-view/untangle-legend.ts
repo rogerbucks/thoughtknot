@@ -4,6 +4,8 @@
 // Save as shown writes the choices (§25, untangle_legend), and a view saved so opens with them.
 import { word } from '@thoughtknot/core';
 import type { LegendFilter, LegendItem, LegendState } from '@thoughtknot/core';
+// the panel shown or hidden; in a phone's sheet, shown, it turns the sheet to it (controls_sheet)
+export { panelShown as legendShown } from './controls-sheet';
 
 const SAYS: Record<LegendState, () => string> = {
   normal: () => '',

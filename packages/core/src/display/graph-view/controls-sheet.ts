@@ -5,6 +5,8 @@
 // peek, a strip of about a sixth of the drawing; half; and full. Its handle steps through them. Choosing a thing opens
 // Details at peek, so the thing stays in sight above it. Closing the details goes back to Controls. Each target is
 // 44 px. The height is kept for the session, so a card drawn again opens the same way.
+// The Filter panel lies in the Controls tab, not over the drawing. Opened, it turns the sheet to Controls, at half
+// height at least, so its queries can be read (ES§75, AQ6).
 import { word } from '@thoughtknot/core';
 
 /** How tall the sheet stands: a strip, half the drawing, or all of it. */
@@ -17,6 +19,9 @@ type SheetTab = 'controls' | 'details';
 /** The event the details send as they are shown or closed, which the sheet hears to change its tab. */
 const SHOWN = 'thoughtknot-details-shown';
 
+/** The event a panel in the sheet sends as it is shown, which turns the sheet to its Controls tab. */
+const PANEL = 'thoughtknot-sheet-panel-shown';
+
 /** The class of the sheet, which the details look for to know they are in it. */
 const SHEET = 'thoughtknot-phone-sheet';
 
@@ -27,6 +32,12 @@ let keptHeight: SheetHeight = 'peek';
 export function detailsShown(el: HTMLElement, shown: boolean): void {
   el.hidden = !shown;
   el.dispatchEvent(new CustomEvent(SHOWN, { bubbles: true, detail: shown }));
+}
+
+/** Shows (`shown`) or hides the panel `el`; shown in a phone's sheet, the sheet turns to it. */
+export function panelShown(el: HTMLElement, shown: boolean): void {
+  el.hidden = !shown;
+  if (shown) el.dispatchEvent(new CustomEvent(PANEL, { bubbles: true }));
 }
 
 /** Whether the details `el` are in a phone's sheet: then they are not pinned to the screen on their own. */
@@ -87,6 +98,12 @@ export function renderSheet(layer: HTMLElement, root: HTMLElement, corner: HTMLE
     if (shown && tabs.details.hidden) height('peek'); // only as they open: a thing chosen after keeps the height
     tabs.details.hidden = !shown;
     tab(shown ? 'details' : 'controls');
+  });
+  // a panel shown in the Controls tab turns the sheet to it, risen from the strip so it can be read
+  root.addEventListener(PANEL, (e: Event) => {
+    if (!panes.controls.contains(e.target as Node)) return;
+    tab('controls');
+    if (tall === 'peek') height('half');
   });
   tabs.details.hidden = true;
   tab('controls');
