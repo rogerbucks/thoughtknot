@@ -5,7 +5,12 @@
     {
       "file": "test/gpu-painters.test.js",
       "failedFirst": [],
-      "passedFirst": []
+      "passedFirst": [],
+      "held": [
+        "the painters on the graphics chip, in a real browser > WebGL 2 paints the overview as the 2D canvas does",
+        "the painters on the graphics chip, in a real browser > ai_query_highlight: WebGL 2 paints a highlight's ring in its colour as the 2D canvas does, the boxes as they were",
+        "the painters on the graphics chip, in a real browser > WebGPU builds its shaders and paints every kind of mark with no error"
+      ]
     }
   ]
 }
