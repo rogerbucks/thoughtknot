@@ -14,9 +14,8 @@
 //                                                    no record (CI). So each is recorded on its own branch.
 //   node scripts/tests-first.mjs --excuse [--force] [--fault] <test file> <test> <reason>
 //                                                    keep the reason a test passed first, in test/seen-failing/.
-//                                                    <test> is its full name as --check prints it: its suites and
-//                                                    its own name, joined by " > ". One
-//                                                    kept already is replaced only with --force. With --fault, keep
+//                                                    <test> is the full name --check prints. One kept already is
+//                                                    replaced only with --force. With --fault, keep
 //                                                    the reason a test failed at its own commit, so was not replayed
 //                                                    (and which commit fixed it). That is only for a test the records
 //                                                    hold as a fault. --tally counts it excused, and --check does not
@@ -202,9 +201,8 @@ export function replay(repo, commit) {
         });
         continue;
       }
-      // the tests it held before and still passes, changed by the commit or not. A replay on another machine may find
-      // one new, when its old version failed at the parent there (PR 2427). The record names them, so a reason asked
-      // for there names a test the file held at that commit
+      // the tests it held before and still passes. A replay on another machine may find one new (PR 2427). The record
+      // names them, so a reason asked for there names a test the file held
       const held = now.passed.filter((n) => old.includes(n));
       out.files.push(withFaults(judged(file, fresh, run(before.dir, file, repo), held)));
     }

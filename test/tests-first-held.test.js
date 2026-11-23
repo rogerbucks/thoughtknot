@@ -11,8 +11,8 @@ const TWICE = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
 
 describe('the tests a file held before its commit', () => {
-  // PR 2427: a test whose old version failed at the parent on CI's Ubuntu, but passed on the Mac, is new and passing
-  // first there, and held before here. CI asks for a reason; the Mac's record must name the test, so the reason has one
+  // PR 2427: a test's old version failed at the parent on CI's Ubuntu, but passed on the Mac. So CI found it new and
+  // passing first, and asked for a reason. The Mac's record must name the test, so the reason has one
   test('a test the commit changed that its file held before is named in the record, so a reason asked for elsewhere names a real test', () => {
     const r = repository([
       { 'src/twice.js': 'export const twice = (x) => x * 2;\n', 'test/twice.test.js': TWICE("test('one', () => {});") },

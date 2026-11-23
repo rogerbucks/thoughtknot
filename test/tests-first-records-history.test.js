@@ -86,8 +86,8 @@ describe('this repository’s records', () => {
       [],
       'unexplained',
     );
-    // a reason is for a test that passed first, a new test of a commit not replayed, or a test held before in a file a
-    // recorded commit changed, which a replay elsewhere, as CI's on Ubuntu, may find new (PR 2427)
+    // a reason is for a test that passed first, or a new test of a commit not replayed. It may also be for a held test,
+    // which a replay elsewhere may find new, as CI's on Ubuntu did (PR 2427)
     assert.deepEqual(reasonsForNoTest(path('.')), [], 'a reason for no such test');
     for (const names of Object.values(exceptions))
       for (const reason of Object.values(names)) {

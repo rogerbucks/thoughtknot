@@ -1,15 +1,14 @@
-// The tests a reason may name beside those that passed first (spec §12, tests_first). The records are made on a Mac and
-// CI replays on Ubuntu. A test whose old version fails at the parent on one, but not the other, is new and passing first
-// there, and held before here (PR 2427). Records and reasons are kept by scripts/tests-first-records.mjs; the command
-// is scripts/tests-first.mjs.
+// The tests a reason may name beside those that passed first (spec §12, tests_first). The records are made on a Mac.
+// CI replays on Ubuntu. A test's old version may fail at the parent on one but not the other. It is then new and passing
+// first there, and held before here (PR 2427). Records and reasons are kept by scripts/tests-first-records.mjs. The
+// command is scripts/tests-first.mjs.
 import { exceptionsIn, history, readRecords, summary, testFiles } from './tests-first-records.mjs';
 
 /**
  * The tests held before, and still passing, in each test file a recorded commit changed, as `<test file> :: <test>`,
  * for the test files the repository holds now. The record does not say which of them the commit itself changed. A
- * replay on another machine may find one new and passing first, when its old version failed at the parent there: CI on
- * Ubuntu, where the record was made on a Mac (PR 2427). A reason kept for one names a test its file held at that
- * commit, so it is not a reason for no such test.
+ * replay on another machine may find one new and passing first, as CI's on Ubuntu did (PR 2427). Its old version
+ * failed at the parent there. A reason kept for one names a test its file held, so it is not a reason for no such test.
  */
 export function heldTests(repo) {
   const { baseline, commits } = readRecords(repo);
@@ -23,8 +22,7 @@ export function heldTests(repo) {
 
 /**
  * The plain reasons (not for a fault) that name no test the records hold, as `<test file> :: <test>`, sorted. A reason
- * is for a test that passed first, for a new test of a commit not replayed, or for a test held before in a file a
- * recorded commit changed (heldTests).
+ * may name a test that passed first, or a new test of a commit not replayed. It may also name a held test (heldTests).
  */
 export function reasonsForNoTest(repo) {
   const { files } = summary(repo);
