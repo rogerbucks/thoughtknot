@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/app-source-words.test.js",
+  "test": "the app’s words > every word says something, and a counted one has both forms",
+  "seen_failing_first": false,
+  "evidence": "It guards words added later: the AI words were already in the app's catalogue when this test was written, so it passed against its parent."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "the shipped source > no source makes a network request, except the AI send module, the address test, the plug-in link and the phone app’s AI ports",
+  "seen_failing_first": false,
+  "evidence": "That commit only renamed the existing network test as it added the phone's AI ports to its allow-list, so it was new by name only. A later commit put policy.test.js back to main's, with no entry for the app. The boundary is still proved there: 'no source makes a network request, except the AI send module, the address test and the plug-in link' scans packages/app/src and passes, since the ports now call send, not request. test/app-ai-policy.test.js pins the plug-in's commands to app-ai.ts, and packages/app/test/app-config.test.js holds the plug-in to requests the person sent, with no redirect."
+}
