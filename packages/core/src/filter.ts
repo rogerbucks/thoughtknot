@@ -51,6 +51,13 @@ export interface Query extends QueryStep {
   back: readonly QueryStep[];
 }
 
+/** One line of a highlight's legend: a part, or the query itself, with its mark and what it is called. */
+export interface QueryLegendEntry {
+  id: string;
+  mark: QueryMark;
+  said: string;
+}
+
 /** A change refused, and why in words. */
 export interface QueryRefused {
   refused: string;
@@ -99,7 +106,7 @@ export function queryLocked(q: Query, locked: boolean): Query {
 }
 
 /** The filter of `q` in plain words: its own, or its parts' joined by and or or. */
-function filterWords(q: Query): string {
+export function filterWords(q: Query): string {
   if (!q.parts) return filterSaid(q.draft);
   const join = word(q.join === 'any' ? 'filter.query.any' : 'filter.query.all');
   return q.parts.map((p) => `(${filterWords(p)})`).join(` ${join} `);
@@ -202,7 +209,7 @@ export function queryPartOut(q: Query, id: string): Query | QueryRefused {
 }
 
 /** The legend of a highlight: each part, or the query itself, with its mark and what it is called. None for a filter. */
-export function queryLegend(q: Query): { id: string; mark: QueryMark; said: string }[] {
+export function queryLegend(q: Query): QueryLegendEntry[] {
   if (q.show !== 'highlight') return [];
   return (q.parts ?? [q]).map((p) => ({ id: p.id, mark: p.mark, said: querySaid(p) }));
 }
@@ -220,17 +227,23 @@ export function queryView(
   graph: Graph,
   choices?: RuleChoices,
 ): { forward: Kept | null; hidden: Kept; marks: Map<string, QueryMark[]> } {
-  const things = queryKeeps(graph, q, choices);
-  const marks = new Map<string, QueryMark[]>();
-  if (q.show === 'filter') return { ...withAsked(d, edges, legend, { things, hide: q.hide }), marks };
-  const parts = q.parts
-    ? q.parts.map((p) => ({ mark: p.mark, keeps: queryKeeps(graph, p, choices) }))
-    : [{ mark: q.mark, keeps: things }];
-  for (const b of d.boxes)
-    if (things.has(b.key) && !legend.hidden.things.has(b.key))
-      marks.set(
-        b.key,
-        parts.filter((p) => p.keeps.has(b.key)).map((p) => p.mark),
-      );
+  if (q.show === 'filter') {
+    const things = queryKeeps(graph, q, choices);
+    return { ...withAsked(d, edges, legend, { things, hide: q.hide }), marks: new Map() };
+  }
+  const all = queryMarked(graph, q, choices);
+  const marks = new Map(d.boxes.flatMap((b) => (legend.hidden.things.has(b.key) ? [] : found(all, b.key))));
   return { forward: legend.forward, hidden: legend.hidden, marks };
+}
+
+const found = (all: Map<string, QueryMark[]>, key: string): [string, QueryMark[]][] => {
+  const marks = all.get(key);
+  return marks ? [[key, marks]] : [];
+};
+
+/** Each thing `q` keeps, with the mark of each part that finds it, or its own mark when not merged. */
+export function queryMarked(graph: Graph, q: Query, choices?: RuleChoices): Map<string, QueryMark[]> {
+  const parts = (q.parts ?? [q]).map((p) => ({ mark: p.mark, keeps: queryKeeps(graph, p, choices) }));
+  const things = q.parts ? queryKeeps(graph, q, choices) : (parts[0]?.keeps ?? new Set<string>());
+  return new Map([...things].map((k) => [k, parts.filter((p) => p.keeps.has(k)).map((p) => p.mark)]));
 }

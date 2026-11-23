@@ -5553,6 +5553,51 @@ img.thoughtknot-picture-hidden,
   align-items: center;
   gap: var(--gn-space-1);
 }
+/* Queries merged (ES§75, ai_query_merge): the parts, each with its own mark, and the bar to merge the chosen. */
+.thoughtknot-query-merge,
+.thoughtknot-query-part,
+.thoughtknot-query-choose {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-query-parts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  padding-inline-start: var(--gn-space-2);
+}
+.thoughtknot-query-part-said {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* The legend of a highlight: each part's badge in its ring's colour, as the drawing marks it, and its name. */
+.thoughtknot-query-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1) var(--gn-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-query-legend > li {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-query-legend-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  border: 2px solid var(--thoughtknot-query-line, var(--gn-accent));
+  border-radius: var(--gn-radius-s);
+  color: var(--thoughtknot-query-label, var(--gn-text-normal));
+}
 /* The filters saved by name, picked from one list, with Delete beside it (untangle_filter_saved). */
 .thoughtknot-filter-saved {
   display: flex;
