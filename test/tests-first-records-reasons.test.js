@@ -3,11 +3,12 @@
 // tests-first-records.test.js. Split from it on 11 Oct 2026, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BASELINE, EXCUSALS, RECORDS, exceptionsIn, excusalName, excuse } from '../scripts/tests-first-records.mjs';
-import { replay, unexplained } from '../scripts/tests-first.mjs';
+import { excuseCommand, replay, shellQuoted, unexplained } from '../scripts/tests-first.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { repository } from './repository/scratch-repository.js';
 
@@ -40,6 +41,18 @@ describe('a reason for each test that passed before its code', () => {
     } finally {
       r.done();
     }
+  });
+
+  test('the --excuse command --check suggests gives a shell the test file and name as they are, whatever they hold', () => {
+    const file = 'test/a b.test.js',
+      name = "suite > without `echo ran`, $HOME, it's \\ and !! done";
+    const command = excuseCommand(file, name);
+    assert.equal(command, `node scripts/tests-first.mjs --excuse ${shellQuoted(file)} ${shellQuoted(name)} <reason>`);
+    // the shell prints each argument it was given on a line of its own, nothing in them run or expanded
+    const shown = execFileSync('sh', ['-c', `printf '%s\\n' ${shellQuoted(file)} ${shellQuoted(name)}`], {
+      encoding: 'utf8',
+    });
+    assert.equal(shown, `${file}\n${name}\n`);
   });
 
   test('a reason in a file not named for its test fails loudly, naming the file and the name it should have', () => {

@@ -8,6 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { RECORDS, exceptionsIn, readRecords, summary } from '../scripts/tests-first-records.mjs';
+import { reasonsForNoTest } from '../scripts/tests-first-held.mjs';
 import { faultReasonsWithoutFault } from '../scripts/tests-first-faults.mjs';
 import { path, exists, walk } from './repository/repo.js';
 
@@ -80,21 +81,14 @@ describe('this repository’s records', () => {
           .map(([n]) => `${file} :: ${n}`),
       );
     const excused = named(false);
-    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor
-    // passing. A reason may be kept for it
-    const unproved = Object.entries(proved.files).flatMap(([file, e]) =>
-      (e.notReplayedCommits ?? []).flatMap((c) => (c.tests ?? []).map((n) => `${file} :: ${n}`)),
-    );
     assert.deepEqual(
       passed.filter((p) => !excused.includes(p)),
       [],
       'unexplained',
     );
-    assert.deepEqual(
-      excused.filter((x) => !passed.includes(x) && !unproved.includes(x)),
-      [],
-      'a reason for no such test',
-    );
+    // a reason is for a test that passed first, or a new test of a commit not replayed. It may also be for a held test,
+    // which a replay elsewhere may find new, as CI's on Ubuntu did (PR 2427)
+    assert.deepEqual(reasonsForNoTest(path('.')), [], 'a reason for no such test');
     for (const names of Object.values(exceptions))
       for (const reason of Object.values(names)) {
         assert.equal(reason.seen_failing_first, false);

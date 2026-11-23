@@ -245,7 +245,7 @@ export const history = (repo, baseline) =>
     .filter(Boolean);
 
 /** The test files the repository holds now. */
-const testFiles = (repo) =>
+export const testFiles = (repo) =>
   new Set(
     git(repo, 'ls-files')
       .split('\n')
