@@ -82,16 +82,14 @@ export class UntangleView {
   private readonly core: Untangle;
   private readonly banner: Banner;
   private readonly legend: LegendPanel;
-  /** The filter by what things hold, built the first time the panel opens: until then it costs nothing. */
-  private asker: FilterAskPanel | null | undefined;
+  private asker: FilterAskPanel | null | undefined; // the filter by what things hold, built when it first opens
   private shown: ShownAsk | null = null; // the filter, or query shown as a highlight (ES§75), for the banner
   private readonly finder: FindRow;
   private readonly sidebar: ExploreSidebar;
   private readonly host: UntangleHost;
   private readonly names: Map<string, string>;
   private asking: string | null = null;
-  /** The thing and steps the drawing was last regrouped to, so it is laid out again only when they change. */
-  private regrouped = '';
+  private regrouped = ''; // the thing and steps last regrouped to, so it is laid out again only when they change
   /** The bar's button that opens the search row, which Escape in the row gives the focus back to. */
   private findButton: HTMLElement | null = null;
 
@@ -134,6 +132,7 @@ export class UntangleView {
   /** Shows a filter by what things hold, the rest faded or hidden; null shows all again. */
   private showAsked(asked: ShownAsk | null): void {
     this.shown = asked; // a highlight fades and hides nothing: it only marks what it finds (query-marks.ts)
+    if (!asked) this.asker?.off(); // nothing shown, so a query changed later stays off
     ({ asked: this.core.asked, lit: this.core.lit } = askedOf(asked));
     this.changed();
   }
@@ -306,8 +305,8 @@ export class UntangleView {
     this.core.showAll();
     this.core.legend.reset();
     this.core.clearRoute();
-    this.core.asked = this.core.lit = null;
-    this.shown = null;
+    this.core.asked = this.core.lit = this.shown = null;
+    this.asker?.off();
     this.asking = null;
     this.legend.refresh();
     this.changed();
@@ -374,6 +373,7 @@ export class UntangleView {
     if (asked)
       rows.push({
         words: word(banner, { count: asked.things.size, said: asked.said }),
+        ...(asked.legend && { legend: asked.legend }),
         actions: [
           { label: word('filter.ask.edit'), run: () => this.openAsk() },
           { label: word('filter.ask.off'), run: () => this.showAsked(null) },

@@ -1,11 +1,15 @@
 // The banner over an untangled drawing (editor spec §25). It shows what the drawing is filtered to, the path asked for,
 // or the question waiting for a second thing. Each is said in a sentence with its way back, and announced to screen
-// readers as it changes.
+// readers as it changes. A highlight's line carries its legend, naming each part's mark (ES§75, ai_query_merge).
+import type { QueryLegendEntry } from '../../filter.ts';
+import { queryLegendIn } from './untangle-query-legend.ts';
 
 /** One line of the banner: what it says, and the buttons that act on it. */
 export interface BannerRow {
   words: string;
   actions: { label: string; run: () => void }[];
+  /** For a highlight: each part's badge and colour, named. */
+  legend?: readonly QueryLegendEntry[];
 }
 
 /** The banner of one drawing, empty and hidden until something is filtered, chosen or asked for. */
@@ -29,6 +33,7 @@ export class Banner {
         const b = line.createEl('button', { text: a.label, attr: { type: 'button' } });
         b.addEventListener('click', a.run);
       }
+      if (row.legend) queryLegendIn(line, row.legend);
     }
   }
 }

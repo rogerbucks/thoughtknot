@@ -10,8 +10,8 @@ import { word } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading, RuleChoices, RuleDraft, RuleWrite } from '@thoughtknot/core';
 import { blankFilter, filterKeeps, filterReady, filterSaid } from '../../filter-ask.ts';
-import { FIRST_MARK } from '../../filter.ts';
-import type { QueryMark, QueryShow } from '../../filter.ts';
+import { FIRST_MARK, queryKeeps, queryLegend, queryMarked, querySaid } from '../../filter.ts';
+import type { Query, QueryLegendEntry, QueryShow } from '../../filter.ts';
 import type { AskedFilter } from '../../filter-ask.ts';
 import { markedBy } from '../../query-marks.ts';
 import type { Marked } from '../../query-marks.ts';
@@ -28,13 +28,13 @@ export interface FilterAskHost {
   /** The graph the filter is on: a query's answer is taken only when it keeps something here. */
   graph: Graph;
   choices: RuleChoices;
-  /** How many things the filter keeps, of how many. */
-  count: (draft: RuleDraft) => { kept: number; of: number };
+  /** How many things the filter keeps, of how many; a merged query's by its parts. */
+  count: (draft: RuleDraft, query?: Query) => { kept: number; of: number };
   /**
    * Shows the filter on the drawing, the rest faded or hidden; null clears it. A query says how it is shown, as a filter
-   * or a highlight, and what it is called.
+   * or a highlight, what it is called, and the mark of each part.
    */
-  show: (draft: RuleDraft | null, hide: boolean, query?: { show: QueryShow; said: string; mark?: QueryMark }) => void;
+  show: (draft: RuleDraft | null, hide: boolean, query?: Query) => void;
   /**
    * Asks an AI for a filter from words, where the host can: the host shows what is sent and waits for a yes. A send
    * that comes to no rule is told to `fail`, in words, where the host can.
@@ -48,6 +48,8 @@ export interface FilterAskHost {
 export interface FilterAskPanel {
   el: HTMLElement;
   focus: () => void;
+  /** The drawing shows no filter now: a later change to a query does not show it again. */
+  off: () => void;
 }
 
 /** Builds the panel at the end of `root`. */
@@ -74,12 +76,14 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   const saving = host.named?.save;
   const saveButton = saving && button(acts, word('filter.saved.save'), 'bookmark', () => nameIt());
 
+  // a merged query worked on whole is counted, and shown, by its parts; only a single filter is saved by name
   const tell = (extra = '') => {
-    const ready = filterReady(state.draft);
+    const whole = queries.whole();
+    const ready = !!whole || filterReady(state.draft);
     showButton.disabled = !ready;
-    if (saveButton) saveButton.disabled = !ready;
+    if (saveButton) saveButton.disabled = !ready || !!whole;
     if (!ready) return said.setText(extra || word('filter.ask.empty'));
-    const { kept, of } = host.count(state.draft);
+    const { kept, of } = host.count(state.draft, whole ?? undefined);
     const counted = word('filter.ask.keeps', { count: kept, of });
     said.setText([extra, byAi ? word('filter.ask.by-ai') : '', counted].filter(Boolean).join(' '));
   };
@@ -89,11 +93,11 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     queries.edited();
     tell();
   };
-  // the rows of the query worked on, which cannot be changed while it is locked
+  // the rows of the query worked on, which cannot be changed while it is locked, or merged and worked on whole
   const redraw = () => {
     renderFind(find, state, host.choices, edited);
-    const locked = !!queries.worked()?.locked;
-    for (const c of find.querySelectorAll('input, select, button')) (c as HTMLInputElement).disabled = locked;
+    const fixed = queries.fixed();
+    for (const c of find.querySelectorAll('input, select, button')) (c as HTMLInputElement).disabled = fixed;
   };
   const queries = new QueryPanel(list, {
     graph: host.graph,
@@ -117,7 +121,9 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
   const nameIt = () =>
     saving && namePrompt(saved, filterSaid(state.draft), (name) => saving({ name, draft: state.draft }));
   const show = () => {
-    if (filterReady(state.draft) && !queries.show()) host.show(state.draft, hide.checked);
+    if (queries.whole() || filterReady(state.draft)) {
+      if (!queries.show()) host.show(state.draft, hide.checked);
+    }
   };
   // the rows start again and nothing is shown; the queries asked stay listed
   const clear = () => {
@@ -133,13 +139,11 @@ export function renderFilterAsk(root: HTMLElement, host: FilterAskHost): FilterA
     if (!words) return tell(word('filter.ask.no-words'));
     queries.ask(words);
   };
-  hide.addEventListener('change', () => {
-    if (filterReady(state.draft)) show();
-  });
+  hide.addEventListener('change', () => show());
   if (host.named) savedRow(saved, host.named, pick);
   redraw();
   tell();
-  return { el, focus: () => (input ?? find.querySelector('select'))?.focus() };
+  return { el, focus: () => (input ?? find.querySelector('select'))?.focus(), off: () => queries.off() };
 }
 
 /** The box to write what to see in, and Ask AI, at the end of `el`; Enter asks too, and never sends a form round it. */
@@ -208,14 +212,16 @@ export interface ShownAsk {
   hide: boolean;
   /** Shown as a filter, the rest fades or hides; as a highlight, nothing does (ES§75, ai_query_highlight). */
   show: QueryShow;
-  /** The badge and colour a highlight marks what it finds with (query-marks.ts). */
-  mark?: QueryMark;
+  /** What a highlight marks, each thing with the badge and colour of each part that finds it (query-marks.ts). */
+  marked?: Marked;
+  /** The legend of a highlight: each part's mark and what it is called (ES§75, ai_query_merge). */
+  legend?: readonly QueryLegendEntry[];
 }
 
 /** What the untangling shows for `asked`: a filter fades or hides, and a highlight only marks (ES§75, query-marks.ts). */
 export function askedOf(asked: ShownAsk | null): { asked: AskedFilter | null; lit: Marked | null } {
   if (asked?.show === 'filter') return { asked: { things: asked.things, hide: asked.hide }, lit: null };
-  return { asked: null, lit: asked ? markedBy(asked.things, asked.mark ?? FIRST_MARK) : null };
+  return { asked: null, lit: asked ? (asked.marked ?? markedBy(asked.things, FIRST_MARK)) : null };
 }
 
 /**
@@ -231,20 +237,22 @@ export function askPanelIn(
   if (!g) return null;
   const choices = ruleChoices(g);
   const drawn = new Set(card.drawing.boxes.map((b) => b.key));
-  const kept = (draft: RuleDraft) => new Set(filterKeeps(g, draft, choices).filter((k) => drawn.has(k)));
+  // a query is kept by its own filter, or its parts joined: worked out afresh, and counted among the things drawn
+  const kept = (draft: RuleDraft, q?: Query) =>
+    new Set([...(q ? queryKeeps(g, q, choices) : filterKeeps(g, draft, choices))].filter((k) => drawn.has(k)));
   const panel = renderFilterAsk(legend, {
     choices,
     graph: g,
-    count: (draft) => ({ kept: kept(draft).size, of: drawn.size }),
-    show: (draft, hide, query) =>
+    count: (draft, q) => ({ kept: kept(draft, q).size, of: drawn.size }),
+    show: (draft, hide, q) =>
       show(
         draft && {
           draft,
-          said: query?.said ?? filterSaid(draft),
-          things: kept(draft),
+          said: q ? querySaid(q) : filterSaid(draft),
+          things: kept(draft, q),
           hide,
-          show: query?.show ?? 'filter',
-          ...(query?.mark && { mark: query.mark }),
+          show: q?.show ?? 'filter',
+          ...(q && { marked: queryMarked(g, q, choices), legend: queryLegend(q) }),
         },
       ),
     ...(card.describe && { describe: card.describe }),

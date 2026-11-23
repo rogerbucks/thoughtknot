@@ -4,6 +4,7 @@
 // - A thing drawn in a box is read as before.
 // - A thing a query's highlight marks (ES§75, ai_query_highlight) is read where it was, with its badge before its name.
 //   Its line is its ring's colour, as the stylesheet paints it. So the 3D view's painters show the same marks.
+// - Merged queries (ES§75, ai_query_merge): the legend names each part's badge in the colour its ring is painted.
 //
 // Chrome is the one THOUGHTKNOT_CHROME names, or the first on the PATH. Where none is found the cases skip, except in CI.
 import { test, describe, before, after } from 'node:test';
@@ -22,6 +23,7 @@ import { marksOfSvg } from './packages/core/src/display/graph-view/svg-marks.ts'
 import { DrawingMarks } from './packages/core/src/display/graph-view/focus-marks.ts';
 import { QUERY_MARKS } from './packages/core/src/filter.ts';
 import { markedBy } from './packages/core/src/query-marks.ts';
+import { queryLegendIn } from './packages/core/src/display/graph-view/untangle-query-legend.ts';
 window.readHighlight = (css) => {
   const holder = document.body.appendChild(document.createElement('div'));
   holder.setAttribute('style', '--color-orange: rgb(236, 117, 0); --text-normal: rgb(34, 34, 34)');
@@ -40,6 +42,39 @@ window.readHighlight = (css) => {
   const lit = read();
   holder.remove();
   return { plain, lit };
+};
+/** Marks three things with two parts' marks, one each and both, and draws their legend: gives what each shows. */
+window.readLegend = (css) => {
+  const holder = document.body.appendChild(document.createElement('div'));
+  holder.setAttribute('style', '--color-blue: rgb(8, 109, 221); --color-orange: rgb(236, 117, 0); --text-normal: rgb(34, 34, 34)');
+  const node = (key, x) => \`<g class="node" data-key="\${key}"><polygon fill="rgb(200, 240, 200)" stroke="rgb(9, 9, 9)" points="\${x},20 \${x + 60},20 \${x + 60},60 \${x},60"/><text x="\${x + 30}" y="45">\${key}</text></g>\`;
+  holder.innerHTML = \`<style>\${css}</style><svg class="thoughtknot-svg" xmlns="http://www.w3.org/2000/svg" width="400" height="100"><g class="graph">\${node('a', 10)}\${node('b', 110)}\${node('c', 210)}</g></svg>\`;
+  const [one, two] = QUERY_MARKS;
+  const marked = new Map([['a', [one]], ['b', [two]], ['c', [one, two]]]);
+  const none = { things: new Set(), edges: new Set() };
+  new DrawingMarks(holder.querySelector('svg')).all({ kept: null, hidden: none, hot: null, marked });
+  queryLegendIn(holder, [{ id: 'p1', mark: one, said: 'late tasks' }, { id: 'p2', mark: two, said: 'dear tasks' }]);
+  // a colour as the page paints it, so a blend and its result compare alike
+  const resolve = (colour) => {
+    const probe = holder.appendChild(document.createElement('i'));
+    probe.style.color = colour;
+    const out = getComputedStyle(probe).color;
+    probe.remove();
+    return out;
+  };
+  const things = Object.fromEntries(['a', 'b', 'c'].map((key) => {
+    const g = holder.querySelector(\`[data-key=\${key}]\`);
+    const ring = getComputedStyle(g.querySelector('polygon')).stroke;
+    return [key, { badge: g.getAttribute('data-query-badge'), ring, label: resolve(getComputedStyle(g).getPropertyValue('--thoughtknot-query-label')) }];
+  }));
+  const legend = [...holder.querySelectorAll('.thoughtknot-query-legend li')].map((li) => {
+    const badge = li.querySelector('.thoughtknot-query-legend-badge');
+    const look = getComputedStyle(badge);
+    const box = badge.getBoundingClientRect();
+    return { badge: badge.textContent, said: li.textContent.slice(badge.textContent.length), ring: look.borderTopColor, label: look.color, named: badge.getAttribute('aria-label'), seen: box.width > 0 && box.height > 0 };
+  });
+  holder.remove();
+  return { things, legend };
 };
 window.readBare = () => {
   const holder = document.body.appendChild(document.createElement('div'));
@@ -144,6 +179,37 @@ describe('the marks of a drawing on screen, in a real browser', () => {
       }
     },
   );
+
+  // proves: ai_query_merge
+  test("ai_query_merge: the legend names each part's badge in the colour its ring is painted", options, async () => {
+    const css = readFileSync(join(ROOT, 'styles.css'), 'utf8')
+      .match(/[^}]*thoughtknot-query[^{]*\{[^}]*\}/g)
+      .join('\n');
+    const { things, legend } = JSON.parse(await browser.run(`JSON.stringify(readLegend(${JSON.stringify(css)}))`));
+    assert.deepEqual(
+      legend.map((l) => [l.badge, l.said]),
+      [
+        ['⚑', 'late tasks'],
+        ['★', 'dear tasks'],
+      ],
+      'a line for each part, its badge and what it is called',
+    );
+    assert.ok(
+      legend.every((l) => l.seen),
+      'each badge is drawn',
+    );
+    for (const [l, key] of [
+      [legend[0], 'a'],
+      [legend[1], 'b'],
+    ]) {
+      assert.equal(things[key].badge, l.badge, `the badge drawn on ${key} is the one its legend line shows`);
+      assert.equal(l.ring, things[key].ring, `in the colour ${key}'s ring is painted`);
+      assert.equal(l.label, things[key].label, 'its badge in the colour of the drawn badge');
+    }
+    assert.notEqual(legend[0].ring, legend[1].ring, 'each part its own colour');
+    assert.equal(things.c.badge, '⚑★', 'a thing both find has both badges');
+    assert.equal(legend[1].named, 'Star mark, Orange', 'the mark said in words too');
+  });
 
   // proves: space_density_tiles
   test('a shaded square of the drawing, as a density view draws, is a box of its own shade', options, async () => {
