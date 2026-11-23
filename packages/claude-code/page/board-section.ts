@@ -4,6 +4,7 @@
 import { arrangerOf, gqlBlocks, namedFiltersOf, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import type { Pictures } from '@thoughtknot/core/display/board/board-images';
+import type { BoardAskOf } from '@thoughtknot/core/display/host-parts';
 import {
   boardFromGraph,
   draftFor,
@@ -108,6 +109,7 @@ export function boardSection(
   seatFor?: SeatFor,
   again?: () => void,
   pictures?: Pictures,
+  askOf?: BoardAskOf,
 ): HTMLElement | null {
   const written = gqlBlocks(note.text).filter((b) => boardOf(b.text));
   // a note with no board opens on a starter board, or an empty one with no graph either (ES§76, board_first_new_note).
@@ -138,6 +140,11 @@ export function boardSection(
       again?.();
       return null;
     },
+    // the board the AI proposes is shown as the one above is, until it is kept or dropped (board_proposed)
+    askAi: askOf?.(boardOf(b.text)?.on ?? undefined, (d) => {
+      proposeBoard(key, d);
+      again?.();
+    }),
     change: seat
       ? undefined
       : async (ask) => {
@@ -211,12 +218,13 @@ export function boardsKept(
   dark: () => boolean,
   seatFor?: SeatFor,
   pictures?: Pictures,
+  askOf?: BoardAskOf,
 ): () => void {
   let boards: HTMLElement | null = null;
   const kept = keptIn(parent.ownerDocument.defaultView);
   const draw = () => {
     boards?.remove();
-    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw, pictures);
+    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw, pictures, askOf);
     if (!boards) return;
     // whiteboard files in and out: a small bar under the boards, closed until it is opened (board_exchange)
     const win = parent.ownerDocument.defaultView;

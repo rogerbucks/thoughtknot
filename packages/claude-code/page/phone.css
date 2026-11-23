@@ -154,7 +154,7 @@ body {
 .gn-phone[data-tab='board'] .gn-board-exchange,
 .gn-phone[data-tab]:not([data-tab='graph']) .gn-pane,
 .gn-phone[data-tab]:not([data-tab='note']) :is(.gn-cards, article.gn-prose, .gn-text-version),
-.gn-phone[data-tab]:not([data-tab='more']) :is(.gn-presets, .gn-changes, .gn-review, .gn-export-bar),
+.gn-phone[data-tab]:not([data-tab='more']) :is(.gn-presets, .gn-changes, .gn-review, .gn-export-bar, .gn-ai),
 .gn-phone :is(.gn-board-first, .gn-board-turn) {
   display: none;
 }
@@ -211,7 +211,7 @@ body {
 
 /* The More view (phone_more): its parts are grouped rows, as a phone's settings are. Each part is a card, each
    control a whole row of 44 or more, and the long words under a control are small and quiet. */
-.gn-phone[data-tab='more'] :is(.gn-board-exchange, .gn-presets, .gn-export-bar) {
+.gn-phone[data-tab='more'] :is(.gn-board-exchange, .gn-presets, .gn-export-bar, .gn-ai) {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -261,12 +261,97 @@ body {
   align-items: stretch;
   gap: var(--gn-space-1);
 }
-.gn-phone[data-tab='more'] :is(.gn-board-exchange, .gn-presets, .gn-export-bar) :is(button, select, input) {
+.gn-phone[data-tab='more']
+  :is(.gn-board-exchange, .gn-presets, .gn-export-bar, .gn-ai)
+  :is(button, select, input, summary) {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   justify-content: flex-start;
   text-align: start;
+}
+
+/* The AI group (ES§19, app_ai_settings): each model a card of its own rows, its long words small and quiet. */
+.gn-ai :is(h2, h3) {
+  margin: 0;
+  font-size: var(--gn-font-size-l);
+}
+.gn-ai fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  min-width: 0;
+  margin: 0;
+  padding: var(--gn-space-2) 0 0;
+  border: 0;
+  border-top: 1px solid var(--gn-border);
+}
+.gn-ai legend {
+  padding: 0;
+  font-weight: var(--gn-font-weight-semibold);
+}
+.gn-ai :is(.gn-ai-row, .gn-ai-row-group, .gn-ai-key) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gn-space-1);
+}
+.gn-ai :is(p, ol) {
+  margin: 0;
+}
+.gn-ai-quiet {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.gn-ai-record-list {
+  padding-inline-start: var(--gn-space-3);
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+.gn-ai :is(button, select, input, summary) {
+  min-height: 44px;
+}
+
+/* The send sheet (ES§19, app_ai_send_sheet) rises from the foot of the screen, over the bar. What will be
+   sent is shown in full above the two buttons. Each button is 44 by 44 or more. */
+.gn-ai-sheet {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  max-height: 85dvh;
+  padding: var(--gn-space-3) var(--gn-space-3) calc(var(--gn-space-3) + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  border-top: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m) var(--gn-radius-m) 0 0;
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  box-shadow: 0 -4px 24px rgb(0 0 0 / 25%);
+}
+.gn-ai-sheet :is(h2, p, ul) {
+  margin: 0;
+}
+.gn-ai-sheet-sent {
+  max-height: 40dvh;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: var(--gn-font-size-s);
+}
+.gn-ai-sheet-buttons {
+  display: flex;
+  gap: var(--gn-space-2);
+}
+.gn-ai-sheet :is(button, select) {
+  min-width: 44px;
+  min-height: 44px;
+}
+.gn-ai-sheet-buttons button {
+  flex: 1;
 }
 
 /* The graph's own block is in the Graph view. In the Note view the note reads as words. */

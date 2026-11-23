@@ -24,6 +24,7 @@ import { exportCalls } from './export-calls.ts';
 import { windowAttachments } from './board-attachments.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { boardsKept, seatsOf } from './board-section.ts';
+import { hostPartsOf } from '@thoughtknot/core/display/host-parts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
 import { reviewSection } from './review-section.ts';
@@ -40,6 +41,7 @@ import { PageNote } from './page-note.ts';
 import { pluginSection, startPlugins } from './page-plugins.ts';
 import { focusCards, showCards } from './proposal-card.ts';
 import type { Decide } from './proposal-card.ts';
+import type { Settings } from '@thoughtknot/core';
 import { decide, proposalsIn } from './proposal-review.ts';
 import { serverCalls, takeFragment } from './server-calls.ts';
 
@@ -72,6 +74,34 @@ async function paneWithPreset(
   });
   editor = await openEditorPane(pane, page, settings, layouts, pictures, preset.vault);
   graph.append(preset.el);
+}
+
+/**
+ * The note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view), with what the host
+ * adds. The phone app adds its AI: a group of the More view, and the board's way to ask. Claude Code and VS Code add
+ * none (app_ai_host, cc_claude_only).
+ */
+async function boardsWithHost(
+  win: Window & typeof globalThis,
+  graph: HTMLElement,
+  page: PageNote,
+  note: string,
+  settings: Settings,
+  say: (text: string) => void,
+  pictures: ReturnType<typeof windowAttachments>,
+): Promise<{ addBoards: () => void; hostSection?: HTMLElement }> {
+  let redraw = () => {};
+  const text = {
+    get text() {
+      return page.text;
+    },
+    path: note,
+  };
+  const parts = await hostPartsOf(win, { doc: win.document, settings, note: text, say, changed: () => redraw() });
+  const dark = () => win.matchMedia(DARK).matches;
+  const addBoards = boardsKept(graph, page, note, dark, seatsOf(win, note), pictures, parts.askOf);
+  redraw = addBoards;
+  return { addBoards, hostSection: parts.section };
 }
 
 /** Starts the page in `win`: its host, then the note. */
@@ -159,9 +189,8 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     };
     // the graph as plain-language sentences, under the editor, made again with the note (cc_text_version)
     const addTextVersion = textVersionKept(graph, () => page.text);
-    // the note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view)
     const pictures = windowAttachments(win, token, note, target?.note ?? null);
-    const addBoards = boardsKept(graph, page, note, () => win.matchMedia(DARK).matches, seatsOf(win, note), pictures);
+    const { addBoards, hostSection } = await boardsWithHost(win, graph, page, note, settings, announce, pictures);
     // the plug-ins turned on in Obsidian, each in a sealed worker, and the graphs of a type one adds (plugin_outside_page)
     const plugins = await startPlugins(win, listed);
     let pluginPart: HTMLElement | null = null;
@@ -228,6 +257,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         dark: () => win.matchMedia(DARK).matches,
       }),
     );
+    if (hostSection) graph.append(hostSection); // the host's own part of the More view, after the page's own
     await draw();
     // a proposal that lands, or any other change on disk, is drawn when the server sends it
     void notes

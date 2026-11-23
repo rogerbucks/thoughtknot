@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window may call the app's eleven folder commands, the gh call (checked against its list in gh.rs), the six mesh commands (private addresses only, mesh.rs), the eight note commands (crdt.rs), the one command that looks for a mesh VPN address (found.rs), the two commands of the store of notes read in parts (parts.rs) and Tauri's core events, nothing else.",
+  "description": "The main window may call the app's eleven folder commands, the gh call (checked against its list in gh.rs), the six mesh commands (private addresses only, mesh.rs), the eight note commands (crdt.rs), the one command that looks for a mesh VPN address (found.rs), the two commands of the store of notes read in parts (parts.rs), the seven AI commands of the app's own AI plug-in (ai/, on an iPhone or iPad only) and Tauri's core events, nothing else.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -33,6 +33,12 @@
     "allow-crdt-history",
     "allow-machine-found",
     "allow-parts-write",
-    "allow-parts-read"
+    "allow-parts-read",
+    "ai:allow-ai-here",
+    "ai:allow-ai-key-set",
+    "ai:allow-ai-key-has",
+    "ai:allow-ai-key-forget",
+    "ai:allow-ai-request",
+    "ai:allow-ai-on-device-ask"
   ]
 }

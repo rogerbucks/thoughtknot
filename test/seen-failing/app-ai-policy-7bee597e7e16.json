@@ -1,0 +1,6 @@
+{
+  "file": "test/app-ai-policy.test.js",
+  "test": "the phone app’s AI plug-in > only the phone app’s AI module calls its commands",
+  "seen_failing_first": false,
+  "evidence": "It pins what already held: only app-ai.ts named the AI plug-in's commands. So it guards code added later; it was written with the trust-boundary review's fixes."
+}

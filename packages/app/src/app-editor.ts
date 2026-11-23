@@ -4,6 +4,8 @@
 // read at once is kept in the app's file on disk (tauri-parts-store.ts).
 import { setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import type { NoteStorage, WriteOptions } from '@thoughtknot/core';
+import type { HostPartsAsk } from '@thoughtknot/core/display/host-parts';
+import { aiHostParts, tauriAiPorts } from './app-ai.ts';
 import { appFetch } from './app-api.ts';
 import { indexedShelves } from './app-shelves.ts';
 import { startShared, type Shared } from './app-shared.ts';
@@ -49,6 +51,10 @@ if (tauri) {
     orInMemory(tauriPartsStore(tauri.core.invoke, place), (e) =>
       console.warn('ThoughtKnot: the store on disk failed; this session keeps huge notes in memory', e),
     );
+  // AI, on a device whose AI plug-in says it hosts it: the page waits for these before it offers any (app_ai_host)
+  (window as Window & { thoughtknotAi?: unknown }).thoughtknotAi = tauriAiPorts(tauri.core.invoke, window.localStorage);
+  (window as Window & { thoughtknotHostParts?: unknown }).thoughtknotHostParts = (ask: HostPartsAsk) =>
+    aiHostParts(window, ask);
   window.fetch = appFetch(
     {
       storage: sharedStorage(tauriStorage(tauri.core.invoke), ready),

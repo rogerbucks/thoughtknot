@@ -9,6 +9,8 @@ import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const config = JSON.parse(read('src-tauri/tauri.conf.json'));
+/** The app's own AI plug-in's commands (src-tauri/ai), in its build script's order. */
+const AI_COMMANDS = ['ai_here', 'ai_key_set', 'ai_key_has', 'ai_key_forget', 'ai_request', 'ai_on_device_ask'];
 const COMMANDS = [
   'pick_folder',
   'own_folder',
@@ -79,9 +81,35 @@ test('the commands in the Rust, the build script and the capability are the same
     [handled, built, allowed].map((l) => [...l].sort()),
     Array(3).fill([...COMMANDS].sort()),
   );
+  // the app's own AI plug-in's six commands, each allowed by name, none reading a key back (ES§19, app_ai_host)
   assert.deepEqual(
     capability.permissions.filter((p) => !p.startsWith('allow-')),
-    ['core:default'],
+    ['core:default', ...AI_COMMANDS.map((c) => `ai:allow-${c.replace(/_/g, '-')}`)],
+  );
+  const aiBuilt = /const COMMANDS: &\[&str\] = &\[([^\]]*)\]/
+    .exec(read('src-tauri/ai/build.rs'))[1]
+    .match(/"([a-z_]+)"/g)
+    .map((s) => s.slice(1, -1));
+  assert.deepEqual(aiBuilt, AI_COMMANDS);
+});
+
+test('the AI plug-in reaches the network only for a request the person sent, by https or on this device', () => {
+  const ai = read('src-tauri/ai/src/lib.rs');
+  const request = /async fn ai_request[^{]*\{([\s\S]*?)\n\}/.exec(ai)[1];
+  assert.ok(
+    request.indexOf('refused(') >= 0 && request.indexOf('refused(') < request.indexOf('phone'),
+    'checked first',
+  );
+  const swift = read('src-tauri/ai/ios/Sources/Requests.swift');
+  assert.match(swift, /URLSessionConfiguration\.ephemeral/, 'it keeps no cookies, cache or credentials');
+  // a redirect would carry the note, and the key, to an address the person never saw
+  assert.match(swift, /delegate: NoRedirects\(\)/, 'its session follows no redirect');
+  assert.match(swift, /willPerformHTTPRedirection[\s\S]*?completionHandler\(nil\)/);
+  assert.match(swift, /\(300\.\.<400\)\.contains\(http\.statusCode\)/, 'and a 3xx is said to be one');
+  assert.doesNotMatch(
+    read('src-tauri/ai/ios/Sources/OnDevice.swift'),
+    /PrivateCloudCompute/,
+    'the model on the phone, never a server',
   );
 });
 
@@ -114,7 +142,8 @@ test('the app takes no plug-in that reaches the disk, the network or a shell on 
     ([, name, a, b]) => [name, a ?? b],
   );
   const plugins = crates.map(([n]) => n).filter((n) => n.startsWith('tauri-plugin-'));
-  assert.deepEqual(plugins, ['tauri-plugin-keeper', 'tauri-plugin-dialog']);
+  assert.deepEqual(plugins, ['tauri-plugin-keeper', 'tauri-plugin-ai', 'tauri-plugin-dialog']);
+  assert.match(cargo, /^tauri-plugin-ai = \{ version = "=[\d.]+", path = "ai" \}$/m, 'the AI plug-in is the app’s own');
   assert.match(
     cargo,
     /^tauri-plugin-keeper = \{ version = "=[\d.]+", path = "keeper" \}$/m,

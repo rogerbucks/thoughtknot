@@ -1,0 +1,6 @@
+# Written by Tauri's build into the phone code's folders, never committed.
+/ios/.tauri
+/ios/.build
+/permissions/schemas
+/.tauri
+/ios/Package.resolved

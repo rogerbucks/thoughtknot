@@ -22,6 +22,8 @@ tauri = { version = "=2.12.5", features = [] }
 serde = { version = "1", features = ["derive"] }
 # the vault key in the phone's own secure store: this app's own plug-in, in keeper/
 tauri-plugin-keeper = { version = "=0.10.0", path = "keeper" }
+# AI on the iPhone and iPad: keys in the Keychain, the sends the person makes, the on-device model (ai/)
+tauri-plugin-ai = { version = "=0.10.0", path = "ai" }
 automerge = "0.12"
 # the rows of notes read in parts, in a SQLite file on the device: this app's own crate, in store/
 thoughtknot-store = { version = "=0.9.0", path = "store" }
