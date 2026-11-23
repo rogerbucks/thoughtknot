@@ -23,15 +23,21 @@ import type {
   Transport,
 } from '@thoughtknot/core';
 
-/** A model's key, kept in the device's own secure store under its name: never in the vault or the app's settings. */
+/**
+ * A model's key, kept in the device's own secure store under its name, for the model's address only: never in the
+ * vault or the app's settings. The page never reads it back. A request names it by its mark (`keyMark`), and the
+ * device writes it in, only for that address (the plug-in's Requests.swift).
+ */
 export interface AiKeys {
   /** Whether a key is kept under the name: the key is not read. */
   has(name: string): Promise<boolean>;
-  /** The key, read only as a send the person said yes to goes; null when none is kept. */
-  get(name: string): Promise<string | null>;
-  set(name: string, key: string): Promise<void>;
+  /** Keeps the key under the name, for the model at `address` only. */
+  set(name: string, key: string, address: string): Promise<void>;
   forget(name: string): Promise<void>;
 }
+
+/** What a request's header holds in place of the key kept under `name`: the device writes the key in for it. */
+export const keyMark = (name: string): string => `{{keychain:${name}}}`;
 
 /** The AI setup this device keeps: AI on or off, the models, and what unlabelled notes count as. Never a key. */
 export interface AiSetup {
@@ -168,7 +174,13 @@ export class AppAi {
 
   /** The models offered for `purpose`, in order: the phone's own first, then the person's private ones, then the rest. */
   choices(purpose: string): ModelChoice[] {
-    return modelChoices(this.settings(), purpose, this.onDevice ? { name: this.onDevice.model.name } : null);
+    const settings = this.settings();
+    const own = this.onDevice ? { name: this.onDevice.model.name } : null;
+    const offered = modelChoices(settings, purpose, own);
+    // the phone's own model needs AI on but no other model set up, as the core's prepareSend allows
+    return offered.length || !own || settings.aiUse !== 'on'
+      ? offered
+      : [{ name: own.name, source: 'host', forPurpose: true }];
   }
 
   /** Whether `model` is the phone's own. */
@@ -177,30 +189,28 @@ export class AppAi {
   }
 
   /**
-   * The exact request for `ask`, ready for the send sheet; or why nothing may be sent. The model's own key is looked
-   * for in what would go, so it is never sent as text.
+   * The exact request for `ask`, ready for the send sheet; or why nothing may be sent. The page holds no key, so the
+   * device looks for the model's key in what would go, as it sends, and refuses it there (Requests.swift).
    */
-  async prepare(ask: PhoneAsk): Promise<PreparedSend | SendRefused> {
-    const settings = this.settings();
-    const named = settings.aiModels.find((m) => m.name === ask.model);
-    const key = named?.keyName ? await this.ports.keys.get(named.keyName).catch(() => null) : null;
-    return prepareSend({
-      ...ask,
-      settings,
-      level: levelOf(ask.note),
-      ...(this.onDevice && { host: this.onDevice.model }),
-      sends: this.ports.record.list(),
-      ...(key && { secrets: [key] }),
-    });
+  prepare(ask: PhoneAsk): Promise<PreparedSend | SendRefused> {
+    return Promise.resolve(
+      prepareSend({
+        ...ask,
+        settings: this.settings(),
+        level: levelOf(ask.note),
+        ...(this.onDevice && { host: this.onDevice.model }),
+        sends: this.ports.record.list(),
+      }),
+    );
   }
 
   /**
-   * Sends a prepared request, once the person tapped Send on exactly it. The key is read from the device's store only
-   * now. The send is recorded on this device whatever came of it.
+   * Sends a prepared request, once the person tapped Send on exactly it. Its header names the key by its mark only: the
+   * device writes the key in. The send is recorded on this device whatever came of it.
    */
   async send(p: PreparedSend, yes: Confirmation | undefined): Promise<SendResult> {
     const own = this.isOnDevice(p.model.name) ? this.own : null;
-    const key = !own && p.model.keyName ? await this.ports.keys.get(p.model.keyName).catch(() => null) : null;
+    const key = !own && p.model.keyName ? keyMark(p.model.keyName) : null;
     const result = await sendPrepared(p, yes, { transport: own ? own.transport : this.ports.transport, key });
     if ('record' in result) this.ports.record.add(result.record);
     return result;

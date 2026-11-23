@@ -6,10 +6,11 @@
 // - adds a model by its address, checked as every host checks one (ai_private_is_own): https, or http on the device;
 // - marks a model private, a model they run, which its address must show, such as a Tailscale name; or public;
 // - sets its ceiling and its purpose, keeps its key in the Keychain (app-ai-key.ts), and removes it;
-// - tests it: its address is asked for its list of models, with its key, and no note is sent.
+// - tests it, while AI is on: its address is asked for its list of models, with its key, and no note is sent.
 // What is set is kept on this device only, in the window's own storage, never the vault: never a key.
 import { AI_PURPOSES, endpointProblem, modelsAddress, privateProblem, purposeWords, word } from '@thoughtknot/core';
 import type { AiModel, WordKey } from '@thoughtknot/core';
+import { keyMark } from './app-ai-host.ts';
 import type { AiSetup, AppAi, SetupStore } from './app-ai-host.ts';
 import { keyNameOf, keyRow } from './app-ai-key.ts';
 import { recordSection } from './app-ai-record.ts';
@@ -46,15 +47,20 @@ function modelNames(text: string): string[] {
   }
 }
 
-/** Test on a model: its address asked once for its list of models, with its key. No note is sent. */
+/**
+ * Test on a model: its address asked once for its list of models, with its key, while AI is on. No note is sent. The
+ * header names the key by its mark: the device writes the key in.
+ */
 export async function testModel(ai: AppAi, m: AiModel): Promise<string> {
+  if (ai.settings().aiUse !== 'on') return word('app.ai.test.off');
   const problem = endpointProblem(m.endpoint);
   if (problem) return word('app.ai.test.said', { answer: word('models.test.refused', { why: problem }) });
   const address = modelsAddress(m.endpoint);
-  const key = await ai.ports.keys.get(keyNameOf(m)).catch(() => null);
+  const name = keyNameOf(m);
+  const has = await ai.ports.keys.has(name).catch(() => false);
   let answer: string;
   try {
-    const reply = await ai.ports.probe(address, key ? { Authorization: `Bearer ${key}` } : {});
+    const reply = await ai.ports.probe(address, has ? { Authorization: `Bearer ${keyMark(name)}` } : {});
     const names = reply.status >= 200 && reply.status < 300 ? modelNames(reply.text) : [];
     answer =
       reply.status < 200 || reply.status >= 300
@@ -225,7 +231,16 @@ function modelGroup(
   group.append(
     el(doc, 'legend', '', m.name),
     el(doc, 'p', 'gn-ai-quiet', word('app.ai.address', { address: m.endpoint })),
-    row(doc, word('app.ai.reach'), reach, m.reach === 'private' ? undefined : word('app.ai.reach.public-off')),
+    row(
+      doc,
+      word('app.ai.reach'),
+      reach,
+      m.reach !== 'private'
+        ? word('app.ai.reach.public-off')
+        : /\.ts\.net(?:[:/]|$)/i.test(m.endpoint)
+          ? word('app.ai.reach.funnel')
+          : undefined,
+    ),
     row(
       doc,
       word('app.ai.ceiling'),
@@ -236,7 +251,7 @@ function modelGroup(
       word('app.ai.purpose'),
       pick(doc, purposes, m.purpose, (v) => set({ ...m, purpose: v })),
     ),
-    keyRow(doc, ai.ports.keys, keyNameOf(m), (name) => m.keyName !== name && set({ ...m, keyName: name })),
+    keyRow(doc, ai.ports.keys, keyNameOf(m), m.endpoint, (name) => m.keyName !== name && set({ ...m, keyName: name })),
     test,
     answer,
     button(doc, word('app.ai.remove', { name: m.name }), () => {

@@ -4,7 +4,6 @@ const COMMANDS: &[&str] = &[
     "ai_here",
     "ai_key_set",
     "ai_key_has",
-    "ai_key_get",
     "ai_key_forget",
     "ai_request",
     "ai_on_device_ask",

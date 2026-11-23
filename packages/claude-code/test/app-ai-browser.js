@@ -69,7 +69,6 @@ export async function phoneApp(chrome) {
       if (c === 'machine_found') return [];
       if (c === 'plugin:ai|ai_here') return { host: true, onDevice: 'device-not-eligible' };
       if (c === 'plugin:ai|ai_key_has') return keys.has(a.name);
-      if (c === 'plugin:ai|ai_key_get') return keys.get(a.name) ?? null;
       if (c === 'plugin:ai|ai_key_set') return void keys.set(a.name, a.key);
       if (c === 'plugin:ai|ai_key_forget') return void keys.delete(a.name);
       if (c === 'plugin:ai|ai_request') { window.__aiSent.push(a.request); return { status: 200, text: '{"data":[]}' }; }

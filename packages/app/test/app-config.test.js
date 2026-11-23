@@ -10,15 +10,7 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const config = JSON.parse(read('src-tauri/tauri.conf.json'));
 /** The app's own AI plug-in's commands (src-tauri/ai), in its build script's order. */
-const AI_COMMANDS = [
-  'ai_here',
-  'ai_key_set',
-  'ai_key_has',
-  'ai_key_get',
-  'ai_key_forget',
-  'ai_request',
-  'ai_on_device_ask',
-];
+const AI_COMMANDS = ['ai_here', 'ai_key_set', 'ai_key_has', 'ai_key_forget', 'ai_request', 'ai_on_device_ask'];
 const COMMANDS = [
   'pick_folder',
   'own_folder',
@@ -89,7 +81,7 @@ test('the commands in the Rust, the build script and the capability are the same
     [handled, built, allowed].map((l) => [...l].sort()),
     Array(3).fill([...COMMANDS].sort()),
   );
-  // the app's own AI plug-in's seven commands, each allowed by name (ES§19, app_ai_host)
+  // the app's own AI plug-in's six commands, each allowed by name, none reading a key back (ES§19, app_ai_host)
   assert.deepEqual(
     capability.permissions.filter((p) => !p.startsWith('allow-')),
     ['core:default', ...AI_COMMANDS.map((c) => `ai:allow-${c.replace(/_/g, '-')}`)],
@@ -110,6 +102,10 @@ test('the AI plug-in reaches the network only for a request the person sent, by 
   );
   const swift = read('src-tauri/ai/ios/Sources/Requests.swift');
   assert.match(swift, /URLSessionConfiguration\.ephemeral/, 'it keeps no cookies, cache or credentials');
+  // a redirect would carry the note, and the key, to an address the person never saw
+  assert.match(swift, /delegate: NoRedirects\(\)/, 'its session follows no redirect');
+  assert.match(swift, /willPerformHTTPRedirection[\s\S]*?completionHandler\(nil\)/);
+  assert.match(swift, /\(300\.\.<400\)\.contains\(http\.statusCode\)/, 'and a 3xx is said to be one');
   assert.doesNotMatch(
     read('src-tauri/ai/ios/Sources/OnDevice.swift'),
     /PrivateCloudCompute/,

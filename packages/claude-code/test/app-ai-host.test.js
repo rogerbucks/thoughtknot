@@ -51,7 +51,8 @@ describe('AI on the phone app’s page', () => {
     assert.equal(device.sent.length, 1);
     assert.equal(device.sent[0].body, p.body, 'exactly what was shown');
     assert.equal(device.sent[0].url, p.to);
-    assert.equal(device.sent[0].headers.Authorization, 'Bearer kept-in-the-keychain', 'the key read only now');
+    assert.equal(device.sent[0].headers.Authorization, `Bearer {{keychain:${OWN.keyName}}}`, 'the key named, not read');
+    assert.ok(!JSON.stringify(device.sent).includes('kept-in-the-keychain'), 'the page never had the key');
     assert.ok('proposal' in result, JSON.stringify(result));
     const records = ports.record.list();
     assert.equal(records.length, 1);

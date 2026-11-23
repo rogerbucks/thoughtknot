@@ -177,15 +177,17 @@ The same shell is built for Android, and for the iPhone and iPad (spec §40). On
   - The window may not ask for the key yet: the capability does not allow `vault_key`. Sync allows it when it joins
     the app (W30). On a computer the command says it keeps none yet.
   - Its tests run on an Android emulator in the phone app workflow (`keeper/android/src/androidTest`).
-- AI on the iPhone (ES§19, app_ai_host) is the app's own plug-in in `src-tauri/ai/`, with seven commands, each allowed
-  by name in the capability:
+- AI on the iPhone (ES§19, app_ai_host) is the app's own plug-in in `src-tauri/ai/`, with six commands, each allowed
+  by name in the capability. Only `src/app-ai.ts` calls them (`test/app-ai-policy.test.js`):
   - `ai_here` says whether this device hosts AI, and whether its own model can be asked. Only iOS does; any other
     device says no, and `src/app-ai.ts` then gives the page no AI.
-  - `ai_key_set`, `ai_key_has`, `ai_key_get` and `ai_key_forget` keep a model's key in the Keychain, for this device
-    only, never synced or backed up (`AiKeys.swift`).
+  - `ai_key_set`, `ai_key_has` and `ai_key_forget` keep a model's key in the Keychain, for this device only, never
+    synced or backed up, and with the model's address (`AiKeys.swift`). No command reads a key back: a request's header
+    names it by a mark, `{{keychain:NAME}}`, and Swift writes the key in, only for the address it was kept for, and
+    refuses a body that holds it (`Requests.swift`, `KeyFill`).
   - `ai_request` sends a request the person said yes to. The Rust refuses first anything but a POST, or a GET with no
     body; anything but https, or http on this device; and a body over 16 MiB. The Swift sends it in a session that
-    keeps nothing, stopped after 120 seconds or 8 MiB of answer (`Requests.swift`).
+    keeps nothing and follows no redirect, stopped after 120 seconds or 8 MiB of answer (`Requests.swift`).
   - `ai_on_device_ask` asks Apple's model on the phone, where it has one: iOS 26 and Apple Intelligence on. It is never
     Private Cloud Compute (`OnDevice.swift`).
 - The phone app's id is `app.thoughtknot.mobile` (`tauri.android.conf.json`, `tauri.ios.conf.json`).

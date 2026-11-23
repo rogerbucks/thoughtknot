@@ -110,6 +110,8 @@ export const APP_SOURCE_WORDS = {
   'app.ai.purpose': 'What it is for',
   'app.ai.reach': 'Whose model it is',
   'app.ai.reach.private': 'Private: a model you run',
+  'app.ai.reach.funnel':
+    'A Tailscale Funnel address is open to anyone: mark a model there private only if you run it yourself.',
   'app.ai.reach.public': 'Public: a cloud model',
   'app.ai.reach.public-off':
     'A public model is sent nothing from this iPhone yet. Mark it private if you run it yourself, such as on your tailnet.',
@@ -125,6 +127,7 @@ export const APP_SOURCE_WORDS = {
   'app.ai.key.failed': 'The key was not kept: {why}',
   'app.ai.test': 'Test {name}',
   'app.ai.test.said': '{answer} No note was sent.',
+  'app.ai.test.off': 'Turn AI on first: Test asks the model’s address, and nothing goes while AI is off.',
   'app.ai.remove': 'Remove {name}',
   'app.ai.add.title': 'Add a model',
   'app.ai.add.name': 'Its name',

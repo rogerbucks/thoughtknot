@@ -12,6 +12,7 @@ class NamedArgs: Decodable {
 class KeepArgs: Decodable {
   let name: String
   let key: String
+  let address: String
 }
 
 class RequestArgs: Decodable {
@@ -35,10 +36,6 @@ struct Has: Encodable {
   let has: Bool
 }
 
-struct Found: Encodable {
-  let key: String?
-}
-
 struct Reply: Encodable {
   let status: Int
   let text: String
@@ -56,7 +53,7 @@ class AiPlugin: Plugin {
   @objc public func keySet(_ invoke: Invoke) throws {
     let a = try invoke.parseArgs(KeepArgs.self)
     do {
-      try AiKeys.keep(name: a.name, key: a.key)
+      try AiKeys.keep(name: a.name, key: a.key, address: a.address)
       invoke.resolve()
     } catch {
       invoke.reject("the Keychain could not keep the key: \(error)")
@@ -69,15 +66,6 @@ class AiPlugin: Plugin {
       invoke.resolve(Has(has: try AiKeys.has(name: a.name)))
     } catch {
       invoke.reject("the Keychain could not be read: \(error)")
-    }
-  }
-
-  @objc public func keyGet(_ invoke: Invoke) throws {
-    let a = try invoke.parseArgs(NamedArgs.self)
-    do {
-      invoke.resolve(Found(key: try AiKeys.key(name: a.name)))
-    } catch {
-      invoke.reject("the Keychain could not give the key: \(error)")
     }
   }
 

@@ -37,7 +37,6 @@
     "ai:allow-ai-here",
     "ai:allow-ai-key-set",
     "ai:allow-ai-key-has",
-    "ai:allow-ai-key-get",
     "ai:allow-ai-key-forget",
     "ai:allow-ai-request",
     "ai:allow-ai-on-device-ask"

@@ -1,6 +1,7 @@
 // A model's key on an iPhone or iPad (ES§19, app_ai_key_keychain). It is kept in the Keychain for this device only:
 // never synced, never in a backup another device opens, never in the vault or the app's settings. So each device is
-// set up on its own. The person types the key once; it is read again only as a send they said yes to goes.
+// set up on its own. The person types the key once. It is kept with the address it is for, and read again only in
+// Swift, as a request to that address goes: the window never gets it back.
 //
 // This file holds no Tauri code, so it builds on its own with a fake store in place of the Keychain.
 import Foundation
@@ -58,18 +59,24 @@ enum AiKeys {
   /// The Keychain service the keys are kept under, apart from the vault key's.
   static let service = "app.thoughtknot.ai-key"
 
-  static func keep(name: String, key: String, in store: KeyStore = AiKeychain()) throws {
-    try store.put(service: service, account: name, secret: Data(key.utf8))
+  /// Keeps the key for the model's address: it is written into a request to that address only (Requests.swift).
+  static func keep(name: String, key: String, address: String, in store: KeyStore = AiKeychain()) throws {
+    guard let origin = KeyFill.origin(of: address), !key.contains("\n") else { throw AiKeyError.notText }
+    try store.put(service: service, account: name, secret: Data("\(origin)\n\(key)".utf8))
   }
 
   static func has(name: String, in store: KeyStore = AiKeychain()) throws -> Bool {
     try store.find(service: service, account: name) != nil
   }
 
-  static func key(name: String, in store: KeyStore = AiKeychain()) throws -> String? {
+  /// The key kept under the name, with the address it was kept for. Read only here, as a request goes: the window is
+  /// never handed it.
+  static func kept(name: String, in store: KeyStore = AiKeychain()) throws -> (origin: String, key: String)? {
     guard let data = try store.find(service: service, account: name) else { return nil }
-    guard let text = String(data: data, encoding: .utf8) else { throw AiKeyError.notText }
-    return text
+    guard let text = String(data: data, encoding: .utf8), let cut = text.firstIndex(of: "\n") else {
+      throw AiKeyError.notText
+    }
+    return (String(text[..<cut]), String(text[text.index(after: cut)...]))
   }
 
   static func forget(name: String, in store: KeyStore = AiKeychain()) throws {

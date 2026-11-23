@@ -54,19 +54,25 @@ export function dom() {
  */
 export async function phone({ setup, own, reply = { status: 200, text: ANSWER }, win = dom() } = {}) {
   const keychain = new Map();
+  const boundTo = new Map();
   const sent = [];
   const asked = [];
   const device = {
     keychain,
     sent,
     asked,
+    // as the Keychain: a key goes in with its model's address, and nothing reads it back
     keys: {
       has: async (name) => keychain.has(name),
-      get: async (name) => keychain.get(name) ?? null,
-      set: async (name, key) => void keychain.set(name, key),
+      set: async (name, key, address) => {
+        keychain.set(name, key);
+        boundTo.set(name, address);
+      },
       forget: async (name) => void keychain.delete(name),
     },
-    request: async (r) => {
+    boundTo,
+    // what the page handed the device: a header names a key by its mark, which the device writes the key into
+    send: async (r) => {
       sent.push(r);
       return typeof reply === 'function' ? reply(r) : reply;
     },

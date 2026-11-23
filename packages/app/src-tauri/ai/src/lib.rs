@@ -1,7 +1,8 @@
 // AI on the iPhone and iPad (editor spec ES§19, app_ai_host). The window decides everything about a send: the core makes
 // the request, shows it, and sends it only after the person taps Send. This plug-in only carries it out, on the phone:
-// - a model's key, kept in the Keychain for this device only, never in the vault or the app's settings
-//   (app_ai_key_keychain, ios/Sources/AiKeys.swift);
+// - a model's key, kept in the Keychain for this device only, never in the vault or the app's settings, and never
+//   handed back to the window: Swift writes it into a request to the address it was kept for (app_ai_key_keychain,
+//   ios/Sources/AiKeys.swift, ios/Sources/Requests.swift);
 // - a request the person sent, to the address they set up, over https, or http to this device itself
 //   (ios/Sources/Requests.swift). Anything else is refused here, before Swift is asked;
 // - Apple's on-device model, where the phone has one (app_ai_on_device, ios/Sources/OnDevice.swift). Nothing sent to it
@@ -40,16 +41,12 @@ struct Named {
 struct Keep {
     name: String,
     key: String,
+    address: String,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Has {
     has: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Found {
-    key: Option<String>,
 }
 
 /// A request as the window hands it over, already shown to the person and said yes to.
@@ -148,25 +145,33 @@ async fn ai_here<R: Runtime>(app: tauri::AppHandle<R>) -> Result<Here, String> {
     }
 }
 
-/// Keeps a model's key in the Keychain under its name, replacing one kept before.
+/// Keeps a model's key in the Keychain under its name, for the model's address only, replacing one kept before. No
+/// command reads it back: Swift writes it into a request to that address, where a header names it by its mark.
 #[tauri::command]
-async fn ai_key_set<R: Runtime>(app: tauri::AppHandle<R>, name: String, key: String) -> Result<(), String> {
-    if name.trim().is_empty() || key.is_empty() {
-        return Err("a key needs a name and a value".into());
+async fn ai_key_set<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    name: String,
+    key: String,
+    address: String,
+) -> Result<(), String> {
+    if name.trim().is_empty() || key.is_empty() || name.contains("}}") || key.contains('\n') {
+        return Err("a key needs a plain name and a value".into());
     }
-    phone(&app, "keySet", Keep { name, key })
+    if let Some(why) = refused(&Request {
+        url: address.clone(),
+        method: "GET".into(),
+        headers: HashMap::new(),
+        body: String::new(),
+    }) {
+        return Err(why);
+    }
+    phone(&app, "keySet", Keep { name, key, address })
 }
 
 /// Whether a key is kept under this name: the key itself is not read.
 #[tauri::command]
 async fn ai_key_has<R: Runtime>(app: tauri::AppHandle<R>, name: String) -> Result<bool, String> {
     phone::<R, Named, Has>(&app, "keyHas", Named { name }).map(|h| h.has)
-}
-
-/// The key kept under this name, read only as a send the person said yes to goes.
-#[tauri::command]
-async fn ai_key_get<R: Runtime>(app: tauri::AppHandle<R>, name: String) -> Result<Option<String>, String> {
-    phone::<R, Named, Found>(&app, "keyGet", Named { name }).map(|f| f.key)
 }
 
 /// Forgets the key kept under this name.
@@ -201,7 +206,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ai_here,
             ai_key_set,
             ai_key_has,
-            ai_key_get,
             ai_key_forget,
             ai_request,
             ai_on_device_ask

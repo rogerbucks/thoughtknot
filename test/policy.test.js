@@ -34,12 +34,10 @@ const MARKDOWN_RENDERER = 'marked';
 // The one addition for the sync package alone (§40, local_encrypted_store; Roger, 28 Oct 2026): upstream Automerge.
 const CRDT = '@automerge/automerge';
 // The places that may reach the network (§13): sending to an AI, as the user sends (§19); Test beside a model's address,
-// as the user presses it, sending no note (ES§19); a plug-in link, on Add (§54); the phone app's AI ports, its one way
-// to the app's AI plug-in, which sends only what the person said yes to (ES§19, app_ai_host).
+// as the user presses it, sending no note (ES§19); a plug-in link, on Add (§54).
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
 const AI_TEST_MODULE = 'packages/obsidian/src/settings/ai-check.ts';
-const APP_AI_PORTS = 'packages/app/src/app-ai-ports.ts';
-const NETWORK_ALLOWED = [AI_SEND_MODULE, AI_TEST_MODULE, 'packages/obsidian/src/outside/outside-link.ts', APP_AI_PORTS];
+const NETWORK_ALLOWED = [AI_SEND_MODULE, AI_TEST_MODULE, 'packages/obsidian/src/outside/outside-link.ts'];
 const AI_SEND_DIALOG = 'packages/obsidian/src/ai/send-dialog.ts';
 const TEST_FRAMEWORKS = ['jest', 'mocha', 'vitest', 'ava', 'tap', 'jasmine', 'uvu', 'chai'];
 
@@ -507,7 +505,7 @@ describe('the shipped source', () => {
     assert.ok(sourceFiles().length > 0);
   });
 
-  test('no source makes a network request, except the AI send module, the address test, the plug-in link and the phone app’s AI ports', () => {
+  test('no source makes a network request, except the AI send module, the address test and the plug-in link', () => {
     const offenders = sourceFiles().filter((f) => !NETWORK_ALLOWED.includes(f) && findsNetwork(read(f)));
     assert.deepEqual(offenders, []);
   });

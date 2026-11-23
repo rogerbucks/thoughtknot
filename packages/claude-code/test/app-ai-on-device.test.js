@@ -53,6 +53,21 @@ describe('the phone’s own model', () => {
     assert.equal(ai.onDevice.model.ceiling, 'Restricted');
   });
 
+  test('with AI on and no other model set up, the phone’s own is offered alone, and a note goes to it', async () => {
+    const { ai, device } = await phone({ setup: { aiUse: 'on', aiModels: [], aiUnlabelled: 'Public' }, own: content });
+    assert.deepEqual(
+      ai.choices('Research questions').map((c) => [c.name, c.source]),
+      [['This iPhone', 'host']],
+    );
+    const p = await ai.prepare({ ...ASK, model: 'This iPhone' });
+    assert.ok(!('refused' in p), JSON.stringify(p));
+    assert.ok('proposal' in (await ai.send(p, confirmSend(p))));
+    assert.equal(device.asked.length, 1, 'asked on the device');
+    assert.equal(device.sent.length, 0, 'nothing on the network');
+    const off = await phone({ setup: { aiUse: 'off', aiModels: [] }, own: content });
+    assert.deepEqual(off.ai.choices('Research questions'), [], 'none while AI is off');
+  });
+
   test('where the phone offers none, nothing changes', async () => {
     const { ai, win } = await phone({ setup: SETUP });
     assert.equal(ai.onDevice, null);

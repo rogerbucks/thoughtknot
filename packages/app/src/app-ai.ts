@@ -23,11 +23,11 @@ export async function tauriAiPorts(invoke: Invoke, storage: Storage): Promise<Ap
     {
       keys: {
         has: async (name) => (await call('ai_key_has', { name })) === true,
-        get: async (name) => ((await call('ai_key_get', { name })) as string | null) ?? null,
-        set: async (name, key) => void (await call('ai_key_set', { name, key })),
+        // no command reads a key back: the device writes it into a request to its own address only
+        set: async (name, key, address) => void (await call('ai_key_set', { name, key, address })),
         forget: async (name) => void (await call('ai_key_forget', { name })),
       },
-      request: async (r) => (await call('ai_request', { request: r })) as { status: number; text: string },
+      send: async (r) => (await call('ai_request', { request: r })) as { status: number; text: string },
       onDevice: here.onDevice ?? 'none',
       ask: async (instructions, prompt) => String(await call('ai_on_device_ask', { instructions, prompt })),
     },

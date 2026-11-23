@@ -18,7 +18,8 @@ export interface DeviceRequest {
 /** What the device itself can do for AI. */
 export interface DeviceAi {
   keys: AiKeys;
-  request(r: DeviceRequest): Promise<{ status: number; text: string }>;
+  /** Sends the request through the app's AI plug-in (app-ai.ts), the one way it reaches a model's address. */
+  send(r: DeviceRequest): Promise<{ status: number; text: string }>;
   /** Whether the device's own model can be asked now: 'available', or why not. */
   onDevice: string;
   ask: AskOnDevice;
@@ -29,8 +30,8 @@ export function appAiPorts(device: DeviceAi, storage: Pick<Storage, 'getItem' | 
   return {
     setup: deviceSetupStore(storage),
     keys: device.keys,
-    transport: (r) => device.request(r),
-    probe: (url, headers) => device.request({ url, method: 'GET', headers, body: '' }),
+    transport: (r) => device.send(r),
+    probe: (url, headers) => device.send({ url, method: 'GET', headers, body: '' }),
     record: deviceSendLog(storage),
     onDevice: (ceiling) => Promise.resolve(device.onDevice === 'available' ? onDeviceModel(device.ask, ceiling) : null),
   };

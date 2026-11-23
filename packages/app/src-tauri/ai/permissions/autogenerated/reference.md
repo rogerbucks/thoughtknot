@@ -62,32 +62,6 @@ Denies the ai_key_forget command without any pre-configured scope.
 <tr>
 <td>
 
-`ai:allow-ai-key-get`
-
-</td>
-<td>
-
-Enables the ai_key_get command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`ai:deny-ai-key-get`
-
-</td>
-<td>
-
-Denies the ai_key_get command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `ai:allow-ai-key-has`
 
 </td>

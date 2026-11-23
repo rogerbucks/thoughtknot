@@ -97,15 +97,34 @@ describe('AI set up in the More view', () => {
     const g = await group({ reply });
     add(g, 'Mac mini', 'https://mac-mini.tailnet.ts.net/v1', 'llama');
     g.device.keychain.set('Mac mini', 'a-key');
+    g.set(g.rowOf('Use AI')[0].querySelector('select'), 'on');
     g.press('Test Mac mini');
     await until(() => /No note was sent/.test(g.section.textContent));
     assert.equal(g.device.sent.length, 1);
     const [asked] = g.device.sent;
     assert.deepEqual(
       [asked.method, asked.url, asked.body, asked.headers.Authorization],
-      ['GET', 'https://mac-mini.tailnet.ts.net/v1/models', '', 'Bearer a-key'],
+      ['GET', 'https://mac-mini.tailnet.ts.net/v1/models', '', 'Bearer {{keychain:Mac mini}}'],
+      'the key named by its mark: the device writes it in',
     );
+    assert.ok(!JSON.stringify(asked).includes('a-key'), 'the page never had the key');
     assert.match(g.section.textContent, /llama, qwen/);
+  });
+
+  test('Test asks nothing while AI is off, and says so', async () => {
+    const g = await group();
+    add(g, 'Mac mini', 'https://mac-mini.tailnet.ts.net/v1', 'llama');
+    g.press('Test Mac mini');
+    await until(() => /Turn AI on first/.test(g.section.textContent));
+    assert.equal(g.device.sent.length, 0);
+  });
+
+  test('a model marked private at a Tailscale name is told a Funnel address is open to anyone', async () => {
+    const g = await group();
+    add(g, 'Mac mini', 'https://mac-mini.tailnet.ts.net/v1', 'llama');
+    assert.doesNotMatch(g.section.textContent, /Funnel/);
+    g.set(g.rowOf('Whose model it is')[0].querySelector('select'), 'private');
+    assert.match(g.section.textContent, /Tailscale Funnel address is open to anyone/);
   });
 
   test('what is kept on the device holds no key, even one handed in with a model', async () => {
