@@ -38,10 +38,6 @@ Rust (src-tauri/)
 - `app-start.ts`: the first page. Pick a folder with the system's dialog, then each note is a link into the editor.
 - `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list. On a
   computer it also adds the GitHub button for the open note. It puts the AI ports on the window too.
-- `app-ai.ts`: `tauriAiPorts`, the page's AI ports over the AI plug-in's commands (ES§19). A device whose plug-in does
-  not host AI, or cannot be asked, gets none. `aiHostParts` makes the page's host parts from them: the AI group of
-  the More view and the board's Ask AI box. The rest is `app-ai-*.ts` here, listed in the claude-code GUIDE, whose
-  page holds only the generic hook (`host-parts.ts`).
 - `app-github.ts`: the GitHub button and its panel (spec §48). The panel keeps the picked repositories, the branch and
   the highest classification in the window's storage, never in a note. In the editor it sends the open note, or asks
   for a review as a pull request. The show-before-send screen (`showOutgoing`) comes first: Cancel has the focus, and
@@ -50,6 +46,30 @@ Rust (src-tauri/)
   reaches the Rust.
 - `tauri-mesh.ts`: `dialDevice` and `listenForDevice`, the mesh commands as a sync `Channel`. Sends go in order, and the
   channel closes when the Rust says the connection ended.
+
+## AI on the iPhone, in `src/`
+
+AI on the iPhone (ES§19, app_ai_host to app_ai_on_device). The core keeps every rule of a send, as in Obsidian.
+The page holds only a generic hook (`claude-code/page/host-parts.ts`), and the app fills it:
+
+- `app-ai.ts`: `tauriAiPorts`, the AI ports over the AI plug-in's commands. A device whose plug-in does not host
+  AI, or cannot be asked, gets none. `aiHostParts` makes the page's parts: the AI group and the Ask AI box.
+- `app-ai-host.ts`: `AppAi`. It lays this device's AI setup over the settings and offers the models, the phone's
+  own first. It makes a send ready by `prepareSend` and sends it by `sendPrepared`, recorded whatever came of it.
+- `app-ai-ports.ts`: `appAiPorts`, the ports from what the device can do. The setup and the record are kept in the
+  window's own storage, on this device only.
+- `app-ai-settings.ts`: the AI group of the More view, in grouped rows. It turns AI on or off and says what an
+  unlabelled note counts as. It sets the phone's own model's ceiling, and adds each model by its address.
+- A model is marked private only where its address shows the person runs it, such as a Tailscale name. Test asks
+  the address for its models while AI is on, and no note goes.
+- `app-ai-key.ts`: a model's key row. The key goes to the Keychain port only, for the model's address, and the
+  field is emptied. The page never reads it back.
+- `app-ai-send-sheet.ts`: the send sheet, from the foot of the screen. It shows exactly what goes, and to which
+  model. Nothing is sent before Send. `boardAskOf` gives the board's Ask AI box, which opens it.
+- `app-ai-record.ts`: the record of sends, on this device only, read in the More view. It holds no text sent.
+- `app-ai-on-device.ts`: the phone's own model as the core's host model, through a transport to the device.
+- Tests: `test/app-ai-*.test.js`. The settings and sheet tests also open the app in Chrome as a phone, with
+  `app-ai-browser.js`, and measure each control.
 
 ## Huge notes, in `src/`
 
@@ -177,19 +197,6 @@ The same shell is built for Android, and for the iPhone and iPad (spec §40). On
   - The window may not ask for the key yet: the capability does not allow `vault_key`. Sync allows it when it joins
     the app (W30). On a computer the command says it keeps none yet.
   - Its tests run on an Android emulator in the phone app workflow (`keeper/android/src/androidTest`).
-- AI on the iPhone (ES§19, app_ai_host) is the app's own plug-in in `src-tauri/ai/`, with six commands, each allowed
-  by name in the capability. Only `src/app-ai.ts` calls them (`test/app-ai-policy.test.js`):
-  - `ai_here` says whether this device hosts AI, and whether its own model can be asked. Only iOS does; any other
-    device says no, and `src/app-ai.ts` then gives the page no AI.
-  - `ai_key_set`, `ai_key_has` and `ai_key_forget` keep a model's key in the Keychain, for this device only, never
-    synced or backed up, and with the model's address (`AiKeys.swift`). No command reads a key back: a request's header
-    names it by a mark, `{{keychain:NAME}}`, and Swift writes the key in, only for the address it was kept for, and
-    refuses a body that holds it (`Requests.swift`, `KeyFill`).
-  - `ai_request` sends a request the person said yes to. The Rust refuses first anything but a POST, or a GET with no
-    body; anything but https, or http on this device; and a body over 16 MiB. The Swift sends it in a session that
-    keeps nothing and follows no redirect, stopped after 120 seconds or 8 MiB of answer (`Requests.swift`).
-  - `ai_on_device_ask` asks Apple's model on the phone, where it has one: iOS 26 and Apple Intelligence on. It is never
-    Private Cloud Compute (`OnDevice.swift`).
 - The phone app's id is `app.thoughtknot.mobile` (`tauri.android.conf.json`, `tauri.ios.conf.json`).
 
 The phone and tablet app workflow (`.github/workflows/mobile-app.yml`) builds both on each change:
@@ -207,6 +214,24 @@ npm run build --workspace packages/app
 cd packages/app/src-tauri && cargo tauri android init && cargo tauri android build --debug --apk --target aarch64
 cd packages/app/src-tauri && cargo tauri ios init && cargo tauri ios dev     # the simulator
 ```
+
+### The AI plug-in, in `src-tauri/ai/`
+
+AI on the iPhone (ES§19, app_ai_host) is the app's own plug-in in `src-tauri/ai/`. It has six commands, each
+allowed by name in the capability. Only `src/app-ai.ts` calls them (`test/app-ai-policy.test.js`):
+
+- `ai_here` says whether this device hosts AI, and whether its own model can be asked. Only iOS does; any other
+  device says no, and `src/app-ai.ts` then gives the page no AI.
+- `ai_key_set`, `ai_key_has` and `ai_key_forget` keep a model's key in the Keychain (`AiKeys.swift`). It is kept
+  for this device only, never synced or backed up, and with the model's address.
+- No command reads a key back. A request's header names it by a mark, `{{keychain:NAME}}`. Swift writes the key in
+  only for the address it was kept for, and refuses a body that holds it (`Requests.swift`, `KeyFill`).
+- `ai_request` sends a request the person said yes to. The Rust first refuses anything but a POST, or a GET with no
+  body. It refuses anything but https, or http on this device, and a body over 16 MiB.
+- The Swift sends it in a session that keeps nothing and follows no redirect. It stops after 120 seconds or 8 MiB
+  of answer (`Requests.swift`).
+- `ai_on_device_ask` asks Apple's model on the phone, where it has one: iOS 26 and Apple Intelligence on. It is never
+  Private Cloud Compute (`OnDevice.swift`).
 
 ## Installers
 

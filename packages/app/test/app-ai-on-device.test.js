@@ -1,10 +1,10 @@
 // The phone's own model (editor spec ES§19, app_ai_on_device). Where the phone offers a model on the device, it is listed
-// first and marked private, and a note sent to it goes to the device, never the network, under every rule of a send.
+// first and marked private. A note sent to it goes to the device, never the network, under every rule of a send.
 // Where the phone offers none, nothing changes: the models set up are offered as before.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { confirmSend } from '@thoughtknot/core';
-import { aiSection } from '../../app/src/app-ai-settings.ts';
+import { aiSection } from '../src/app-ai-settings.ts';
 import { ANSWER, NOTE, OWN, phone } from './app-ai-fakes.js';
 
 const SETUP = { aiUse: 'on', aiModels: [OWN], aiUnlabelled: 'Public' };

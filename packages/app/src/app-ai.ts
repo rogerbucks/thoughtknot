@@ -1,8 +1,8 @@
-// AI on the phone app (editor spec ES§19, app_ai_host). The app's AI plug-in (src-tauri/ai) holds a model's key in the
-// device's Keychain, sends a request the person said yes to, and asks the phone's own model. Here its commands become
-// the AI ports, and the AI becomes the page's host parts: its group of the More view and the board's way to ask
+// AI on the phone app (editor spec ES§19, app_ai_host). The app's AI plug-in (src-tauri/ai) keeps a model's key in the
+// device's Keychain. It sends a request the person said yes to, and asks the phone's own model. Here its commands become
+// the AI ports. The AI becomes the page's host parts: its group of the More view and the board's way to ask
 // (host-parts.ts on the page). The page holds none of it (cc_claude_only). Only a device whose plug-in says it hosts
-// AI gets them: any other, or one whose plug-in cannot be asked, gets none, and the page offers no AI.
+// AI gets them. Any other, or one whose plug-in cannot be asked, gets none, and the page offers no AI.
 import type { HostParts, HostPartsAsk } from '../../claude-code/page/host-parts.ts';
 import { AppAi, aiPortsOf } from './app-ai-host.ts';
 import type { AppAiPorts } from './app-ai-host.ts';
@@ -36,8 +36,8 @@ export async function tauriAiPorts(invoke: Invoke, storage: Storage): Promise<Ap
 }
 
 /**
- * The page's host parts for AI on this window: the AI group of the More view, and the board's Ask AI box while AI is
- * on. None where the window has no AI ports.
+ * The page's host parts for AI on this window. They are the AI group of the More view, and the board's Ask AI box
+ * while AI is on. None where the window has no AI ports.
  */
 export async function aiHostParts(win: Window, ask: HostPartsAsk): Promise<HostParts> {
   const ports = await aiPortsOf(win);

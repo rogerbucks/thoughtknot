@@ -1,5 +1,5 @@
-// The AI ports a phone app hands the page (editor spec ES§19, app_ai_host), made from what the device itself can do:
-// its Keychain, its one way to send a request, and its own model where it has one. The setup and the record of sends
+// The AI ports a phone app hands the page (editor spec ES§19, app_ai_host). They are made from what the device can
+// do: its Keychain, its way to send, and its own model where it has one. The setup and the record of sends
 // are kept in the window's own storage, on this device only (app-ai-settings.ts, app-ai-record.ts).
 import type { AiKeys, AppAiPorts } from './app-ai-host.ts';
 import { onDeviceModel } from './app-ai-on-device.ts';

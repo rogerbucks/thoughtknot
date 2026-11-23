@@ -1,5 +1,5 @@
 // The phone app's window in a real Chrome, as a phone, with AI on (ES§19, app_ai_settings, app_ai_send_sheet). It is
-// test/phone-shell.test.js's way of opening the app, with the AI plug-in's commands answered by the page: the device
+// test/phone-shell.test.js's way of opening the app, with the AI plug-in's commands answered by the page. The device
 // hosts AI, keeps keys in a map, and records each request it is handed without sending it anywhere. Chrome is the one
 // THOUGHTKNOT_CHROME names, or the first of the usual names on the PATH. Where none is found the cases skip, except in
 // CI, which fails.
@@ -8,7 +8,7 @@ import { mkdtempSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
 import { findChrome, startChrome } from '../../../scripts/chrome.mjs';
-import { buildApp } from '../../app/esbuild.config.mjs';
+import { buildApp } from '../esbuild.config.mjs';
 
 const NOTE =
   "# Map\nThe note's own words.\n```gql\n// graph: g · SOURCE\n(a:Idea {title: 'One'}),\n(b:Idea {title: 'Two'}),\n(a)-[:RELATES_TO]->(b)\n```\n";

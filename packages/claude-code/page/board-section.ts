@@ -82,8 +82,9 @@ function proposedIn(
 }
 
 /**
- * How the board asks the person's AI for a board, where the host has AI on (ES§19, app_ai_host): given the graph the
- * board is on and what to do with the board that comes back, the words handler; or nothing, so the list offers no box.
+ * How the board asks the person's AI for a board, where the host has AI on (ES§19, app_ai_host). It is given the graph
+ * the board is on, and what to do with the board that comes back. It gives the words handler, or nothing, so the list
+ * offers no box.
  */
 export type BoardAskOf = (
   graph: string | undefined,

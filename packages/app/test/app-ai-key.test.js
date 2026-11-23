@@ -6,7 +6,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { keyNameOf, keyRow } from '../../app/src/app-ai-key.ts';
+import { keyNameOf, keyRow } from '../src/app-ai-key.ts';
 
 const ADDRESS = 'https://mac-mini.tailnet.ts.net/v1';
 const KEY = ['sk', 'phone', 'z'.repeat(24)].join('-');
@@ -83,24 +83,21 @@ describe('a model’s key on a phone', () => {
   });
 
   test('the page keeps it in no store of its own, and the app writes it to this device’s Keychain only', () => {
-    const page = readFileSync(new URL('../../app/src/app-ai-key.ts', import.meta.url), 'utf8');
+    const page = readFileSync(new URL('../src/app-ai-key.ts', import.meta.url), 'utf8');
     assert.doesNotMatch(page, /localStorage|sessionStorage|indexedDB|fetch\(|cookie/);
-    const swift = readFileSync(new URL('../../app/src-tauri/ai/ios/Sources/AiKeys.swift', import.meta.url), 'utf8');
+    const swift = readFileSync(new URL('../src-tauri/ai/ios/Sources/AiKeys.swift', import.meta.url), 'utf8');
     assert.match(swift, /kSecAttrAccessibleWhenUnlockedThisDeviceOnly/, 'never backed up or synced to iCloud');
     assert.doesNotMatch(swift, /kSecAttrSynchronizable\s*:\s*(true|kCFBooleanTrue)/);
   });
 
   test('no command reads a key back to the page: the device writes it in, for its own address only', () => {
-    const ports = readFileSync(new URL('../../app/src/app-ai-host.ts', import.meta.url), 'utf8');
+    const ports = readFileSync(new URL('../src/app-ai-host.ts', import.meta.url), 'utf8');
     assert.doesNotMatch(ports, /\bget\(name: string\)/, 'the page’s key port has no way to read a key');
-    const rust = readFileSync(new URL('../../app/src-tauri/ai/src/lib.rs', import.meta.url), 'utf8');
+    const rust = readFileSync(new URL('../src-tauri/ai/src/lib.rs', import.meta.url), 'utf8');
     assert.doesNotMatch(rust, /ai_key_get|keyGet/);
-    const plugin = readFileSync(new URL('../../app/src-tauri/ai/ios/Sources/AiPlugin.swift', import.meta.url), 'utf8');
+    const plugin = readFileSync(new URL('../src-tauri/ai/ios/Sources/AiPlugin.swift', import.meta.url), 'utf8');
     assert.doesNotMatch(plugin, /keyGet|AiKeys\.kept/, 'the plug-in’s door hands out no key');
-    const requests = readFileSync(
-      new URL('../../app/src-tauri/ai/ios/Sources/Requests.swift', import.meta.url),
-      'utf8',
-    );
+    const requests = readFileSync(new URL('../src-tauri/ai/ios/Sources/Requests.swift', import.meta.url), 'utf8');
     assert.match(requests, /to == kept\.origin/, 'a key goes only to the address it was kept for');
     assert.match(requests, /body\.contains\(kept\.key\)/, 'a body holding the key is refused');
     const fill = requests.indexOf('KeyFill.fill(url:');

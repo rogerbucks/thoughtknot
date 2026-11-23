@@ -1,10 +1,10 @@
 // AI set up on a phone (editor spec ES§19, app_ai_settings; ES§40, phone_more). In the More view, as grouped rows, the
-// person turns AI on, adds a model by its address, marks it private or public, sets its ceiling and purpose, and tests
-// it with no note sent. What is set is kept on the device, never with a key. In a real Chrome, as a phone, each control
+// person turns AI on, adds a model by its address and marks it private or public. They set its ceiling and purpose,
+// and test it with no note sent. What is set is kept on the device, never with a key. In a real Chrome, as a phone, each control
 // is a whole row, 44 or more tall.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { aiSection, SETUP_KEY } from '../../app/src/app-ai-settings.ts';
+import { aiSection, SETUP_KEY } from '../src/app-ai-settings.ts';
 import { phone, until } from './app-ai-fakes.js';
 import { chromeHere, phoneApp } from './app-ai-browser.js';
 

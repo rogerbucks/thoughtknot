@@ -1,6 +1,6 @@
 // The words of the desktop app's own pages, in UK English (editor spec §41, standalone_app; §42, words_catalogue).
 // The editor inside the app is the browser editor's page, which says its own words. The VS Code extension's own
-// messages join them here (vscode-source-words.ts), and so do the phone's AI words (ES§19, app_ai_host to
+// messages join them here (vscode-source-words.ts). So do the phone's AI words (ES§19, app_ai_host to
 // app_ai_on_device). source-words.ts keeps them with every other word.
 import { PHONE_SOURCE_WORDS } from './phone-source-words.ts';
 import { VSCODE_SOURCE_WORDS } from './vscode-source-words.ts';

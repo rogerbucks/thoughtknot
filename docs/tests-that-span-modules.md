@@ -825,6 +825,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
+- `test/app-ai-policy.test.js` — the phone app reaches a model only through its AI plug-in's commands, and one module
+  alone calls them. No command reads a key back (ES§19, app_ai_host). It reads the repository's source.
 ## Failure reports and process docs
 
 - `test/report-failure-workflow.test.js` — four workflows report a failed job through one reusable workflow. It writes

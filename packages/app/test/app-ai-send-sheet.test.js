@@ -3,7 +3,7 @@
 // its buttons are 44 by 44 or more, and the board's Ask AI box opens it.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { openSendSheet } from '../../app/src/app-ai-send-sheet.ts';
+import { openSendSheet } from '../src/app-ai-send-sheet.ts';
 import { NOTE, OWN, phone, until } from './app-ai-fakes.js';
 import { chromeHere, phoneApp } from './app-ai-browser.js';
 

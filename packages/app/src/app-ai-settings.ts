@@ -1,5 +1,5 @@
 // AI set up on a phone (editor spec ES§19, app_ai_settings; ES§40, phone_more). It is a group of the More view, in
-// grouped rows as a phone's settings are, each control a whole row of 44 or more (phone.css). From it the person:
+// grouped rows as a phone's settings are. Each control is a whole row of 44 or more (phone.css). From it the person:
 // - turns AI on or off: it is off until they turn it on (ai_off_until_chosen);
 // - says what a note with no classification counts as: the highest, until they change it (unclassified_strictest);
 // - sets the ceiling of the phone's own model, where it has one, which is listed first (app_ai_on_device);

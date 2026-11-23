@@ -1,7 +1,7 @@
 // The record of sends on a phone (editor spec ES§19, app_ai_record; record_every_send). Each send is recorded whatever
-// came of it: when, to which model and address, the digest and size of what went, how much of the graph, and what came
-// back. Never the text sent. The record is kept on this device only, in the window's own storage, never in the vault or
-// anything that syncs, because it says what was sent. The last 200 are kept. The person reads it in the More view.
+// came of it. It says when, to which model and address, the digest and size of what went, and how much of the graph.
+// It says what came back too. Never the text sent. The record is kept on this device only, in the window's own storage. It is never in the vault
+// or anything that syncs, because it says what was sent. The last 200 are kept. The person reads it in the More view.
 import { formatCount, word } from '@thoughtknot/core';
 import type { SendRecord } from '@thoughtknot/core';
 import type { SendLog } from './app-ai-host.ts';

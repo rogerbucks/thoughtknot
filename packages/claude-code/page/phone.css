@@ -312,8 +312,8 @@ body {
   min-height: 44px;
 }
 
-/* The send sheet (ES§19, app_ai_send_sheet): from the foot of the screen, over the bar, with what will be sent in
-   full above the two buttons, each 44 by 44 or more. */
+/* The send sheet (ES§19, app_ai_send_sheet) rises from the foot of the screen, over the bar. What will be
+   sent is shown in full above the two buttons. Each button is 44 by 44 or more. */
 .gn-ai-sheet {
   position: fixed;
   inset: auto 0 0;

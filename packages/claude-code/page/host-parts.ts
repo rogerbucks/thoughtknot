@@ -1,5 +1,5 @@
 // What a host may add to the page (editor spec ES§19, app_ai_host). The phone app adds its AI this way: a group of the
-// More view, and the board's way to ask. The page itself holds none of it, so a page no host adds to, as in Claude
+// More view, and the board's way to ask. The page itself holds none of it. So a page no host adds to, as in Claude
 // Code or VS Code, offers no model (cc_claude_only). The host puts a function on the window before the page starts.
 import type { Settings } from '@thoughtknot/core';
 import type { BoardAskOf } from './board-section.ts';

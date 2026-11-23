@@ -117,7 +117,7 @@ export async function openSendSheet(
 }
 
 /**
- * The board's way to ask an AI for a board (ES§45, board_proposed), through the sheet: the whole of `graph` goes with
+ * The board's way to ask an AI for a board (ES§45, board_proposed), through the sheet. The whole of `graph` goes with
  * the person's words. Nothing while AI is off, so the board offers no box. `got` takes the board proposed; `say` says
  * why nothing came.
  */

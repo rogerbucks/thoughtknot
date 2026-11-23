@@ -1,10 +1,10 @@
-// What the AI tests on the phone app's page share (ES§19, app_ai_host to app_ai_on_device): a device that is not one.
-// Its Keychain is a map the test can read, its storage is the window's, its network only records what it was handed,
+// What the AI tests on the phone app's page share (ES§19, app_ai_host to app_ai_on_device). It is a device that is not one.
+// Its Keychain is a map the test can read, its storage is the window's. Its network only records what it was handed,
 // and its own model, where it has one, answers as told.
 import { JSDOM } from 'jsdom';
 import { settingsFrom } from '@thoughtknot/core';
-import { AppAi } from '../../app/src/app-ai-host.ts';
-import { appAiPorts } from '../../app/src/app-ai-ports.ts';
+import { AppAi } from '../src/app-ai-host.ts';
+import { appAiPorts } from '../src/app-ai-ports.ts';
 
 export const NOTE =
   "# Trip\n\n```gql\n// graph: trip\n(a:Place {name: 'Paris'}),\n(b:Place {name: 'Rome'}),\n(a)-[:NEAR]->(b)\n```\n";
@@ -88,11 +88,12 @@ export async function phone({ setup, own, reply = { status: 200, text: ANSWER },
   return { ai, device, ports, win };
 }
 
-/** Waits until `ok` is true, or fails after a second. */
+/** Waits until `ok` is true, turn by turn of the event loop, or fails after a second. */
 export async function until(ok) {
-  for (let i = 0; i < 100; i++) {
+  const end = Date.now() + 1000;
+  while (Date.now() < end) {
     if (ok()) return;
-    await new Promise((t) => setTimeout(t, 10));
+    await new Promise((turn) => setImmediate(turn));
   }
   throw new Error('waited a second for something that did not come');
 }

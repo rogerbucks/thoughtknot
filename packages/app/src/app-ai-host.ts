@@ -5,7 +5,7 @@
 // - the exact request is shown in the send sheet first, and only Send on exactly that sends it, once (seen_before_sent);
 // - every send is recorded on this device, whatever came of it (record_every_send);
 // - an answer is only ever a proposal (answers_are_proposals).
-// A model the person runs may be reached by its name on their own network, such as a Tailscale name: the core counts
+// A model the person runs may be reached by its name on their own network, such as a Tailscale name. The core counts
 // one there as their own (ai_private_is_own). The app hands in the ports below on its window before the page starts.
 // The page holds no key and reaches no network itself: the app's ports do, only when the person taps Send or Test.
 import { aiModel, classificationOf, modelChoices, prepareSend, sendPrepared } from '@thoughtknot/core';
@@ -24,8 +24,8 @@ import type {
 } from '@thoughtknot/core';
 
 /**
- * A model's key, kept in the device's own secure store under its name, for the model's address only: never in the
- * vault or the app's settings. The page never reads it back. A request names it by its mark (`keyMark`), and the
+ * A model's key, kept in the device's own secure store under its name, for the model's address only. It is never in
+ * the vault or the app's settings. The page never reads it back. A request names it by its mark (`keyMark`), and the
  * device writes it in, only for that address (the plug-in's Requests.swift).
  */
 export interface AiKeys {
@@ -189,7 +189,7 @@ export class AppAi {
   }
 
   /**
-   * The exact request for `ask`, ready for the send sheet; or why nothing may be sent. The page holds no key, so the
+   * The exact request for `ask`, ready for the send sheet; or why nothing may be sent. The page holds no key. So the
    * device looks for the model's key in what would go, as it sends, and refuses it there (Requests.swift).
    */
   prepare(ask: PhoneAsk): Promise<PreparedSend | SendRefused> {
