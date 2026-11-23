@@ -1,4 +1,4 @@
-// The words of the app's own pages (editor spec §41, standalone_app; §42, words_catalogue), the phone's AI among them
+// The words of the app's own pages (editor spec ES§41, standalone_app; ES§42, words_catalogue), the phone's AI among them
 // (ES§19). Every word the app's code asks for is here, and each says something, with both plural forms where it counts.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

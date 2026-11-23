@@ -1,4 +1,4 @@
-// The phone app's way to a model (editor spec ES§19, app_ai_host; §13). It reaches a model only through its AI
+// The phone app's way to a model (editor spec ES§19, app_ai_host). It reaches a model only through its AI
 // plug-in's commands, which one module alone names. So no other code can send to a model, or ask for a key, behind the
 // send sheet's back. No command reads a key back at all: the device writes the key into a request to the address
 // it was kept for. The network scan in policy.test.js cannot see a plug-in command, so this test holds that line.
