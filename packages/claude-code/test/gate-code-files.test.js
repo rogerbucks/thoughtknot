@@ -1,6 +1,6 @@
-// A Bash command that names `classification` may still rewrite an existing code file whose path is known (spec ES§26
-// cc_gate_code_files, risk TRUST-1, Roger, 23 Nov 2026). A note, a file of a kind not listed, a settings file, a link
-// to a note and a code file holding a classified front matter are still judged as notes. Proved in a temporary folder.
+// A Bash command that names `classification` may still rewrite an existing code file whose path is known. That is spec
+// ES§26 cc_gate_code_files, risk TRUST-1 (Roger, 23 Nov 2026). A note, an unlisted kind and a settings file are still
+// judged as notes. So are a link to a note and a code file with a classified front matter. Proved in a temporary folder.
 import { afterEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

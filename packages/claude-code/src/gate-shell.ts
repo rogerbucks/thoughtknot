@@ -6,8 +6,9 @@
 // A write to a file not yet made is allowed, whatever it holds. Roger ruled so on 7 Nov 2026: a new note may carry a
 // classification, such as a screenshot's sidecar does. A heredoc that `cat` sends to a note that exists is judged as a
 // Write is, whether the command names `classification` or not. Beyond that, a command that names it is refused unless
-// every step only reads, or writes only to files not yet made or to code files (gate-code.ts, 23 Nov 2026). What a
-// command changes without naming it, such as cutting the front matter by line numbers, is not seen. GUIDE.md says so.
+// every step only reads, or writes only to new files. Since 23 Nov 2026 it may write code files too (gate-code.ts).
+// What a command changes without naming it, such as cutting the front matter by line numbers, is not seen. GUIDE.md
+// says so.
 import { classificationOf } from '@thoughtknot/core';
 import type { GatePorts } from './gate-guard.ts';
 import { codeFile } from './gate-code.ts';
