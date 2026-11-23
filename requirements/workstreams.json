@@ -1470,5 +1470,17 @@
       "ai_query_fuzzy",
       "ai_query_stale"
     ]
+  },
+  "IA1": {
+    "title": "AI on the iPhone app",
+    "size": "M",
+    "requirements": [
+      "app_ai_host",
+      "app_ai_settings",
+      "app_ai_key_keychain",
+      "app_ai_send_sheet",
+      "app_ai_record",
+      "app_ai_on_device"
+    ]
   }
 }
