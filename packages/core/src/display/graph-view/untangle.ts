@@ -231,7 +231,7 @@ export class UntangleView {
 
   /** Opens or closes the legend panel (the bar's button). */
   toggleLegend(b: HTMLElement): void {
-    legendShown(this.legend.el, this.legend.el.hidden);
+    legendShown(this.legend.el, this.legend.el.hidden !== false);
     if (!this.legend.el.hidden) this.ask();
     b.setAttribute('aria-expanded', String(!this.legend.el.hidden));
   }
