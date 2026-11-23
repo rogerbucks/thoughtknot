@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { confirmSend } from '@thoughtknot/core';
-import { aiSection } from '../page/app-ai-settings.ts';
+import { aiSection } from '../../app/src/app-ai-settings.ts';
 import { ANSWER, NOTE, OWN, phone } from './app-ai-fakes.js';
 
 const SETUP = { aiUse: 'on', aiModels: [OWN], aiUnlabelled: 'Public' };

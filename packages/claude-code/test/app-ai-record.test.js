@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SENDS_KEY, SENDS_KEPT, deviceSendLog, recordSection } from '../page/app-ai-record.ts';
+import { SENDS_KEY, SENDS_KEPT, deviceSendLog, recordSection } from '../../app/src/app-ai-record.ts';
 import { JSDOM } from 'jsdom';
 
 const dom = () => new JSDOM('<main id="gn-page"></main>', { url: 'https://app.test/' }).window;
@@ -97,7 +97,7 @@ describe('the record of sends on a phone', () => {
   });
 
   test('the page keeps it nowhere but the window’s own storage: no vault call and no synced store', () => {
-    const source = readFileSync(new URL('../page/app-ai-record.ts', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../../app/src/app-ai-record.ts', import.meta.url), 'utf8');
     assert.doesNotMatch(source, /fetch\(|\/api\/|writeWhole|indexedDB|invoke\(/);
   });
 });

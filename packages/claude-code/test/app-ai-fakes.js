@@ -3,8 +3,8 @@
 // and its own model, where it has one, answers as told.
 import { JSDOM } from 'jsdom';
 import { settingsFrom } from '@thoughtknot/core';
-import { AppAi } from '../page/app-ai-host.ts';
-import { appAiPorts } from '../page/app-ai-ports.ts';
+import { AppAi } from '../../app/src/app-ai-host.ts';
+import { appAiPorts } from '../../app/src/app-ai-ports.ts';
 
 export const NOTE =
   "# Trip\n\n```gql\n// graph: trip\n(a:Place {name: 'Paris'}),\n(b:Place {name: 'Rome'}),\n(a)-[:NEAR]->(b)\n```\n";

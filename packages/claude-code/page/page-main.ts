@@ -23,11 +23,8 @@ import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
 import { windowAttachments } from './board-attachments.ts';
 import { exportingOf, localDay } from './export-run.ts';
-import { AppAi, aiPortsOf } from './app-ai-host.ts';
-import { aiSection } from './app-ai-settings.ts';
-import { boardAskOf } from './app-ai-send-sheet.ts';
 import { boardsKept, seatsOf } from './board-section.ts';
-import type { BoardAskOf } from './board-section.ts';
+import { hostPartsOf } from './host-parts.ts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
 import { reviewSection } from './review-section.ts';
@@ -165,25 +162,20 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const addTextVersion = textVersionKept(graph, () => page.text);
     // the note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view)
     const pictures = windowAttachments(win, token, note, target?.note ?? null);
-    // AI, where the app hosts it: off until the person turns it on in the More view (app_ai_host)
-    const aiPorts = await aiPortsOf(win);
-    const ai = aiPorts ? await AppAi.start(aiPorts, settings) : null;
-    const askOf: BoardAskOf | undefined = ai
-      ? (on, got) =>
-          boardAskOf(
-            doc,
-            ai,
-            {
-              get text() {
-                return page.text;
-              },
-              path: note,
-            },
-            on,
-            got,
-            announce,
-          )
-      : undefined;
+    // what the host adds, such as the phone app's AI: none in Claude Code or VS Code (app_ai_host, cc_claude_only)
+    let redraw = () => {};
+    const parts = await hostPartsOf(win, {
+      doc,
+      settings,
+      note: {
+        get text() {
+          return page.text;
+        },
+        path: note,
+      },
+      say: announce,
+      changed: () => redraw(),
+    });
     const addBoards = boardsKept(
       graph,
       page,
@@ -191,8 +183,9 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       () => win.matchMedia(DARK).matches,
       seatsOf(win, note),
       pictures,
-      askOf,
+      parts.askOf,
     );
+    redraw = addBoards;
     // the plug-ins turned on in Obsidian, each in a sealed worker, and the graphs of a type one adds (plugin_outside_page)
     const plugins = await startPlugins(win, listed);
     let pluginPart: HTMLElement | null = null;
@@ -259,8 +252,8 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         dark: () => win.matchMedia(DARK).matches,
       }),
     );
-    // the AI group of the More view: a change there offers the board's AI box, or takes it away
-    if (ai) graph.append(aiSection(doc, ai, () => addBoards()));
+    // the host's own part of the More view, after the page's own
+    if (parts.section) graph.append(parts.section);
     await draw();
     // a proposal that lands, or any other change on disk, is drawn when the server sends it
     void notes

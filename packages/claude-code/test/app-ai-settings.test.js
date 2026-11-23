@@ -4,7 +4,7 @@
 // is a whole row, 44 or more tall.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { aiSection, SETUP_KEY } from '../page/app-ai-settings.ts';
+import { aiSection, SETUP_KEY } from '../../app/src/app-ai-settings.ts';
 import { phone, until } from './app-ai-fakes.js';
 import { chromeHere, phoneApp } from './app-ai-browser.js';
 

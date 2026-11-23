@@ -6,7 +6,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { keyNameOf, keyRow } from '../page/app-ai-key.ts';
+import { keyNameOf, keyRow } from '../../app/src/app-ai-key.ts';
 
 const KEY = ['sk', 'phone', 'z'.repeat(24)].join('-');
 const settle = () => new Promise((t) => setTimeout(t, 0));
@@ -83,7 +83,7 @@ describe('a model’s key on a phone', () => {
   });
 
   test('the page keeps it in no store of its own, and the app writes it to this device’s Keychain only', () => {
-    const page = readFileSync(new URL('../page/app-ai-key.ts', import.meta.url), 'utf8');
+    const page = readFileSync(new URL('../../app/src/app-ai-key.ts', import.meta.url), 'utf8');
     assert.doesNotMatch(page, /localStorage|sessionStorage|indexedDB|fetch\(|cookie/);
     const swift = readFileSync(new URL('../../app/src-tauri/ai/ios/Sources/AiKeys.swift', import.meta.url), 'utf8');
     assert.match(swift, /kSecAttrAccessibleWhenUnlockedThisDeviceOnly/, 'never backed up or synced to iCloud');

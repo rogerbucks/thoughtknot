@@ -39,7 +39,9 @@ Rust (src-tauri/)
 - `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list. On a
   computer it also adds the GitHub button for the open note. It puts the AI ports on the window too.
 - `app-ai.ts`: `tauriAiPorts`, the page's AI ports over the AI plug-in's commands (ES§19). A device whose plug-in does
-  not host AI, or cannot be asked, gets none. The page's side is `packages/claude-code/page/app-ai-*.ts`.
+  not host AI, or cannot be asked, gets none. `aiHostParts` makes the page's host parts from them: the AI group of
+  the More view and the board's Ask AI box. The rest is `app-ai-*.ts` here, listed in the claude-code GUIDE, whose
+  page holds only the generic hook (`host-parts.ts`).
 - `app-github.ts`: the GitHub button and its panel (spec §48). The panel keeps the picked repositories, the branch and
   the highest classification in the window's storage, never in a note. In the editor it sends the open note, or asks
   for a review as a pull request. The show-before-send screen (`showOutgoing`) comes first: Cancel has the focus, and

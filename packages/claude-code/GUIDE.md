@@ -669,8 +669,12 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
 
 ### AI on the phone app (ES§19, app_ai_host to app_ai_on_device)
 
-The phone app hands the page its AI ports on `window.thoughtknotAi`, as a promise (`packages/app/src/app-ai.ts`). Any
-other window has none, and the page offers no AI. The core keeps every rule of a send, as in Obsidian.
+The page holds no AI itself, so its source names no model (cc_claude_only). It holds only `host-parts.ts`:
+`hostPartsOf` asks the window's `thoughtknotHostParts` for a host's parts, a group of the More view and the board's
+way to ask, and gets none where there is no host or it fails. The phone app puts its AI there
+(`packages/app/src/app-ai.ts`, `aiHostParts`), with its ports on `window.thoughtknotAi`. Any other window has none,
+and the page offers no AI. The core keeps every rule of a send, as in Obsidian. The modules below are in
+`packages/app/src/`; their tests stay here.
 
 - `app-ai-host.ts` — `AppAi`: the settings with this device's AI setup over them, the models offered (the phone's own
   first), a send made ready by `prepareSend`, and a send by `sendPrepared`, recorded whatever came of it.
