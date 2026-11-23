@@ -1,0 +1,6 @@
+{
+  "file": "test/gpu-painters.test.js",
+  "test": "the painters on the graphics chip, in a real browser > ai_query_highlight: WebGL 2 paints a highlight's ring in its colour as the 2D canvas does, the boxes as they were",
+  "seen_failing_first": false,
+  "evidence": "Commit 283788b fixed an existing test that failed on Ubuntu Chrome, where antialiased box edges came near the ring colour. The painters did not change, so it passes against the code before it."
+}

@@ -9,7 +9,7 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import type { RuleChoices, RuleDraft, RuleWrite, SendResult } from '@thoughtknot/core';
 import { blankFilter, filterSaid } from '../../filter-ask.ts';
 import { queryAskWords, queryBack, queryEdited, queryLocked, querySaid, queryShown } from '../../filter.ts';
-import type { Query, QueryShow } from '../../filter.ts';
+import type { Query, QueryMark, QueryShow } from '../../filter.ts';
 import { queryResult } from '../../filter-send.ts';
 import { button } from '../button.ts';
 import type { FormState } from './rule-form-parts.ts';
@@ -19,7 +19,7 @@ export interface QueryHost {
   graph: Graph;
   choices: RuleChoices;
   describe?: (words: string, fill: (rule: RuleWrite) => void, fail?: (why: string) => void) => void;
-  show: (draft: RuleDraft, hide: boolean, query: { show: QueryShow; said: string }) => void;
+  show: (draft: RuleDraft, hide: boolean, query: { show: QueryShow; said: string; mark?: QueryMark }) => void;
   /** The panel's rows, drawn again from `state` after it changes, and its status line. */
   state: FormState;
   redraw: () => void;
@@ -99,7 +99,7 @@ export class QueryPanel {
 
   private showQuery(q: Query): void {
     this.shownId = q.id;
-    this.host.show(q.draft, this.host.hidden(), { show: q.show, said: querySaid(q) });
+    this.host.show(q.draft, this.host.hidden(), { show: q.show, said: querySaid(q), mark: q.mark });
   }
 
   private draw(): void {

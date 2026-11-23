@@ -1,4 +1,4 @@
-// The tests a reason may name beside those that passed first (spec §12, tests_first): scripts/tests-first-held.mjs. The
+// The tests a reason may name beside those that passed first (ES§12, tests_first): scripts/tests-first-held.mjs. The
 // records are made on a Mac and CI replays on Ubuntu. A test held before on one may be new on the other (PR 2427).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,12 +1,15 @@
 // The stage's side of untangling (editor spec §25, untangle_legend and untangle_ask_filter). A card's untangling tells
 // what it brings forward and hides, through `untangledIn`, on the card's own element. The stage finds it from its
 // viewport and marks its drawing so (render-untangle.ts). The untangling marks the SVG under the stage by class as it
-// changes. So the stage watches those classes, and draws again only when what is kept or hidden has changed.
+// changes. So the stage watches those classes, and draws again only when what is kept, hidden or marked has changed.
 import { untangledMarks, untangles } from '../../render/render-untangle.ts';
 import type { StageLayers } from '../../render/render-untangle.ts';
 import type { Mark } from '../../render/render-marks.ts';
 import type { Scene } from '../../render/render-scene.ts';
 import type { Layers } from '../../untangle.ts';
+import { PALETTES } from '../../palette.ts';
+import { DARK } from '../../render/render-look.ts';
+import type { Look } from '../../render/render-look.ts';
 
 /** Each card's untangling, by the card's element: what it brings forward and hides now. */
 export const untangledIn = new WeakMap<Element, () => Layers>();
@@ -15,14 +18,21 @@ export const untangledIn = new WeakMap<Element, () => Layers>();
 function layersOf(el: Element | null): StageLayers | null {
   for (let at = el; at; at = at.parentElement) {
     const shown = untangledIn.get(at)?.();
-    if (shown) return { kept: shown.kept?.things ?? null, hidden: shown.hidden.things };
+    if (shown)
+      return {
+        kept: shown.kept?.things ?? null,
+        hidden: shown.hidden.things,
+        ...(shown.marked && { marked: shown.marked }),
+      };
   }
   return null;
 }
 
 /** A stamp of the layers, so a change of class that changes neither is not drawn again. Sets keep their order. */
 const stampOf = (l: StageLayers | null) =>
-  !untangles(l) ? '' : `${[...(l.kept ?? [])].join(',')}|${[...l.hidden].join(',')}`;
+  !untangles(l)
+    ? ''
+    : `${[...(l.kept ?? [])].join(',')}|${[...l.hidden].join(',')}|${[...(l.marked ?? [])].map(([k, ms]) => `${k}:${ms.map((m) => m.badge).join('')}`).join(',')}`;
 
 /** What one stage shows of its card's untangling. */
 export class StageUntangle {
@@ -38,12 +48,16 @@ export class StageUntangle {
     this.redraw = redraw;
   }
 
-  /** `marks` as the card's untangling shows them. From the first drawing on, it watches the card, to draw again. */
-  of(marks: Mark[], viewport: HTMLElement, scene: Scene): Mark[] {
+  /**
+   * `marks` as the card's untangling shows them, a highlight's marks in the colours of the theme's `look`. From the first drawing on, it
+   * watches the card, to draw again.
+   */
+  of(marks: Mark[], viewport: HTMLElement, scene: Scene, look?: Look): Mark[] {
     this.watch(viewport);
     const layers = layersOf(viewport);
     this.stamp = stampOf(layers);
-    return untangles(layers) ? untangledMarks(marks, scene, layers) : marks;
+    const p = look === DARK ? PALETTES.dark : PALETTES.light;
+    return untangles(layers) ? untangledMarks(marks, scene, layers, p) : marks;
   }
 
   private watch(viewport: HTMLElement): void {

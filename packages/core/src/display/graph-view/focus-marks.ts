@@ -3,6 +3,9 @@
 // rest. Only classes change, never an attribute that places or sizes anything, so nothing moves and nothing is laid out
 // again.
 import type { FocusTarget, Kept } from '@thoughtknot/core';
+import { PALETTES } from '../../palette.ts';
+import { drawnOf, queryLabel, queryLine } from '../../query-marks.ts';
+import type { Marked, QueryMarkDrawn } from '../../query-marks.ts';
 
 // One "changed" signal for every surface that shows a card's drawing (view_options_everywhere). The flat drawing, the
 // view in space (2.5D, 3D, globe), its mini-map and the lens all listen to it. It says what changed, so each does only
@@ -26,11 +29,75 @@ export function changeOf(e: Event): ViewChange {
   return what === 'lens' || what === 'sketch' ? what : 'look';
 }
 
-/** What the drawing is to show: what stays at full strength (null: all of it), what is hidden, and what is highlighted. */
+/**
+ * What the drawing is to show: what stays at full strength (null: all of it), what is hidden and what is highlighted.
+ * Then what a query shown as a highlight marks (ES§75), if one is shown.
+ */
 export interface Marks {
   kept: Kept | null;
   hidden: Kept;
   hot: Kept | null;
+  marked?: Marked;
+}
+
+/** The class on a thing a query's highlight marks, which `styles.css` rings in the highlight's colour. */
+export const QUERY_MARKED = 'thoughtknot-query-marked';
+/** The class of a highlight's badge on a thing, which the 3D view reads too (svg-marks.ts). */
+export const QUERY_BADGE = 'thoughtknot-query-badge';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The numbers in an attribute of `el`, such as a polygon's points. */
+const numbersIn = (el: Element | null, name: string) =>
+  (el?.getAttribute(name) ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+
+/**
+ * Marks the box group `g` with a highlight's mark `d`, or takes it off for null. The ring is the outline's colour and
+ * weight (styles.css). The badge is a sign at the box's top right corner, clear of a rule's badge at its top left.
+ * Both sit on the box as it is: no attribute that places or sizes the box is touched.
+ */
+export function markQuery(g: Element, d: QueryMarkDrawn | null): void {
+  const kids = Array.from(g.children);
+  const child = (...tags: string[]) => kids.find((c) => tags.includes(c.tagName.toLowerCase())) ?? null;
+  const had = kids.find((c) => c.classList.contains(QUERY_BADGE));
+  if (g.getAttribute('data-query-badge') === (d?.glyph ?? null) && (!d || had)) return;
+  had?.remove();
+  g.classList.toggle(QUERY_MARKED, !!d);
+  const style = (g as Element & { style?: CSSStyleDeclaration }).style;
+  if (!d) {
+    g.removeAttribute('data-query-badge');
+    style?.removeProperty('--thoughtknot-query-line');
+    style?.removeProperty('--thoughtknot-query-label');
+    return;
+  }
+  g.setAttribute('data-query-badge', d.glyph);
+  style?.setProperty('--thoughtknot-query-line', queryLine(d.hue, PALETTES.obsidian));
+  style?.setProperty('--thoughtknot-query-label', queryLabel(d.hue, PALETTES.obsidian));
+  const shape = child('path', 'polygon', 'ellipse');
+  const tag = shape?.tagName.toLowerCase();
+  let x: number | undefined, y: number | undefined;
+  if (tag === 'ellipse') {
+    const [cx = 0, cy = 0, rx = 0, ry = 0] = ['cx', 'cy', 'rx', 'ry'].map((n) => numbersIn(shape ?? null, n)[0]);
+    [x, y] = [cx + rx * 0.7, cy - ry * 0.7 + 10];
+  } else if (shape) {
+    const all = numbersIn(shape, tag === 'path' ? 'd' : 'points');
+    if (all.length >= 4) {
+      x = Math.max(...all.filter((_, i) => i % 2 === 0)) - 4;
+      y = Math.min(...all.filter((_, i) => i % 2 === 1)) + 10;
+    }
+  } else {
+    // a thing drawn as its name alone has no outline to ring: its badge sits just above its name
+    const name = child('text');
+    [x, y] = [numbersIn(name, 'x')[0], (numbersIn(name, 'y')[0] ?? 12) - 12];
+  }
+  if (x === undefined || y === undefined) return;
+  const badge = g.appendChild(g.ownerDocument.createElementNS(SVG_NS, 'text'));
+  // with no outline to ring, the badge itself takes the colour, in the label blend, as it sits on the page
+  badge.setAttribute('class', shape ? QUERY_BADGE : `${QUERY_BADGE} ${QUERY_BADGE}-bare`);
+  badge.setAttribute('x', String(x));
+  badge.setAttribute('y', String(y));
+  badge.setAttribute('text-anchor', shape ? 'end' : 'middle');
+  badge.setAttribute('aria-hidden', 'true');
+  badge.textContent = d.glyph;
 }
 
 /**
@@ -63,7 +130,8 @@ export function sameTarget(a: FocusTarget | null, b: FocusTarget | null): boolea
  * The boxes and links of one drawing, found once, and marked as the drawing is to look. `thoughtknot-hidden` marks what
  * is hidden. With something kept, `thoughtknot-kept` marks what stays at full strength and `thoughtknot-dim` what
  * fades. What is highlighted comes forward under the pointer (`thoughtknot-hot`) over any focus. The focus itself is as
- * it was when the highlight goes. A change of highlight marks only the things it touched.
+ * it was when the highlight goes. A change of highlight marks only the things it touched. What a query's highlight
+ * marks gets a ring and a badge (`markQuery`), by the one mark rule (query-marks.ts).
  */
 export class DrawingMarks {
   private readonly svg: Element;
@@ -85,8 +153,10 @@ export class DrawingMarks {
 
   /** Marks every box and link. */
   all(m: Marks): void {
-    for (const [key, g] of this.nodes)
+    for (const [key, g] of this.nodes) {
       this.mark(g, m, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
+      markQuery(g, drawnOf(m.marked?.get(key)));
+    }
     for (const [n, gs] of this.edges)
       for (const g of gs) this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
     // the 3D view of the drawing, if open, shows what it hides and brings forward too (space-view-panel.ts)

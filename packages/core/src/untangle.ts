@@ -13,6 +13,8 @@ import type { ExploreSave } from './explore-saved.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
+import { markedShown } from './query-marks.ts';
+import type { Marked } from './query-marks.ts';
 import { word } from './words.ts';
 
 const SEPARATOR = ' · ';
@@ -288,6 +290,8 @@ export function emphasis(layers: { focus: Kept | null; forward: Kept | null; rou
 export interface Layers {
   kept: Kept | null;
   hidden: Kept;
+  /** What a query shown as a highlight marks, less what is hidden (ES§75, query-marks.ts); none when none is shown. */
+  marked?: Marked;
 }
 
 /**
@@ -306,6 +310,8 @@ export class Untangle {
   routed: { from: string; to: string; found: PathFound | null } | null = null;
   /** The filter by what things hold, shown on the drawing; null for none (untangle_ask_filter). */
   asked: AskedFilter | null = null;
+  /** What a query shown as a highlight marks: it fades and hides nothing (ES§75, ai_query_highlight); null for none. */
+  lit: Marked | null = null;
   /** The links of the drawing, as `edgesOf` gives them. */
   readonly edges: FocusEdge[];
   private readonly d: GraphDrawing;
@@ -358,7 +364,7 @@ export class Untangle {
 
   /** Whether anything is filtered, chosen or asked for. */
   active(): boolean {
-    const any = this.only ?? this.explore ?? this.routed ?? this.asked;
+    const any = this.only ?? this.explore ?? this.routed ?? this.asked ?? this.lit;
     return any !== null || this.legend.any();
   }
 
@@ -377,6 +383,7 @@ export class Untangle {
     }
     const found = this.routed?.found;
     const route = found ? { things: new Set(found.things), edges: new Set(found.edges) } : null;
-    return { kept: emphasis({ focus, forward, route }), hidden: hide };
+    const kept = emphasis({ focus, forward, route });
+    return this.lit ? { kept, hidden: hide, marked: markedShown(this.lit, hide.things) } : { kept, hidden: hide };
   }
 }

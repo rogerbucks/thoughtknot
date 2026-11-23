@@ -2,6 +2,8 @@
 // - WebGL 2: the overview of a few hundred groups is painted by it and by the 2D canvas painter, and the pictures are
 //   compared. Each part of the picture, 20 by 20 pixels, must be the same colour within a little. Lines are smoothed a
 //   little differently.
+// - A query's highlight (ES§75, ai_query_highlight): its ring and badge come from the one mark rule (query-marks.ts).
+//   WebGL 2 paints them as the 2D canvas does, in the highlight's colour, each box where it was. WebGPU paints them too.
 // - WebGPU: its shaders must build with no error, and a frame of every kind of mark must paint with no error. Its
 //   picture is not compared here: in software, Chrome reads a WebGPU canvas back blank until another page has painted.
 //   It was compared by hand on 22 Oct 2026, and matched as WebGL 2 does.
@@ -36,6 +38,8 @@ import { canvasPainter, paintsOf, pickPainter } from './packages/core/src/displa
 import { webgl2Painter } from './packages/core/src/display/graph-view/gl-painter.ts';
 import { webgpuPainter } from './packages/core/src/display/graph-view/gpu-painter.ts';
 import { PALETTES } from './packages/core/src/palette.ts';
+import { QUERY_MARKS } from './packages/core/src/filter.ts';
+import { markedBy, queryLine, withQueryMarks, withQueryPaints } from './packages/core/src/query-marks.ts';
 const MAKERS = [['canvas', canvasPainter], ['webgl2', webgl2Painter]];
 // WebGPU's device and shaders, caught as the painter makes them, so their errors can be read
 const made = { devices: [], shaders: [] };
@@ -62,6 +66,9 @@ window.checkWebgpu = async () => {
   device.pushErrorScope('validation');
   painter.resize(200, 100, 2);
   painter.paint(MARKS_OF_EVERY_KIND, { x: 0, y: 0, scale: 1.5 }, paintsOf(PALETTES.light));
+  // a highlight's ring and badge are plain marks, painted in a token of their own
+  const lit = withQueryMarks(MARKS_OF_EVERY_KIND.map((m) => ({ ...m, of: m.id })), markedBy(['r', 'e', 'd'], QUERY_MARKS[0]));
+  painter.paint(lit, { x: 0, y: 0, scale: 1.5 }, withQueryPaints(paintsOf(PALETTES.light), PALETTES.light));
   const error = await device.popErrorScope();
   painter.destroy();
   return { kind: painter.kind, shaderErrors: messages.map((m) => m.message), paintError: error?.message ?? null };
@@ -75,6 +82,35 @@ const MARKS_OF_EVERY_KIND = [
   { id: 'c', kind: 'link', style: 'link', points: [[65, 30], [70, 40], [90, 40], [105, 30]], curve: true },
   { id: 'a', kind: 'arrowhead', style: 'link', x: 105, y: 30, angle: -30, size: 6 },
 ];
+/** Paints a few boxes, plain and then highlighted, with each painter; gives back each picture and the ring's colour. */
+window.paintHighlight = async () => {
+  const W = 200, H = 100, p = PALETTES.light;
+  const boxes = [
+    { id: 'a', kind: 'box', style: 'thing', of: 'a', x: 20, y: 20, width: 60, height: 30 },
+    { id: 'b', kind: 'box', style: 'thing', of: 'b', x: 120, y: 20, width: 60, height: 30, shape: 'ellipse' },
+  ];
+  const lit = withQueryMarks(boxes, markedBy(['a', 'b'], QUERY_MARKS[0]));
+  const out = { ring: queryLine('blue', p) };
+  for (const [name, make] of MAKERS) {
+    out[name] = {};
+    for (const [shown, marks, paints] of [['plain', boxes, paintsOf(p)], ['lit', lit, withQueryPaints(paintsOf(p), p)]]) {
+      const canvas = document.body.appendChild(document.createElement('canvas'));
+      const painter = await pickPainter(canvas, [make]);
+      if (!painter) continue;
+      painter.resize(W, H, 1);
+      painter.paint(marks, { x: 0, y: 0, scale: 1 }, paints);
+      const img = new Image();
+      await new Promise((done) => ((img.onload = done), (img.src = canvas.toDataURL())));
+      const copy = document.createElement('canvas');
+      copy.width = W;
+      copy.height = H;
+      const ctx = copy.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      out[name][shown] = { kind: painter.kind, width: W, height: H, pixels: Array.from(ctx.getImageData(0, 0, W, H).data) };
+    }
+  }
+  return out;
+};
 window.paintAll = async (count) => {
   const groups = Array.from({ length: count }, (_, i) => ({
     id: 'group:g' + i, label: 'Group ' + i, by: 'links',
@@ -179,6 +215,52 @@ describe('the painters on the graphics chip, in a real browser', () => {
       assert.equal(differing(canvas, webgl2), 0, `${count} groups`);
     }
   });
+
+  // proves: ai_query_highlight
+  test(
+    "ai_query_highlight: WebGL 2 paints a highlight's ring in its colour as the 2D canvas does, the boxes as they were",
+    options,
+    async () => {
+      const out = JSON.parse(await browser.run('paintHighlight().then(JSON.stringify)'));
+      const ring = [1, 3, 5].map((i) => parseInt(out.ring.slice(i, i + 2), 16));
+      /** How many pixels of a picture are near the ring's colour. */
+      const ringed = ({ pixels }) => {
+        let n = 0;
+        for (let i = 0; i < pixels.length; i += 4)
+          if (pixels[i + 3] > 200 && ring.every((c, k) => Math.abs(pixels[i + k] - c) < 24)) n++;
+        return n;
+      };
+      const at = (pic, x, y) => pic.pixels.slice((y * pic.width + x) * 4, (y * pic.width + x) * 4 + 4);
+      /** The rows the ring takes above the first box, which starts at y 20: its rings lie 2 to 4 pixels out. */
+      const band = (pic, rows = [15, 16, 17, 18]) =>
+        rows.flatMap((y) => Array.from({ length: 41 }, (_, i) => at(pic, 30 + i, y)));
+      for (const name of ['canvas', 'webgl2']) {
+        const { plain, lit } = out[name];
+        assert.equal(lit?.kind, name);
+        // with no highlight the ring's rows are bare paper, exactly
+        const paper = at(plain, 5, 5);
+        assert.deepEqual(
+          band(plain).filter((px) => px.some((c, k) => c !== paper[k])),
+          [],
+          `${name}: no ring with no highlight`,
+        );
+        // the rings' lines are antialiased on the transparent paper: the two middle rows, where they overlap, are the solid part
+        const solid = band(lit, [16, 17]);
+        const inBand = solid.filter((px) => px[3] >= 128 && ring.every((c, k) => Math.abs(px[k] - c) < 24)).length;
+        assert.equal(
+          inBand,
+          solid.length,
+          `${name}: every pixel of the ring's middle rows holds the highlight's colour`,
+        );
+        // antialiased edges can come near the colour, so the whole picture is judged by what the highlight adds
+        assert.ok(ringed(lit) - ringed(plain) > 200, `${name}: the ring is painted in the highlight's colour`);
+        // inside each box nothing changed: the ring lies wholly outside it
+        const inside = (pic) => [at(pic, 50, 35), at(pic, 150, 35), at(pic, 21, 21)];
+        assert.deepEqual(inside(lit), inside(plain), `${name}: each box is painted as it was`);
+      }
+      assert.equal(differing(out.canvas.lit, out.webgl2.lit), 0, 'WebGL 2 paints the highlight as the 2D canvas does');
+    },
+  );
 
   test('WebGPU builds its shaders and paints every kind of mark with no error', options, async (t) => {
     const checked = JSON.parse(

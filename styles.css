@@ -330,6 +330,20 @@
 .thoughtknot-rule-glyph {
   margin-inline-end: var(--gn-space-1);
 }
+/* A query shown as a highlight (ES§75, ai_query_highlight) marks each thing it finds by more than colour. Its outline
+   is in the highlight's colour and heavier, and the highlight's badge sits at the box's top right. A line's weight and a sign
+   move nothing. The badge is in the text colour, so it keeps its contrast on any box. */
+.thoughtknot-svg g.thoughtknot-query-marked > :is(path, polygon, ellipse) {
+  stroke: var(--thoughtknot-query-line, var(--gn-accent));
+  stroke-width: 3;
+}
+.thoughtknot-svg .thoughtknot-query-badge {
+  font-size: 11px;
+  fill: var(--gn-text-normal);
+}
+.thoughtknot-svg .thoughtknot-query-badge-bare {
+  fill: var(--thoughtknot-query-label, var(--gn-text-normal));
+}
 /* the list that picks the intent shown over the drawing, and its standing in words (§58, intent_overlay) */
 .thoughtknot-intent-pick {
   display: flex;
