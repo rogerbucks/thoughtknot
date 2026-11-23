@@ -1,4 +1,4 @@
-// The tests a reason may name beside those that passed first (spec §12, tests_first). The records are made on a Mac.
+// The tests a reason may name beside those that passed first (ES§12, tests_first). The records are made on a Mac.
 // CI replays on Ubuntu. A test's old version may fail at the parent on one but not the other. It is then new and passing
 // first there, and held before here (PR 2427). Records and reasons are kept by scripts/tests-first-records.mjs. The
 // command is scripts/tests-first.mjs.
