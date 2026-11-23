@@ -1,5 +1,6 @@
 // The last part of the types src/index.ts exports, from HitAreas on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
+// SavedQueries, SavedQuery and SavedQuerySave (ai_query_saved), with DeviceStore (ai_query_cache), came on 23 Nov 2026.
 export const TYPES_LATE = [
   // Claude presents and decides (§49), 5 Nov 2026
   'DecisionAnswer',
@@ -252,6 +253,9 @@ export const TYPES_LATE = [
   // a filter saved by name (ES§25, untangle_filter_saved), 13 Nov 2026
   'NamedFilterSave',
   'NamedFilters',
+  'SavedQueries',
+  'SavedQuery',
+  'SavedQuerySave',
   'Scenario',
   'Scheduler',
   'SchemaMove',

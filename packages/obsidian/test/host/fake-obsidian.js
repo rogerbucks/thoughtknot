@@ -96,6 +96,7 @@ export function fakeObsidian(state = {}) {
   }
   const file = (path) => (files.has(path) ? new TFile(path) : null);
   const vault = {
+    getName: () => 'Test vault',
     getFileByPath: file,
     getAbstractFileByPath: file,
     getMarkdownFiles: () => [...files.keys()].filter((p) => p.endsWith('.md')).map((p) => new TFile(p)),

@@ -145,6 +145,7 @@ const listeners = [];
 // the pictures kept, each by its path, as the address the page shows it from
 const pictures = new Map();
 const vault = {
+  getName: () => 'Harness vault',
   getFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
   // a picture dropped on a board is kept in memory, and shown from there
   getResourcePath: (f) => pictures.get(f.path) ?? `app://local/${f.path}`,

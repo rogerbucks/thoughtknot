@@ -523,6 +523,7 @@ export const TYPES = [
   'Details',
   'Device',
   'DeviceAsks',
+  'DeviceStore',
   'Diagnostic',
   'Diagram',
   'DiagramChoice',
