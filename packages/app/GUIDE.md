@@ -37,7 +37,9 @@ Rust (src-tauri/)
   `tauriSaveNew`, which writes an export. `invoke` is handed in, so nothing here imports Tauri.
 - `app-start.ts`: the first page. Pick a folder with the system's dialog, then each note is a link into the editor.
 - `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list. On a
-  computer it also adds the GitHub button for the open note.
+  computer it also adds the GitHub button for the open note. It puts the AI ports on the window too.
+- `app-ai.ts`: `tauriAiPorts`, the page's AI ports over the AI plug-in's commands (ES§19). A device whose plug-in does
+  not host AI, or cannot be asked, gets none. The page's side is `packages/claude-code/page/app-ai-*.ts`.
 - `app-github.ts`: the GitHub button and its panel (spec §48). The panel keeps the picked repositories, the branch and
   the highest classification in the window's storage, never in a note. In the editor it sends the open note, or asks
   for a review as a pull request. The show-before-send screen (`showOutgoing`) comes first: Cancel has the focus, and
@@ -173,6 +175,17 @@ The same shell is built for Android, and for the iPhone and iPad (spec §40). On
   - The window may not ask for the key yet: the capability does not allow `vault_key`. Sync allows it when it joins
     the app (W30). On a computer the command says it keeps none yet.
   - Its tests run on an Android emulator in the phone app workflow (`keeper/android/src/androidTest`).
+- AI on the iPhone (ES§19, app_ai_host) is the app's own plug-in in `src-tauri/ai/`, with seven commands, each allowed
+  by name in the capability:
+  - `ai_here` says whether this device hosts AI, and whether its own model can be asked. Only iOS does; any other
+    device says no, and `src/app-ai.ts` then gives the page no AI.
+  - `ai_key_set`, `ai_key_has`, `ai_key_get` and `ai_key_forget` keep a model's key in the Keychain, for this device
+    only, never synced or backed up (`AiKeys.swift`).
+  - `ai_request` sends a request the person said yes to. The Rust refuses first anything but a POST, or a GET with no
+    body; anything but https, or http on this device; and a body over 16 MiB. The Swift sends it in a session that
+    keeps nothing, stopped after 120 seconds or 8 MiB of answer (`Requests.swift`).
+  - `ai_on_device_ask` asks Apple's model on the phone, where it has one: iOS 26 and Apple Intelligence on. It is never
+    Private Cloud Compute (`OnDevice.swift`).
 - The phone app's id is `app.thoughtknot.mobile` (`tauri.android.conf.json`, `tauri.ios.conf.json`).
 
 The phone and tablet app workflow (`.github/workflows/mobile-app.yml`) builds both on each change:

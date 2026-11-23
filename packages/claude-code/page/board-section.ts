@@ -4,6 +4,7 @@
 import { arrangerOf, gqlBlocks, PALETTES, viewerOf, word } from '@thoughtknot/core';
 import type { Together } from '@thoughtknot/core';
 import type { Pictures } from '@thoughtknot/core/display/board/board-images';
+import type { BoardDraft } from '@thoughtknot/core/display/board/board-draft';
 import {
   boardFromGraph,
   draftFor,
@@ -81,6 +82,15 @@ function proposedIn(
 }
 
 /**
+ * How the board asks the person's AI for a board, where the host has AI on (ES§19, app_ai_host): given the graph the
+ * board is on and what to do with the board that comes back, the words handler; or nothing, so the list offers no box.
+ */
+export type BoardAskOf = (
+  graph: string | undefined,
+  got: (board: BoardDraft) => void,
+) => ((words: string) => void) | undefined;
+
+/**
  * A section with the note's board in front opened, under the list of its boards, or null when the note holds none.
  * `key` names the note. A board with a seat is edited together with the others there, and the others are drawn on it.
  * `again` draws the section afresh, after another board is put in front.
@@ -93,6 +103,7 @@ export function boardSection(
   seatFor?: SeatFor,
   again?: () => void,
   pictures?: Pictures,
+  askOf?: BoardAskOf,
 ): HTMLElement | null {
   const written = gqlBlocks(note.text).filter((b) => boardOf(b.text));
   // a note with no board opens on a starter board, or an empty one with no graph either (ES§76, board_first_new_note).
@@ -123,6 +134,11 @@ export function boardSection(
       again?.();
       return null;
     },
+    // the board the AI proposes is shown as the one above is, until it is kept or dropped (board_proposed)
+    askAi: askOf?.(boardOf(b.text)?.on ?? undefined, (d) => {
+      proposeBoard(key, d);
+      again?.();
+    }),
     change: seat
       ? undefined
       : async (ask) => {
@@ -195,12 +211,13 @@ export function boardsKept(
   dark: () => boolean,
   seatFor?: SeatFor,
   pictures?: Pictures,
+  askOf?: BoardAskOf,
 ): () => void {
   let boards: HTMLElement | null = null;
   const kept = keptIn(parent.ownerDocument.defaultView);
   const draw = () => {
     boards?.remove();
-    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw, pictures);
+    boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor, draw, pictures, askOf);
     if (!boards) return;
     // whiteboard files in and out: a small bar under the boards, closed until it is opened (board_exchange)
     const win = parent.ownerDocument.defaultView;

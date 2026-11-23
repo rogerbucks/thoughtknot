@@ -1,6 +1,7 @@
 // The words of the desktop app's own pages, in UK English (editor spec §41, standalone_app; §42, words_catalogue).
 // The editor inside the app is the browser editor's page, which says its own words. The VS Code extension's own
 // messages join them here (vscode-source-words.ts). source-words.ts keeps them with every other word.
+import { APP_AI_SOURCE_WORDS } from './app-ai-source-words.ts';
 import { PHONE_SOURCE_WORDS } from './phone-source-words.ts';
 import { VSCODE_SOURCE_WORDS } from './vscode-source-words.ts';
 
@@ -97,4 +98,5 @@ export const APP_SOURCE_WORDS = {
     'This window cannot keep a picture: it has no way to write one beside the note and read it back.',
   ...VSCODE_SOURCE_WORDS,
   ...PHONE_SOURCE_WORDS,
+  ...APP_AI_SOURCE_WORDS,
 } as const;

@@ -667,6 +667,26 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   with four views: Board, Graph, Note and More. One shows at a time, by `phone.css`. It also tells the board how tall to be
   (`--thoughtknot-board-room`, read by the core's `board-space.ts`), so the board fills the screen.
 
+### AI on the phone app (ES§19, app_ai_host to app_ai_on_device)
+
+The phone app hands the page its AI ports on `window.thoughtknotAi`, as a promise (`packages/app/src/app-ai.ts`). Any
+other window has none, and the page offers no AI. The core keeps every rule of a send, as in Obsidian.
+
+- `app-ai-host.ts` — `AppAi`: the settings with this device's AI setup over them, the models offered (the phone's own
+  first), a send made ready by `prepareSend`, and a send by `sendPrepared`, recorded whatever came of it.
+- `app-ai-ports.ts` — `appAiPorts`: the ports from what the device can do. The setup and the record are kept in the
+  window's own storage, on this device only.
+- `app-ai-settings.ts` — the AI group of the More view, in grouped rows: AI on or off, what an unlabelled note counts
+  as, the phone's own model's ceiling, and each model added by its address. A model is marked private only where
+  its address shows the person runs it, such as a Tailscale name. Test asks the address for its models; no note goes.
+- `app-ai-key.ts` — a model's key row: the key goes to the Keychain port only, and the field is emptied.
+- `app-ai-send-sheet.ts` — the send sheet, from the foot of the screen: exactly what goes, and to which model. Nothing
+  is sent before Send. `boardAskOf` gives the board's Ask AI box, which opens it.
+- `app-ai-record.ts` — the record of sends, on this device only, read in the More view. It holds no text sent.
+- `app-ai-on-device.ts` — the phone's own model as the core's host model, through a transport to the device.
+- Tests: `test/app-ai-*.test.js`. The settings and sheet tests also open the app in Chrome as a phone, with
+  `app-ai-browser.js`, and measure each control.
+
 ### Export from the page
 
 - `export-run.ts`, `export-calls.ts`, `png.ts` (workstream C6, cc_export_same) — the Export form is the shared layer's.
