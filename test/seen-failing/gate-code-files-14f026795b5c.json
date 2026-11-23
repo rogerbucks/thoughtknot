@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/gate-code-files.test.js",
+  "test": "a Bash write to an existing code file (ES§26 cc_gate_code_files) > is refused when its path, or the count of its links, is not known",
+  "seen_failing_first": false,
+  "evidence": "It guards that the change lets off nothing new: the old code refused all of these, so it passed first."
+}
