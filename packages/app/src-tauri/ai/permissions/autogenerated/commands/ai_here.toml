@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-ai-here"
+description = "Enables the ai_here command without any pre-configured scope."
+commands.allow = ["ai_here"]
+
+[[permission]]
+identifier = "deny-ai-here"
+description = "Denies the ai_here command without any pre-configured scope."
+commands.deny = ["ai_here"]

@@ -457,6 +457,7 @@ fn own_documents<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<PathBuf, Strin
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_keeper::init())
+        .plugin(tauri_plugin_ai::init())
         .manage(Arc::new(mesh::Mesh::default()))
         .manage(crdt::Notes::default())
         .manage(parts::Parts::default());
