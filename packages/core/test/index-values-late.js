@@ -13,6 +13,7 @@
 // INTENT_LINK_TYPES, INTENT_MARKS, UNSTATED and the intent functions (§58, intents) came on 3 Nov 2026.
 // queryCache, queryFitless and savedQueryRemove, savedQueryRenamed, savedQueryWritten (ai_query_saved, ai_query_cache,
 // ai_query_fuzzy) came on 23 Nov 2026.
+import { VALUES_LATER } from './index-values-later.js';
 export const VALUES_LATE = [
   // Claude presents and decides (§49), 5 Nov 2026
   'CAPTION_MOST',
@@ -589,13 +590,5 @@ export const VALUES_LATE = [
   'pptxBlock',
   'pptxBoard',
   'pptxSlides',
-  // a loose line of a graph block turned into GQL, by code or with AI (ES§47, line_to_gql_code and line_to_gql_ai), 24 Nov 2026
-  'aiOnFor',
-  'convertLine',
-  'lineFromProposal',
-  'lineOffer',
-  'lineToGqlAsk',
-  'lineWithGql',
-  'looseLine',
-  'noteWithoutLine',
+  ...VALUES_LATER,
 ];
