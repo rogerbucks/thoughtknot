@@ -8,7 +8,7 @@
 //   then Show and Send again, as for any change (edit_ai_expand).
 // - It may ask for suggestions instead: a value of one property, or each thing's pull on an intent (suggest-rows.ts).
 // - Opened from Expand with AI, the thing's graph, the thing and the expand question are chosen already.
-// - Opened on a text (text-graph.ts, §47), the text and its graph are chosen, and the whole graph goes with it.
+// - Opened on a text or one loose line (text-graph.ts, §47), the text and its graph are chosen, and the graph goes too.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
@@ -20,7 +20,6 @@ import {
   prepareSend,
   readNote,
   sendPrepared,
-  textToGraphAsk,
   viewsOf,
   word,
 } from '@thoughtknot/core';
@@ -30,7 +29,7 @@ import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { PURPOSE, drawModelRow } from './model-row';
-import { asChangeSet, drawTextRows } from './text-graph';
+import { asChangeSet, drawTextRows, textAskOf } from './text-graph';
 import type { TextAsk } from './text-graph';
 import { obsidianTransport } from './send';
 import { NO_SUGGESTION, askOf, drawSuggestRows, levelsAsked, offeredQuestion, saveLevels } from './suggest-rows';
@@ -294,7 +293,7 @@ export class SendDialog extends Modal {
     const ask = this.rule
       ? this.rule.ask(base, this.graph, this.question)
       : this.text
-        ? textToGraphAsk(base, this.text.graph, this.text.words, this.question, this.text.place)
+        ? textAskOf(base, this.text, this.question)
         : askOf(base, this.suggest, this.question);
     const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
@@ -362,8 +361,9 @@ export class SendDialog extends Modal {
     const { proposal } = result,
       n = proposal.changes.length;
     if (levelsAsked(this.suggest)) return saveLevels(this, [this.file, this.note, this.graph], proposal, p.model);
-    // a text for a note with no such graph is reviewed in a dialog of its own: nothing is written until then
-    if (this.text && !(await asChangeSet(this.plugin, this.file, proposal))) return this.close();
+    // a text for a note with no such graph, or a loose line, is reviewed in a dialog of its own: nothing is written yet
+    const set = this.text ? await asChangeSet(this.plugin, this.file, proposal, this.text, this.note) : true;
+    if (set !== true) return set === false ? this.close() : void ((this.refusal = set), this.drawShown());
     const outcome: { refused: string | null } = { refused: null };
     try {
       await changeVaultNote(this.app, this.file.path, (now) => {

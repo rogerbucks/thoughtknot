@@ -8,6 +8,8 @@
 import { EditorView } from '@codemirror/view';
 import { Transaction } from '@codemirror/state';
 import { colonInNote, commaInNote } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from './main';
+import { lineOffers } from './line-offer';
 
 /** The note editor's extension that adds the comma and the colon for you as you type. */
 export const addForYou = EditorView.updateListener.of((u) => {
@@ -48,3 +50,9 @@ export const addForYou = EditorView.updateListener.of((u) => {
     view.dispatch({ changes, annotations: Transaction.userEvent.of(event) });
   }, 0);
 });
+
+/** Registers the note editor's extensions: this one, and the offer beside a loose line of a graph block (§47). */
+export function registerEditorAdds(plugin: ThoughtKnotPlugin): void {
+  plugin.registerEditorExtension(addForYou);
+  plugin.registerEditorExtension(lineOffers(plugin));
+}

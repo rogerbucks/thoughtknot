@@ -54,6 +54,8 @@ export {
 export type { KnownThing, Matched, TextGraph, TextGraphFor, TextSpan } from './text-to-graph.ts';
 export { holdsGraph, noteWithTextGraphApplied, tickedOnly, withGraphHome } from './text-to-graph-note.ts';
 export { convertLine, lineWithGql, looseLine, noteWithoutLine } from './line-to-gql.ts';
+export { aiOnFor, lineFromProposal, lineOffer, lineToGqlAsk } from './line-to-gql-ai.ts';
+export type { LineOffer } from './line-to-gql-ai.ts';
 export type { LineConverted, LineShape, LooseLine } from './line-to-gql.ts';
 export * from './index-tables.ts';
 export * from './index-presets.ts';

@@ -169,3 +169,26 @@ test('a result the library cannot take, or a line no shape fits, is refused with
   const valid = typedIn("(bob:Person {name: 'Bob'})");
   assert.ok('refused' in convertLine(valid.note, valid.line));
 });
+
+test('the loose line problem carries a fix whose title shows the GQL, and applying it writes that GQL in place', async () => {
+  const { diagnostics } = await import('../src/help.ts');
+  const block = [...GRAPH, 'Alice likes Bob'].join('\n');
+  const reading = readNote([block]);
+  const found = diagnostics(reading, 'team', 0, block, 'app://Notes.md');
+  const here = found.find((d) => d.range.start.line === GRAPH.length);
+  assert.ok(here, 'the loose line has a problem');
+  const fix = here.data.fixes.find((f) => f.title.startsWith('Convert to GQL'));
+  assert.ok(fix, 'and a fix that converts it');
+  assert.equal(fix.title, "Convert to GQL: (bob {name: 'Bob'}), (alice)-[:LIKES]->(bob)");
+  const [edit] = fix.edit.changes['app://Notes.md'];
+  const lines = block.split('\n');
+  lines.splice(edit.range.start.line, 1, ...edit.newText.split('\n'));
+  assert.equal(edit.range.end.character, 'Alice likes Bob'.length);
+  const fixed = lines.join('\n');
+  const world = readNote([fixed]).world.team;
+  assert.ok(world.edges.some(([a, t, b]) => a === 'alice' && t === 'LIKES' && b === 'bob'));
+  // a valid block has no such fix
+  const valid = readNote([GRAPH.join('\n')]);
+  const none = diagnostics(valid, 'team', 0, GRAPH.join('\n'), 'app://Notes.md');
+  assert.ok(none.every((d) => d.data.fixes.every((f) => !f.title.startsWith('Convert to GQL'))));
+});

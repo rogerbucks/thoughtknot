@@ -81,7 +81,7 @@ interface Has {
   types: string[];
 }
 
-// a name a person types for a thing: letters, digits and a few marks, at most five words
+// a name a person types for a thing: letters, digits and a few marks, at most five words (three in a list)
 const NAME = /^[\p{L}\p{N}][\p{L}\p{N} '’.&_-]*$/u;
 const nameOk = (s: string, most = 5) => NAME.test(s) && s.length <= 200 && s.split(/\s+/).length <= most;
 const unquote = (s: string) =>
@@ -177,7 +177,7 @@ function listOf(line: string): Read | null {
   const kinded = /^(.+,.+?)\s*:\s*([A-Za-z][\w ]*)$/.exec(line);
   const names = (kinded?.[1] ?? line).split(',').map(unquote);
   const kind = kinded?.[2]?.trim();
-  if (names.length < 2 || !names.every((n) => nameOk(n))) return null;
+  if (names.length < 2 || !names.every((n) => nameOk(n, 3))) return null;
   return { shape: 'list', things: names.map((text) => (kind ? { text, kind } : { text })), links: [] };
 }
 

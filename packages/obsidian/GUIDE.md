@@ -339,6 +339,9 @@ A .base file picks notes with its filters. The Graph view draws them as a graph,
     the ask, so the ceiling, Show, Send and the record hold as for any send.
   - A note that holds the graph gets the answer as a change set. A note with no such graph gets `TextGraphReview`: the
     person ticks what to keep, and only that is written, into a new block.
+- `line-offer.ts` — a loose line in Source mode gets a button at its end (line_to_gql_offer). Convert to GQL shows
+  `LineReview`, and Accept writes the GQL as one step. Convert with AI, while AI is on, opens the send dialog on the
+  line (`lineWithAi` in `ai.ts`). Its answer is shown in `LineReview` too (`lineAnswer` in `text-graph.ts`).
 #### The destination matrix and the network
 
 - `matrix-note.ts` — the destination matrix note, named in the settings, read into plain rows (`matrixRows`).

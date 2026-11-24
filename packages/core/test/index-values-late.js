@@ -589,4 +589,13 @@ export const VALUES_LATE = [
   'pptxBlock',
   'pptxBoard',
   'pptxSlides',
+  // a loose line of a graph block turned into GQL, by code or with AI (ES§47, line_to_gql_code and line_to_gql_ai), 24 Nov 2026
+  'aiOnFor',
+  'convertLine',
+  'lineFromProposal',
+  'lineOffer',
+  'lineToGqlAsk',
+  'lineWithGql',
+  'looseLine',
+  'noteWithoutLine',
 ];

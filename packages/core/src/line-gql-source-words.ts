@@ -5,6 +5,7 @@
 export const LINE_GQL_SOURCE_WORDS = {
   'line-gql.offer': 'Convert to GQL',
   'line-gql.offer-ai': 'Convert with AI',
+  'line-gql.fix': 'Convert to GQL: {gql}',
   'line-gql.offer-tip': 'This line is not GQL yet. See the GQL it would become, and accept it or not.',
   'line-gql.not-loose': 'This line is GQL already, or is not in a graph block: there is nothing to convert.',
   'line-gql.no-shape':

@@ -8,7 +8,7 @@
 // proposal, accepted one change at a time. While AI is off, the editor offers no Expand.
 import { Notice } from 'obsidian';
 import type { TFile } from 'obsidian';
-import { aiReady, keepProposal, noteWithProposal, word } from '@thoughtknot/core';
+import { aiReady, keepProposal, looseLine, noteWithProposal, word } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { classificationInText, classificationOf, higherClassification } from '../export/classification';
 import { noteToRewrite } from '../reading-view';
@@ -167,6 +167,21 @@ export async function proseGraph(plugin: ThoughtKnotPlugin, path: string, prose:
   const base = prose.place.replace(/^.*\//, '').replace(/\.txt$/i, '');
   const text = { graph: graphNamed(base), words: prose.text, place: prose.place };
   const start = { graph: text.graph, things: [], question: word('ai.text-graph.question'), text };
+  new SendDialog(plugin, file, note, levelFor(plugin, file, note), await plugin.sharedSchemas(), start).open();
+}
+
+/**
+ * Convert with AI, for one loose line of a graph block (line_to_gql_ai). It opens the send dialog on the line of the
+ * note at `path`, so the send keeps the rules of §19. The answer is shown as the GQL the line becomes.
+ */
+export async function lineWithAi(plugin: ThoughtKnotPlugin, path: string, note: string, line: number): Promise<void> {
+  const ready = aiReady(plugin.settings);
+  if ('off' in ready) return void new Notice(ready.off);
+  const file = plugin.app.vault.getFileByPath(path);
+  const loose = looseLine(note, line);
+  if (!file || !loose) return;
+  const text = { graph: loose.graph, words: loose.text, line };
+  const start = { graph: loose.graph, things: [], question: word('line-gql.question'), text };
   new SendDialog(plugin, file, note, levelFor(plugin, file, note), await plugin.sharedSchemas(), start).open();
 }
 

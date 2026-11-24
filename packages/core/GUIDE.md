@@ -1932,6 +1932,10 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     the graph has are reused.
   - `lineWithGql` puts any GQL on the line, from code or an AI. It reads the note with it in place, and refuses a
     result that fails or adds a problem.
+- `line-to-gql-fix.ts` — the same conversion in the block editor: `help.ts` gives it as a fix of the line's problem.
+- `line-to-gql-ai.ts` — a loose line code cannot convert, sent to an AI (§47, line_to_gql_ai). `lineOffer` says what
+  is offered. `lineToGqlAsk` is text to graph's ask, with the line as its text. `lineFromProposal` puts the answer on
+  the line.
 
 #### The AI query contract and write scoring (spec §37)
 
