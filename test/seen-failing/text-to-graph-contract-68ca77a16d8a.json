@@ -1,0 +1,6 @@
+{
+  "file": "test/text-to-graph-contract.test.js",
+  "test": "the editor action and the skill take the same prompt and answer schema from the library, and neither holds a copy of its own",
+  "seen_failing_first": false,
+  "evidence": "The send dialog's ask for a text moved into text-graph.ts, so the check now reads that file. The behaviour it proves is unchanged, so it passes against its parent too."
+}
