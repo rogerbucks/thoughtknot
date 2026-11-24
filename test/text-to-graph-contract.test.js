@@ -85,7 +85,8 @@ test('the editor action and the skill take the same prompt and answer schema fro
   assert.ok(doors.length > 3);
   for (const [path, text] of doors)
     for (const l of lines) assert.ok(!text.includes(l), `${path} holds its own copy of "${l}"`);
-  const editor = readFileSync(join(ROOT, 'packages/obsidian/src/ai/send-dialog.ts'), 'utf8');
+  // the send dialog takes its ask for a text from text-graph.ts, which makes it with the library's textToGraphAsk
+  const editor = readFileSync(join(ROOT, 'packages/obsidian/src/ai/text-graph.ts'), 'utf8');
   assert.match(editor, /textToGraphAsk/);
   const skillSource = readFileSync(join(ROOT, 'packages/cowork/src/text-graph.ts'), 'utf8');
   assert.match(skillSource, /textGraphMessage/);

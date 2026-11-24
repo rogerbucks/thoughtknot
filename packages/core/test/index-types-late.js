@@ -526,4 +526,9 @@ export const TYPES_LATE = [
   'PptxBoard',
   'PptxRead',
   'PptxRefusal',
+  // a loose line of a graph block turned into GQL (ES§47, line_to_gql_code and line_to_gql_ai), 24 Nov 2026
+  'LineConverted',
+  'LineOffer',
+  'LineShape',
+  'LooseLine',
 ];

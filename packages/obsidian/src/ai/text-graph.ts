@@ -6,9 +6,20 @@
 // - A note with no such graph gets a review here: the person ticks what to keep, and only that is written.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { TFile } from 'obsidian';
-import { gqlSpans, holdsGraph, noteWithTextGraphApplied, readNote, tickedOnly, word } from '@thoughtknot/core';
+import {
+  gqlSpans,
+  holdsGraph,
+  lineFromProposal,
+  lineToGqlAsk,
+  noteWithTextGraphApplied,
+  readNote,
+  textToGraphAsk,
+  tickedOnly,
+  word,
+} from '@thoughtknot/core';
 import type { Proposal } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { LineReview } from '../line-offer';
 import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
 /** The command's id and name. */
@@ -25,6 +36,8 @@ export interface TextAsk {
   words: string;
   /** The file the words are read from, so each change cites its line there (connector_text_proposed). */
   place?: string;
+  /** The 0-based line of the note the words are, when they are one loose line of a graph block (line_to_gql_ai). */
+  line?: number;
 }
 
 /** A note's own words: its text without its front matter and its gql blocks. */
@@ -72,11 +85,25 @@ export function drawTextRows(el: HTMLElement, text: TextAsk, changed: () => void
   el.createEl('pre', { cls: 'thoughtknot-ai-text', text: text.words });
 }
 
+/** The ask for the text: text to graph's, or for one loose line its own (line_to_gql_ai). */
+export function textAskOf(base: Parameters<typeof lineToGqlAsk>[0], text: TextAsk, question: string) {
+  if (text.line !== undefined) return lineToGqlAsk(base, text.line, question);
+  return textToGraphAsk(base, text.graph, text.words, question, text.place);
+}
+
 /**
  * Whether the answer goes into the note as a change set: true when the note holds the graph. Else the review of what
- * to keep is opened here, and false.
+ * to keep is opened here, and false. An answer for one loose line of `note` is reviewed as the GQL the line becomes:
+ * false once shown, or why it cannot be.
  */
-export async function asChangeSet(plugin: ThoughtKnotPlugin, file: TFile, p: Proposal): Promise<boolean> {
+export async function asChangeSet(
+  plugin: ThoughtKnotPlugin,
+  file: TFile,
+  p: Proposal,
+  text?: TextAsk,
+  note = '',
+): Promise<boolean | string> {
+  if (text?.line !== undefined) return lineAnswer(plugin, file, note, text, p) ?? false;
   if (holdsGraph((await noteText(plugin.app, file.path)) ?? '', p.graph)) return true;
   new TextGraphReview(plugin, file, p).open();
   return false;
@@ -139,4 +166,31 @@ export class TextGraphReview extends Modal {
     new Notice(why ?? word('ai.text-graph.written', { count, graph: this.proposal.graph }));
     if (!why) this.close();
   }
+}
+
+/**
+ * An AI's answer for one loose line (line_to_gql_ai): put on the line and checked there, then shown for review. On
+ * Accept it is written in place of the line, if the line is still as it was. It gives why not, or null once shown.
+ */
+export function lineAnswer(
+  plugin: ThoughtKnotPlugin,
+  file: TFile,
+  note: string,
+  ask: TextAsk,
+  p: Proposal,
+): string | null {
+  const line = ask.line ?? -1;
+  const shown = lineFromProposal(note, line, p);
+  if ('refused' in shown) return shown.refused;
+  new LineReview(plugin, ask.words, shown.gql, async () => {
+    let why: string | null = null;
+    await changeVaultNote(plugin.app, file.path, (now) => {
+      const again = lineFromProposal(now, line, p);
+      if ('gql' in again && again.gql === shown.gql) return again.note;
+      why = word('line-gql.changed');
+      return now;
+    });
+    if (why) new Notice(why);
+  }).open();
+  return null;
 }

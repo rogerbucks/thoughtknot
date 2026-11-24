@@ -1483,5 +1483,16 @@
       "app_ai_record",
       "app_ai_on_device"
     ]
+  },
+  "X2": {
+    "title": "Loose lines to GQL",
+    "size": "M",
+    "requirements": [
+      "line_to_gql_offer",
+      "line_to_gql_code",
+      "line_to_gql_ai",
+      "line_to_gql_checked",
+      "line_to_gql_skill"
+    ]
   }
 }

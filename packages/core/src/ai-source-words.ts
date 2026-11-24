@@ -1,7 +1,7 @@
 // The words of the AI send dialog, the AI models' settings and the question before leaving the app. They are in UK
 // English (editor spec §42, words_catalogue). The core's AI words follow: what is sent, its ceilings and its refusals.
 // source-words.ts keeps them with every other word. The words of AI suggestions (ai-suggest-source-words.ts) and of
-// text to graph (ai-text-graph-source-words.ts) are kept with them.
+// text to graph (ai-text-graph-source-words.ts) are kept with them. So are those of loose lines.
 import { AI_RULE_SOURCE_WORDS } from './ai-rule-source-words.ts';
 import { AI_SUGGEST_SOURCE_WORDS } from './ai-suggest-source-words.ts';
 import { AI_TEXT_GRAPH_SOURCE_WORDS } from './ai-text-graph-source-words.ts';

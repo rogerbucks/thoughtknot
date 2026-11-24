@@ -48,7 +48,7 @@ import { renderShown } from './block';
 import { TriedTypes } from './tried-types';
 import { PANE } from './pane';
 import { registerViews } from './views';
-import { addForYou } from './editor';
+import { registerEditorAdds } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
@@ -113,7 +113,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
     addCommands(this); // all of them, through the plug-in interface; nothing is sent to an AI or read from a database until Send or Import
     registerViews(this); // the edit pane, the details pane and the Graph view of Bases
-    this.registerEditorExtension(addForYou);
+    registerEditorAdds(this); // the comma and colon added for you, and a loose line offered as GQL (§47)
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
     this.registerEditorExtension(graphBlocks(this));
     try {

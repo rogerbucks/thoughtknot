@@ -10,6 +10,7 @@ import { distance, hops } from './estimates.ts';
 import { tokenize } from './tokens.ts';
 import { word } from './words.ts';
 import { cutAtFirst } from './text-cuts.ts';
+import { convertFix } from './line-to-gql-fix.ts';
 
 /** LSP DiagnosticSeverity. */
 export const SEVERITY = { Error: 1, Warning: 2, Information: 3, Hint: 4 } as const;
@@ -176,6 +177,7 @@ export function diagnostics(
         },
       })),
     );
+    if (p.severity === 'error') fixes.push(...convertFix(reading, block, text, line, uri));
     out.push({
       range,
       severity: p.severity === 'warning' ? SEVERITY.Warning : p.severity === 'hint' ? SEVERITY.Hint : SEVERITY.Error,

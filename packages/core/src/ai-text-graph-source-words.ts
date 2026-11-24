@@ -1,6 +1,6 @@
 // The words of text to graph, in UK English (editor spec §42, words_catalogue; §47). They say why a text or an answer
-// is refused, and write where each proposed thing and link came from in the text. ai-source-words.ts keeps them with
-// the other AI words.
+// is refused, and write where each proposed thing and link came from in the text. The words of a loose line turned
+// into GQL are here too (line_to_gql_offer). ai-source-words.ts keeps them with the other AI words.
 
 /** The words of text to graph, by key, in UK English. */
 export const AI_TEXT_GRAPH_SOURCE_WORDS = {
@@ -32,4 +32,21 @@ export const AI_TEXT_GRAPH_SOURCE_WORDS = {
     'This note has no such graph yet. Tick what to keep: only that is written, into a new graph block.',
   'ai.text-graph.write': 'Write the ticked ones',
   'ai.text-graph.written': '{count} changes written into graph {graph}.',
+  // a loose line of a graph block turned into GQL (§47, line_to_gql_offer)
+  'line-gql.offer': 'Convert to GQL',
+  'line-gql.offer-ai': 'Convert with AI',
+  'line-gql.fix': 'Convert to GQL: {gql}',
+  'line-gql.offer-tip': 'This line is not GQL yet. See the GQL it would become, and accept it or not.',
+  'line-gql.not-loose': 'This line is GQL already, or is not in a graph block: there is nothing to convert.',
+  'line-gql.no-shape':
+    'No shape the editor knows fits this line, so code cannot convert it. Convert it with AI instead.',
+  'line-gql.not-read': 'The GQL this line would become cannot be read: {why}',
+  'line-gql.problem': 'The GQL this line would become adds a problem: {why}',
+  'line-gql.nothing-new': 'Everything this line says is in the graph already.',
+  'line-gql.review': 'Convert the line to GQL',
+  'line-gql.review-was': 'The line as typed:',
+  'line-gql.review-becomes': 'It becomes:',
+  'line-gql.accept': 'Accept',
+  'line-gql.changed': 'The line was changed meanwhile, so nothing was written. Convert it again.',
+  'line-gql.question': 'Convert this one line of a graph block into the things, kinds and links it names.',
 } as const;
