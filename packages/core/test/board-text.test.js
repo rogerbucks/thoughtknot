@@ -91,7 +91,7 @@ describe('an edit to a board', () => {
   });
 });
 
-// Every kind of edit, made to a note that holds the board: the note outside the block keeps every byte, and the board
+// Each kind of edit is made to a note that holds the board. The note outside the block keeps every byte. The board
 // read back from the new text holds the edit.
 const EDITED = `// graph: ideas · BOARD ON trip
 (a:Sticky {x: 10, y: 20, text: 'Go by train', style: 'accent'}),
