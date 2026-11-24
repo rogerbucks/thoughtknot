@@ -206,9 +206,9 @@ test("the iPhone app answers Apple's encryption question as built-in only, so a 
   assert.match(plist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/, "only Apple's own encryption");
 });
 
-// The core lets a model be asked over plain http only on this device (localhost, 127.x.x.x or [::1]); any other
-// address, a Tailscale name or one on the home network included, takes https. Apple's App Transport Security blocks
-// plain http unless the app says otherwise, so the app allows it for local addresses alone, never for any site.
+// The core lets a model be asked over plain http only on this device: localhost, 127.x.x.x or [::1]. Any other
+// address takes https, a Tailscale name or one on the home network included. Apple's App Transport Security blocks
+// plain http unless the app says otherwise. So the app allows it for local addresses alone, never for any site.
 test('the iPhone app may ask a model on the phone itself over http, and no other address (ES§19 app_ai_host)', () => {
   const plist = read('src-tauri/Info.ios.plist');
   const ats = /<key>NSAppTransportSecurity<\/key>\s*<dict>([\s\S]*?)<\/dict>/.exec(plist);
