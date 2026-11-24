@@ -13,5 +13,16 @@
        2026, for TestFlight builds he alone tests). A lawyer confirms it before any public release (LEGAL-3). -->
   <key>ITSAppUsesNonExemptEncryption</key>
   <false/>
+  <!-- A model the person runs on this phone is asked over plain http at localhost (ES§19, app_ai_host). Apple's App
+       Transport Security blocks plain http unless the app allows it, so it is allowed for local addresses only. Any
+       other address, a Tailscale name or one on the home network included, takes https, and the core refuses http. -->
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
+  </dict>
+  <!-- iOS asks the person before the app reaches a machine on their home network, such as a model they run there. -->
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>ThoughtKnot reaches an AI model you run on your own network only when you send it a request.</string>
 </dict>
 </plist>
