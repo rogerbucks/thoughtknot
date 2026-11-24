@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-text.test.js",
+  "test": "every board edit is a change to the board block > a remove is written to the note's text, and the board read back holds it",
+  "seen_failing_first": false,
+  "evidence": "It pins behaviour that boardEditInNote, boardEdit and writeBoard already had: each edit already went to the board block and read back the same. The requirement's test was partial only because nothing proved every edit, so this test closes the record rather than drive new code."
+}
