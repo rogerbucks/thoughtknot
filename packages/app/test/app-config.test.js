@@ -206,6 +206,20 @@ test("the iPhone app answers Apple's encryption question as built-in only, so a 
   assert.match(plist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/, "only Apple's own encryption");
 });
 
+// The core lets a model be asked over plain http only on this device: localhost, 127.x.x.x or [::1]. Any other
+// address takes https, a Tailscale name or one on the home network included. Apple's App Transport Security blocks
+// plain http unless the app says otherwise. So the app allows it for local addresses alone, never for any site.
+test('the iPhone app may ask a model on the phone itself over http, and no other address (ES§19 app_ai_host)', () => {
+  const plist = read('src-tauri/Info.ios.plist');
+  const ats = /<key>NSAppTransportSecurity<\/key>\s*<dict>([\s\S]*?)<\/dict>/.exec(plist);
+  assert.ok(ats, 'the app says what App Transport Security allows');
+  assert.match(ats[1], /<key>NSAllowsLocalNetworking<\/key>\s*<true\/>/, 'local addresses may use http');
+  assert.doesNotMatch(plist, /NSAllowsArbitraryLoads/, 'never every site');
+  assert.doesNotMatch(plist, /NSExceptionDomains|NSExceptionAllowsInsecureHTTPLoads/, 'no named site over http');
+  // a model on the home network is reached by https, and iOS asks the person first, in these words
+  assert.match(plist, /<key>NSLocalNetworkUsageDescription<\/key>\s*<string>[^<]*model[^<]*<\/string>/);
+});
+
 test('the folder dialog is a computer’s only: a phone build carries no dialog plug-in', () => {
   const cargo = read('src-tauri/Cargo.toml');
   const desktopOnly = cargo.indexOf(`[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]`);
